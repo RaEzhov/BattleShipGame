@@ -8,12 +8,14 @@ const unsigned int FRAMERATE = 60;
 
 const float BUTTON_SCALE = 2;
 
+const char RESOURCES_PATH[] = "/home/roman/CLionProjects/BattleShipGame/client/resources/";
+
 class Button {
 public:
     Button(float x, float y, Vector2<float> scale_, void(*funcRef)(), RenderWindow *window_,
            const std::string &textTitle,
-           const std::string &buttonOn = "./resources/button1.png",
-           const std::string &buttonOff = "./resources/button2.png") {
+           const std::string &buttonOn = std::string(RESOURCES_PATH) + "button1.png",
+           const std::string &buttonOff = std::string(RESOURCES_PATH) + "button2.png") {
         pFunction = funcRef;
         scale = scale_;
 
@@ -35,10 +37,10 @@ public:
 
         spriteButtonOn.setPosition(buttonPosition);
         spriteButtonOff.setPosition(buttonPosition);
-        spriteTitle.setPosition(buttonPosition.x + (textureButtonOn.getSize().x * spriteButtonOn.getScale().x -
-                                                    textureTitle.getSize().x * spriteTitle.getScale().x) / 2,
-                                buttonPosition.y + (textureButtonOn.getSize().y * spriteButtonOn.getScale().y -
-                                                    textureTitle.getSize().y * spriteTitle.getScale().y) / 2);
+        spriteTitle.setPosition(buttonPosition.x + (float(textureButtonOn.getSize().x) * spriteButtonOn.getScale().x -
+                                                    float(textureTitle.getSize().x) * spriteTitle.getScale().x) / 2,
+                                buttonPosition.y + (float(textureButtonOn.getSize().y) * spriteButtonOn.getScale().y -
+                                                    float(textureTitle.getSize().y) * spriteTitle.getScale().y) / 2);
         titlePosition = spriteTitle.getPosition();
         drawingSprite = &spriteButtonOn;
         lockClick = false;
@@ -71,7 +73,7 @@ public:
             drawingSprite = &spriteButtonOn;
         }
         if (event.type == Event::MouseButtonPressed) {
-            if (event.mouseButton.button == Mouse::Left && lockClick != true) {
+            if (event.mouseButton.button == Mouse::Left && !lockClick) {
                 if (IntRect(spriteButtonOn.getPosition().x, spriteButtonOn.getPosition().y,
                             textureButtonOn.getSize().x * BUTTON_SCALE * scale.x,
                             textureButtonOff.getSize().y * BUTTON_SCALE * scale.y).contains(
@@ -126,9 +128,9 @@ int main() {
     // Загрузка текстур из памяти
 
     Texture background, battleshipText, title, cursor;
-    background.loadFromFile("./resources/mainMenu.jpg");
-    battleshipText.loadFromFile("./resources/battleship.png");
-    cursor.loadFromFile("./resources/cursor.png");
+    background.loadFromFile(std::string(RESOURCES_PATH) + "mainMenu.jpg");
+    battleshipText.loadFromFile(std::string(RESOURCES_PATH) + "battleship.png");
+    cursor.loadFromFile(std::string(RESOURCES_PATH) + "cursor.png");
 
 
     // Получение разрешения фона (1920х1080)
@@ -145,12 +147,12 @@ int main() {
 
     spriteBackground.scale(scaleWindow);
 
-    spriteBattleship.setPosition(float(screenRes.width) * 0.35, float(screenRes.height) * 0.85);
+    spriteBattleship.setPosition(float(screenRes.width) * 0.35f, float(screenRes.height) * 0.85f);
     spriteBattleship.scale(scaleWindow);
 
-    Button exitButton(float(screenRes.width) * 0.05, float(screenRes.height) * 0.85, scaleWindow, nullptr, &window,
-                      "./resources/exit.png");
-    Event event;
+    Button exitButton(float(screenRes.width) * 0.05f, float(screenRes.height) * 0.85f, scaleWindow, nullptr, &window,
+                      std::string(RESOURCES_PATH) + "exit.png");
+    Event event{};
     while (window.isOpen()) {
         while (window.pollEvent(event)) {
             // Пользователь нажал на «крестик» и хочет закрыть окно?
@@ -161,7 +163,7 @@ int main() {
         window.draw(spriteBackground);
         window.draw(spriteBattleship);
         exitButton.draw();
-        spriteCursor.setPosition(Mouse::getPosition().x, Mouse::getPosition().y);
+        spriteCursor.setPosition(float(Mouse::getPosition().x), float(Mouse::getPosition().y));
         window.draw(spriteCursor);
         window.display();
     }
