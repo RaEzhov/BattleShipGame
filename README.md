@@ -1,2 +1,2 @@
-# BattleShipGame
+# Battleship Game
 Online Battleship.
