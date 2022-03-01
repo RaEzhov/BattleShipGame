@@ -8,7 +8,7 @@ const unsigned int FRAMERATE = 60;
 
 const float BUTTON_SCALE = 2;
 
-const char RESOURCES_PATH[] = "/home/roman/CLionProjects/BattleShipGame/client/resources/";
+const char RESOURCES_PATH[] = "/home/roman/clionProjects/BattleShipGame/client/resources/";
 
 class Button {
 public:
@@ -118,14 +118,10 @@ private:
 
 
 int main() {
-
     auto screenRes = sf::VideoMode::getDesktopMode();
-    // Объект, который, собственно, является главным окном приложения
     RenderWindow window(screenRes, "Battleship", Style::Fullscreen);
     window.setFramerateLimit(FRAMERATE);
     window.setMouseCursorVisible(false);
-
-    // Загрузка текстур из памяти
 
     Texture background, battleshipText, title, cursor;
     background.loadFromFile(std::string(RESOURCES_PATH) + "mainMenu.jpg");
@@ -155,7 +151,6 @@ int main() {
     Event event{};
     while (window.isOpen()) {
         while (window.pollEvent(event)) {
-            // Пользователь нажал на «крестик» и хочет закрыть окно?
             if (event.type == Event::Closed)
                 window.close();
             exitButton.eventCheck(event);
@@ -163,6 +158,7 @@ int main() {
         window.draw(spriteBackground);
         window.draw(spriteBattleship);
         exitButton.draw();
+
         spriteCursor.setPosition(float(Mouse::getPosition().x), float(Mouse::getPosition().y));
         window.draw(spriteCursor);
         window.display();
