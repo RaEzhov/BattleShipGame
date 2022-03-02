@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <iostream>
+#include <unordered_set>
 
 using namespace sf;
 
@@ -8,7 +9,7 @@ const unsigned int FRAMERATE = 60;
 
 const float BUTTON_SCALE = 2;
 
-const char RESOURCES_PATH[] = "/home/roman/clionProjects/BattleShipGame/client/resources/";
+const char RESOURCES_PATH[] = "D:/Projects/BattleShipGame/client/resources/";
 
 class Button {
 public:
@@ -116,6 +117,77 @@ private:
     void (*pFunction)();
 };
 
+class Entry{
+public:
+    Entry(Vector2<float>position, unsigned int size, RenderWindow* window_, unsigned int fontSize = 24){
+        window = window_;
+        font.loadFromFile(std::string(RESOURCES_PATH) + "arialmt.ttf");
+        text.setFont(font);
+        text.setCharacterSize(fontSize);
+        text.setFillColor(sf::Color::Black);
+        entry.setPosition(position);
+        text.setPosition(position.x, position.y+5);
+        entry.setSize({static_cast<float>(size*fontSize), static_cast<float>(fontSize * 1.3)});
+        isActive = false;
+        symbolsCount = 21;
+        entry.setFillColor(Color(230, 218, 166, 195));
+        input = "";
+        text.setString(input);
+        clock.restart();
+    }
+    void eventCheck(Event& event){
+        if (isActive) {
+            if (event.type == sf::Event::TextEntered) {
+                if (Keyboard::isKeyPressed(Keyboard::Escape)) {
+                    isActive = false;
+                    entry.setFillColor(Color(230, 218, 166, 195));
+                } else if (Keyboard::isKeyPressed(Keyboard::BackSpace)) {
+                    if (!input.isEmpty()) {
+                        input.erase(input.getSize() - 1);
+                    }
+                } else if (Keyboard::isKeyPressed(Keyboard::Tab)) {
+                    input += ' ';
+                } else if (Keyboard::isKeyPressed(Keyboard::Enter)) {
+                    1;
+                    //playerInput.insert(playerInput.getSize(), "\n");
+                } else if (input.getSize() < symbolsCount) {
+                    input += event.text.unicode;
+                }
+
+                text.setString(input);
+            }
+        }
+        //-----------------------------
+        if (event.type == Event::MouseButtonPressed) {
+
+            if (event.mouseButton.button == Mouse::Left) {
+                if (IntRect(entry.getPosition().x, entry.getPosition().y,
+                            entry.getSize().x, entry.getSize().y).contains(
+                        Mouse::getPosition(*window))) {
+                    isActive = true;
+                    entry.setFillColor(Color(230, 218, 166, 255));
+                } else {
+                    isActive = false;
+                    entry.setFillColor(Color(230, 218, 166, 195));
+                }
+            }
+        }
+    }
+    void draw(){
+        window->draw(entry);
+        window->draw(text);
+    }
+private:
+    String input;
+    Text text;
+    Font font;
+    RectangleShape entry;
+    bool isActive;
+    int symbolsCount;
+    Clock clock;
+    RenderWindow* window;
+};
+
 
 int main() {
     auto screenRes = sf::VideoMode::getDesktopMode();
@@ -148,17 +220,20 @@ int main() {
 
     Button exitButton(float(screenRes.width) * 0.05f, float(screenRes.height) * 0.85f, scaleWindow, nullptr, &window,
                       std::string(RESOURCES_PATH) + "exit.png");
+    Entry loginEntry({float(screenRes.width) * 0.2f, float(screenRes.height) * 0.4f}, 15, &window, 24);
     Event event{};
+
     while (window.isOpen()) {
         while (window.pollEvent(event)) {
             if (event.type == Event::Closed)
                 window.close();
             exitButton.eventCheck(event);
+            loginEntry.eventCheck(event);
         }
         window.draw(spriteBackground);
         window.draw(spriteBattleship);
         exitButton.draw();
-
+        loginEntry.draw();
         spriteCursor.setPosition(float(Mouse::getPosition().x), float(Mouse::getPosition().y));
         window.draw(spriteCursor);
         window.display();
