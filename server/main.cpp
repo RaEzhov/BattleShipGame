@@ -1,33 +1,56 @@
 #include <iostream>
+#include <sstream>
+#include <unordered_set>
 #include <pqxx/pqxx>
+
+char CONN_STR[] = "hostaddr=127.0.0.1 port=5432 dbname=battleship_db user=roman password=roman";
+
+class DBConnection {
+public:
+    DBConnection() {
+        conn = new pqxx::connection(CONN_STR);
+        w = new pqxx::work(*conn);
+    }
+
+    ~DBConnection() {
+        w->commit();
+        delete w;
+        delete conn;
+    }
+
+    /** Inserts new user to table users.\n Login and password must already be checked for correctness */
+    void insertNewUser(const std::string &login, const std::string &password) {
+        auto id = w->exec1("SELECT MAX(id) FROM users");
+        std::stringstream ss;
+        ss << "INSERT INTO users VALUES ('" << login << "', '" << password << "', " << id[0].as<int>() + 1 << ", 0)";
+        w->exec(ss.str());
+    }
+
+    /** Select all logins from database and insert it to userLogins set*/
+    void selectUsers(std::unordered_set<std::string> &userLogins) {
+        auto users = w->exec("SELECT login FROM users");
+        for (auto i: users) {
+            userLogins.insert(i[0].as<std::string>());
+        }
+    }
+
+private:
+    pqxx::connection *conn;
+    pqxx::work *w;
+};
+
 int main() {
     try {
-        // Connect to the database.  In practice we may have to pass some
-        // arguments to say where the database server is, and so on.
-        // The constructor parses options exactly like libpq's
-        // PQconnectdb/PQconnect, see:
-        // https://www.postgresql.org/docs/10/static/libpq-connect.html
-        pqxx::connection c("hostaddr=127.0.0.1 port=5432 dbname=test user=roman password=roman");
-        std::cout << c.dbname();
-        // Start a transaction.  In libpqxx, you always work in one.
-        pqxx::work w(c);
-
-        // work::exec1() executes a query returning a single row of data.
-        // We'll just ask the database to return the number 1 to us.
-        pqxx::row r = w.exec1("SELECT * FROM users");
-
-        // Commit your transaction.  If an exception occurred before this
-        // point, execution will have left the block, and the transaction will
-        // have been destroyed along the way.  In that case, the failed
-        // transaction would implicitly abort instead of getting to this point.
-        w.commit();
-
-        // Look at the first and only field in the row, parse it as an integer,
-        // and print it.
-        std::cout << r[0].as<int>() << std::endl;
+        DBConnection conn;
+        std::unordered_set<std::string> set;
+        conn.selectUsers(set);
+        for (auto &i: set) {
+            std::cout << i << ' ';
+        }
     }
     catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
         return 1;
     }
+    return 0;
 }
