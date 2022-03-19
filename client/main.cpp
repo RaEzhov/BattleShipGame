@@ -238,7 +238,6 @@ void loginFnc(){
     bool authDone;
     server.receive(packet);
     packet >> authDone;
-    //std::cout << (authDone ? "Auth done\n" : "Auth failed\n");
     if (authDone){
         userStatus = MAIN_MENU;
     }
@@ -252,12 +251,6 @@ int main() {
         std::cout << "Connection error";
         return 1;
     }
-
-    /*Packet packet;
-    packet.append("ping\n", sizeof("ping\n"));
-    if (server.send(packet) != Socket::Status::Done) {
-        std::cout << "Send error!\n";
-    }*/
 
     auto screenRes = sf::VideoMode::getDesktopMode();
     RenderWindow window(screenRes, "Battleship", Style::Fullscreen);
