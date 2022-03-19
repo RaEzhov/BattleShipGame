@@ -1,9 +1,15 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Network.hpp>
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <unordered_set>
 
 using namespace sf;
+
+const char IP_ADDR[] = "localhost";
+
+const int PORT = 55555;
 
 const unsigned int FRAMERATE = 60;
 
@@ -208,12 +214,44 @@ private:
     RenderWindow *window;
 };
 
+enum status{
+    LOGIN = 1,
+    MAIN_MENU = 2,
+    IN_GAME = 3,
+    IN_FRIENDS_MENU = 4
+};
+
+static unsigned int userStatus = LOGIN;
+
+std::unordered_map<std::string, Button*> buttons;
+std::unordered_map<std::string, Entry*> entries;
+
+static sf::TcpSocket server;
+
 void loginFnc(){
-    //check correctness of login & password (symbols + uniqueness)
-    std::cout << "login function";
+    auto login = entries["login"]->getStr();
+    auto password = entries["password"]->getStr();
+    Packet packet;
+    packet << login << password;
+    server.send(packet);
+    packet.clear();
+    bool authDone;
+    server.receive(packet);
+    packet >> authDone;
+    if (authDone){
+        userStatus = MAIN_MENU;
+    }
 };
 
 int main() {
+
+    sf::Socket::Status status = server.connect(IP_ADDR, PORT);
+    if (status != sf::Socket::Done)
+    {
+        std::cout << "Connection error";
+        return 1;
+    }
+
     auto screenRes = sf::VideoMode::getDesktopMode();
     RenderWindow window(screenRes, "Battleship", Style::Fullscreen);
     window.setFramerateLimit(FRAMERATE);
@@ -246,9 +284,12 @@ int main() {
                       std::string(RESOURCES_PATH) + "exit.png");
     Button loginButton(float(screenRes.width) * 0.22f, float(screenRes.height) * 0.6f, scaleWindow * 0.5f, loginFnc, &window,
                        std::string(RESOURCES_PATH) + "exit.png");
+    buttons["login"] = &loginButton;
 
     Entry loginEntry({float(screenRes.width) * 0.2f, float(screenRes.height) * 0.4f}, 12, &window, 24);
+    entries["login"] = &loginEntry;
     Entry passwordEntry({float(screenRes.width) * 0.2f, float(screenRes.height) * 0.5f}, 12, &window, 24);
+    entries["password"] = &passwordEntry;
     Event event{};
     Text loginText, passwordText;
     Font arial;
@@ -270,18 +311,26 @@ int main() {
             if (event.type == Event::Closed)
                 window.close();
             exitButton.eventCheck(event);
-            loginEntry.eventCheck(event);
-            passwordEntry.eventCheck(event);
-            loginButton.eventCheck(event);
+            switch (userStatus) {
+                case LOGIN:
+                    loginEntry.eventCheck(event);
+                    passwordEntry.eventCheck(event);
+                    loginButton.eventCheck(event);
+                    break;
+            }
         }
         window.draw(spriteBackground);
         window.draw(spriteBattleship);
         exitButton.draw();
-        loginEntry.draw();
-        window.draw(loginText);
-        passwordEntry.draw();
-        window.draw(passwordText);
-        loginButton.draw();
+        switch (userStatus) {
+            case LOGIN:
+                loginEntry.draw();
+                window.draw(loginText);
+                passwordEntry.draw();
+                window.draw(passwordText);
+                loginButton.draw();
+                break;
+        }
         spriteCursor.setPosition(float(Mouse::getPosition().x), float(Mouse::getPosition().y));
         window.draw(spriteCursor);
         window.display();
