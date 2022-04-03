@@ -1,218 +1,11 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
 #include <string>
-#include <sstream>
 #include <iostream>
-#include <unordered_set>
+#include <memory>
 
-using namespace sf;
+#include "screen_objects.h"
 
-const char IP_ADDR[] = "localhost";
-
-const int PORT = 55555;
-
-const unsigned int FRAMERATE = 60;
-
-const float BUTTON_SCALE = 2;
-
-const char RESOURCES_PATH[] = "/home/roman/clionProjects/BattleShipGame/client/resources/";
-
-class Button {
-public:
-    Button(float x, float y, Vector2<float> scale_, void(*funcRef)(), RenderWindow *window_,
-           const std::string &textTitle,
-           const std::string &buttonOn = std::string(RESOURCES_PATH) + "button1.png",
-           const std::string &buttonOff = std::string(RESOURCES_PATH) + "button2.png") {
-        pFunction = funcRef;
-        scale = scale_;
-
-        // Loading sprites
-        textureTitle.loadFromFile(textTitle);
-        textureButtonOn.loadFromFile(buttonOn);
-        textureButtonOff.loadFromFile(buttonOff);
-        spriteTitle.setTexture(textureTitle, true);
-        spriteButtonOn.setTexture(textureButtonOn, true);
-        spriteButtonOff.setTexture(textureButtonOff, true);
-
-
-        // Scaling button
-        spriteTitle.scale(BUTTON_SCALE * scale.x, BUTTON_SCALE * scale.y);
-        spriteButtonOn.scale(BUTTON_SCALE * scale.x, BUTTON_SCALE * scale.y);
-        spriteButtonOff.scale(BUTTON_SCALE * scale.x, BUTTON_SCALE * scale.y);
-
-        buttonPosition = {x, y};
-
-        spriteButtonOn.setPosition(buttonPosition);
-        spriteButtonOff.setPosition(buttonPosition);
-        spriteTitle.setPosition(buttonPosition.x + (float(textureButtonOn.getSize().x) * spriteButtonOn.getScale().x -
-                                                    float(textureTitle.getSize().x) * spriteTitle.getScale().x) / 2,
-                                buttonPosition.y + (float(textureButtonOn.getSize().y) * spriteButtonOn.getScale().y -
-                                                    float(textureTitle.getSize().y) * spriteTitle.getScale().y) / 2);
-        titlePosition = spriteTitle.getPosition();
-        drawingSprite = &spriteButtonOn;
-        lockClick = false;
-        window = window_;
-        pressed = 0;
-    }
-
-    void draw() {
-        if (pressed == 0) {
-            spriteTitle.setColor(Color::White);
-            spriteTitle.setPosition(titlePosition);
-        } else {
-            spriteTitle.setColor(Color(200, 200, 200));
-            spriteTitle.setPosition(titlePosition.x, titlePosition.y + 2 * BUTTON_SCALE * scale.y);
-
-        }
-        window->draw(*drawingSprite);
-        window->draw(spriteTitle);
-    }
-
-    void eventCheck(Event &event) {
-        if (IntRect(spriteButtonOn.getPosition().x, spriteButtonOn.getPosition().y,
-                    textureButtonOn.getSize().x * BUTTON_SCALE * scale.x,
-                    textureButtonOn.getSize().y * BUTTON_SCALE * scale.y).contains(
-                Mouse::getPosition(*window))) {
-            spriteButtonOn.setColor(Color::White);
-        } else {
-            spriteButtonOn.setColor(Color(225, 225, 225, 255));
-            pressed = 0;
-            drawingSprite = &spriteButtonOn;
-        }
-        if (event.type == Event::MouseButtonPressed) {
-            if (event.mouseButton.button == Mouse::Left && !lockClick) {
-                if (IntRect(spriteButtonOn.getPosition().x, spriteButtonOn.getPosition().y,
-                            textureButtonOn.getSize().x * BUTTON_SCALE * scale.x,
-                            textureButtonOff.getSize().y * BUTTON_SCALE * scale.y).contains(
-                        Mouse::getPosition(*window))) {
-                    pressed = 1;
-                    drawingSprite = &spriteButtonOff;
-                }
-                lockClick = true;
-            }
-        }
-        if (event.type == Event::MouseButtonReleased) {
-            if (event.mouseButton.button == Mouse::Left) {
-                if (IntRect(spriteButtonOn.getPosition().x, spriteButtonOn.getPosition().y,
-                            textureButtonOn.getSize().x * BUTTON_SCALE * scale.x,
-                            textureButtonOff.getSize().y * BUTTON_SCALE * scale.y).contains(
-                        Mouse::getPosition(*window))) {
-                    pressed = 0;
-                    drawingSprite = &spriteButtonOn;
-                    if (pFunction) {
-                        (*pFunction)();
-                    } else {
-                        window->close();
-                    }
-                }
-                lockClick = false;
-            }
-        }
-    }
-
-private:
-    Texture textureButtonOn, textureButtonOff, textureTitle;
-    Sprite spriteButtonOn, spriteButtonOff, spriteTitle;
-    Sprite *drawingSprite;
-    bool lockClick;
-    RenderWindow *window;
-    int pressed;
-    Vector2<float> buttonPosition, titlePosition;
-    Vector2<float> scale;
-
-    void (*pFunction)();
-};
-
-class Entry {
-public:
-    Entry(Vector2<float> position, unsigned int size, RenderWindow *window_, unsigned int fontSize = 24) {
-        window = window_;
-        font.loadFromFile(std::string(RESOURCES_PATH) + "arialmt.ttf");
-        text.setFont(font);
-        text.setCharacterSize(fontSize);
-        text.setFillColor(sf::Color::Black);
-        text.setPosition(position.x, position.y);
-        entry.setPosition(position);
-        entry.setSize({static_cast<float>(size * fontSize), static_cast<float>(fontSize * 1.3)});
-        isActive = false;
-        symbolsCount = 21;
-        entry.setFillColor(Color(230, 218, 166, 195));
-        input = "";
-        text.setString(input);
-        clock.restart();
-        entry.setOutlineThickness(1);
-        entry.setOutlineColor(Color::Black);
-        cursor.setString("|");
-        cursor.setFont(font);
-        cursor.setCharacterSize(fontSize);
-        cursor.setFillColor(Color::Black);
-        cursor.setPosition(position);
-    }
-
-    void eventCheck(Event &event) {
-        if (isActive) {
-            if (event.type == sf::Event::TextEntered) {
-                if (Keyboard::isKeyPressed(Keyboard::Escape)) {
-                    isActive = false;
-                    entry.setFillColor(Color(230, 218, 166, 195));
-                } else if (Keyboard::isKeyPressed(Keyboard::BackSpace)) {
-                    if (!input.isEmpty()) {
-                        input.erase(input.getSize() - 1);
-                    }
-                } else if (Keyboard::isKeyPressed(Keyboard::Tab)) {
-                    input += ' ';
-                } else if (Keyboard::isKeyPressed(Keyboard::Enter) || Keyboard::isKeyPressed(Keyboard::Delete)) {
-                    1;
-                    //playerInput.insert(playerInput.getSize(), "\n");
-                } else if (input.getSize() < symbolsCount) {
-                    input += event.text.unicode;
-                }
-                text.setString(input);
-                cursor.setPosition(text.getPosition().x + text.getCharacterSize(), text.getPosition().y);
-            }
-        }
-        //-----------------------------
-        if (event.type == Event::MouseButtonPressed) {
-
-            if (event.mouseButton.button == Mouse::Left) {
-                if (IntRect(entry.getPosition().x, entry.getPosition().y,
-                            entry.getSize().x, entry.getSize().y).contains(
-                        Mouse::getPosition(*window))) {
-                    isActive = true;
-                    entry.setFillColor(Color(230, 218, 166, 255));
-                } else {
-                    isActive = false;
-                    entry.setFillColor(Color(230, 218, 166, 195));
-                }
-            }
-        }
-    }
-
-    void draw() {
-        window->draw(entry);
-        if ( isActive && (clock.getElapsedTime().asMilliseconds() % 1000) > 500){
-            cursor = text;
-            cursor.setString(text.getString() + "|");
-            window->draw(cursor);
-        } else {
-            window->draw(text);
-        }
-    }
-
-    std::string getStr(){
-        return text.getString();
-    }
-
-private:
-    String input;
-    Text text, cursor;
-    Font font;
-    RectangleShape entry;
-    bool isActive;
-    int symbolsCount;
-    Clock clock;
-    RenderWindow *window;
-};
 
 enum status{
     LOGIN = 1,
@@ -223,29 +16,29 @@ enum status{
 
 static unsigned int userStatus = LOGIN;
 
-std::unordered_map<std::string, Button*> buttons;
-std::unordered_map<std::string, Entry*> entries;
+std::unordered_map<std::string, std::unique_ptr<Button>> buttons;
+std::unordered_map<std::string, std::unique_ptr<Entry>> entries;
 
-static sf::TcpSocket server;
+static std::unique_ptr<sf::TcpSocket> server;
 
 void loginFnc(){
     auto login = entries["login"]->getStr();
     auto password = entries["password"]->getStr();
     Packet packet;
     packet << login << password;
-    server.send(packet);
+    server->send(packet);
     packet.clear();
     bool authDone;
-    server.receive(packet);
+    server->receive(packet);
     packet >> authDone;
     if (authDone){
         userStatus = MAIN_MENU;
     }
-};
+}
 
 int main() {
-
-    sf::Socket::Status status = server.connect(IP_ADDR, PORT);
+    server = std::make_unique<sf::TcpSocket>();
+    sf::Socket::Status status = server->connect(IP_ADDR, PORT);
     if (status != sf::Socket::Done)
     {
         std::cout << "Connection error";
@@ -253,9 +46,9 @@ int main() {
     }
 
     auto screenRes = sf::VideoMode::getDesktopMode();
-    RenderWindow window(screenRes, "Battleship", Style::Fullscreen);
-    window.setFramerateLimit(FRAMERATE);
-    window.setMouseCursorVisible(false);
+    auto window = std::make_shared<RenderWindow>(screenRes, "Battleship", Style::Fullscreen);
+    window->setFramerateLimit(FRAMERATE);
+    window->setMouseCursorVisible(false);
 
     Texture background, battleshipText, title, cursor;
     background.loadFromFile(std::string(RESOURCES_PATH) + "mainMenu.jpg");
@@ -280,16 +73,18 @@ int main() {
     spriteBattleship.setPosition(float(screenRes.width) * 0.35f, float(screenRes.height) * 0.85f);
     spriteBattleship.scale(scaleWindow);
 
-    Button exitButton(float(screenRes.width) * 0.05f, float(screenRes.height) * 0.85f, scaleWindow, nullptr, &window,
-                      std::string(RESOURCES_PATH) + "exit.png");
-    Button loginButton(float(screenRes.width) * 0.22f, float(screenRes.height) * 0.6f, scaleWindow * 0.5f, loginFnc, &window,
-                       std::string(RESOURCES_PATH) + "exit.png");
-    buttons["login"] = &loginButton;
+    buttons["exit"] = std::make_unique<Button>(float(screenRes.width) * 0.05f, float(screenRes.height) * 0.85f, scaleWindow, nullptr, window,
+                                               std::string(RESOURCES_PATH) + "exit.png");
 
-    Entry loginEntry({float(screenRes.width) * 0.2f, float(screenRes.height) * 0.4f}, 12, &window, 24);
-    entries["login"] = &loginEntry;
-    Entry passwordEntry({float(screenRes.width) * 0.2f, float(screenRes.height) * 0.5f}, 12, &window, 24);
-    entries["password"] = &passwordEntry;
+    buttons["login"] = std::make_unique<Button>(float(screenRes.width) * 0.22f, float(screenRes.height) * 0.6f, scaleWindow * 0.5f, loginFnc, window,
+                                                std::string(RESOURCES_PATH) + "exit.png");
+
+    entries["login"] = std::make_unique<Entry>(Vector2{float(screenRes.width) * 0.2f, float(screenRes.height) * 0.4f}, 12,
+                                               window, 24);
+
+    entries["password"] = std::make_unique<Entry>(Vector2{float(screenRes.width) * 0.2f, float(screenRes.height) * 0.5f}, 12,
+                                                  window, 24);
+
     Event event{};
     Text loginText, passwordText;
     Font arial;
@@ -306,35 +101,34 @@ int main() {
     passwordText.setFillColor(Color::Black);
     passwordText.setCharacterSize(24);
 
-    while (window.isOpen()) {
-        while (window.pollEvent(event)) {
+    while (window->isOpen()) {
+        while (window->pollEvent(event)) {
             if (event.type == Event::Closed)
-                window.close();
-            exitButton.eventCheck(event);
+                window->close();
+            buttons["exit"]->eventCheck(event);
             switch (userStatus) {
                 case LOGIN:
-                    loginEntry.eventCheck(event);
-                    passwordEntry.eventCheck(event);
-                    loginButton.eventCheck(event);
+                    entries["login"]->eventCheck(event);
+                    entries["password"]->eventCheck(event);
+                    buttons["login"]->eventCheck(event);
                     break;
             }
         }
-        window.draw(spriteBackground);
-        window.draw(spriteBattleship);
-        exitButton.draw();
+        window->draw(spriteBackground);
+        window->draw(spriteBattleship);
+        buttons["exit"]->draw();
         switch (userStatus) {
             case LOGIN:
-                loginEntry.draw();
-                window.draw(loginText);
-                passwordEntry.draw();
-                window.draw(passwordText);
-                loginButton.draw();
+                entries["login"]->draw();
+                window->draw(loginText);
+                entries["password"]->draw();
+                window->draw(passwordText);
+                buttons["login"]->draw();
                 break;
         }
-        spriteCursor.setPosition(float(Mouse::getPosition().x), float(Mouse::getPosition().y));
-        window.draw(spriteCursor);
-        window.display();
+        spriteCursor.setPosition(static_cast<float>(Mouse::getPosition().x), static_cast<float>(Mouse::getPosition().y));
+        window->draw(spriteCursor);
+        window->display();
     }
-
     return 0;
 }
