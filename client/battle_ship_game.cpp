@@ -27,11 +27,11 @@ BattleShipGame::BattleShipGame() : server(std::make_unique<sf::TcpSocket>()), sc
 }
 
 void BattleShipGame::loadTextures(){
-    buttons["exit"] = std::make_unique<Button>(float(screen.width) * 0.05f, float(screen.height) * 0.85f, screenScale, nullptr, window,
-                                               std::string(RESOURCES_PATH) + "exit.png");
+    buttons["exit"] = std::make_unique<Button>(float(screen.width) * 0.05f, float(screen.height) * 0.85f, screenScale,
+                                               nullptr, window, "exit", 60, sf::Color(213, 190, 164));
 
     buttons["login"] = std::make_unique<Button>(float(screen.width) * 0.22f, float(screen.height) * 0.6f, screenScale * 0.5f,
-                                                [this] { loginFunc(); }, window, std::string(RESOURCES_PATH) + "exit.png");
+                                                [this] { loginFunc(); }, window, "login", 40, sf::Color(213, 190, 164));
 
     entries["login"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.2f, float(screen.height) * 0.4f}, 12,
                                                window, 24);
@@ -40,9 +40,9 @@ void BattleShipGame::loadTextures(){
                                                   window, 24);
 
     buttons["single"] = std::make_unique<Button>(static_cast<float>(screen.width)*0.05f, static_cast<float>(screen.height)*0.15f, screenScale,
-                                                 [this]{singlePlayerFunc();}, window, std::string(RESOURCES_PATH)+ "exit.png");
+                                                 [this]{singlePlayerFunc();}, window, "singleplayer", 20, sf::Color(213, 190, 164));
     buttons["multi"] = std::make_unique<Button>(static_cast<float>(screen.width)*0.05f, static_cast<float>(screen.height)*0.35f, screenScale,
-                                                [this]{multiPlayerFunc();}, window, std::string(RESOURCES_PATH)+ "exit.png");
+                                                [this]{multiPlayerFunc();}, window, "multiplayer", 25, sf::Color(213, 190, 164));
     pictures["background"] = std::make_unique<Picture>("mainMenu.jpg",
                                                        sf::Vector2<float>{0,0}, screenScale, window);
     pictures["battleShipText"] = std::make_unique<Picture>("battleship.png",
@@ -55,6 +55,12 @@ void BattleShipGame::loadTextures(){
     titles["password"] = std::make_unique<Title>(std::string("Password:"),
                                                  sf::Vector2<float>{static_cast<float>(screen.width)*0.2f + 10.0f,
                                                                 static_cast<float>(screen.height)*0.5f - 30.0f}, window);
+    pictures["myField"] = std::make_unique<Picture>("Field1.bmp",
+                                                    sf::Vector2<float>(static_cast<float>(screen.width)*0.3f,
+                                                                       static_cast<float>(screen.height)*0.3f),
+                                                    sf::Vector2<float>{screenScale.x*2, screenScale.y*2}, window);
+    buttons["mainMenu"] = std::make_unique<Button>(float(screen.width) * 0.05f, float(screen.height) * 0.85f, screenScale,
+                                                   [this]{mainMenu();}, window, "back", 25, sf::Color(213, 190, 164));
 }
 
 void BattleShipGame::mainLoop() {
@@ -76,7 +82,7 @@ void BattleShipGame::mainLoop() {
                     buttons["exit"]->eventCheck(event);
                     break;
                 case IN_SP_MENU:
-
+                    buttons["mainMenu"]->eventCheck(event);
                     break;
                 default:
                     std::cerr << "Wrong status\n";
@@ -100,7 +106,8 @@ void BattleShipGame::mainLoop() {
                 buttons["exit"]->draw();
                 break;
             case IN_SP_MENU:
-
+                pictures["myField"]->draw();
+                buttons["mainMenu"]->draw();
                 break;
             default:
                 std::cerr << "Wrong status\n";
@@ -122,8 +129,12 @@ void BattleShipGame::loginFunc() {
     server->receive(packet);
     packet >> authDone;
     if (authDone) {
-        status = MAIN_MENU;
+        mainMenu();
     }
+}
+
+void BattleShipGame::mainMenu(){
+    status = MAIN_MENU;
 }
 
 void BattleShipGame::singlePlayerFunc() {

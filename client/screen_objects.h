@@ -26,7 +26,8 @@ protected:
 class Button : public ScreenObject {
 public:
     Button(float x, float y, sf::Vector2<float> scale_, std::function<void()> funcRef,
-           std::shared_ptr<sf::RenderWindow> window_, const std::string &textTitle,
+           std::shared_ptr<sf::RenderWindow> window_, const std::string &text_, unsigned int textSize, sf::Color textColor_,
+           const std::string &font = "Upheavtt.ttf",
            const std::string &buttonOn = std::string(RESOURCES_PATH) + "button1.png",
            const std::string &buttonOff = std::string(RESOURCES_PATH) + "button2.png");
 
@@ -35,11 +36,15 @@ public:
     void eventCheck(sf::Event &event);
 
 private:
-    sf::Texture textureButtonOn, textureButtonOff, textureTitle;
-    sf::Sprite spriteButtonOn, spriteButtonOff, spriteTitle;
+    sf::Text text;
+    sf::Font textFont;
+    sf::Color textColor;
+    sf::Vector2<float> textPosition;
+    sf::Texture textureButtonOn, textureButtonOff;
+    sf::Sprite spriteButtonOn, spriteButtonOff;
     bool lockClick;
     bool pressed;
-    sf::Vector2<float> buttonPosition, titlePosition;
+    sf::Vector2<float> buttonPosition;
     sf::Vector2<float> scale;
 
     std::function<void()> function;

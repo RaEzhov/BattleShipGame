@@ -1,44 +1,50 @@
 #include "screen_objects.h"
+#include <iostream>
 
 Button::Button(float x, float y, sf::Vector2<float> scale_, std::function<void()> funcRef, std::shared_ptr<sf::RenderWindow> window_,
-               const std::string &textTitle, const std::string &buttonOn, const std::string &buttonOff) :
-        ScreenObject(window_), function(std::move(funcRef)), scale(scale_), buttonPosition({x, y}), lockClick(false), pressed(false){
+               const std::string &text_, unsigned int textSize, sf::Color textColor_, const std::string &font, const std::string &buttonOn,
+               const std::string &buttonOff) : ScreenObject(window_), function(std::move(funcRef)), scale(scale_), buttonPosition({x, y}),
+               lockClick(false), pressed(false), textColor(textColor_) {
 
     // Loading sprites
-    textureTitle.loadFromFile(textTitle);
+    textFont.loadFromFile(std::string(RESOURCES_PATH) + font);
+    text.setFont(textFont);
+    text.setCharacterSize(textSize);
+    text.setFillColor(textColor);
+    text.setString(text_);
     textureButtonOn.loadFromFile(buttonOn);
     textureButtonOff.loadFromFile(buttonOff);
-    spriteTitle.setTexture(textureTitle, true);
     spriteButtonOn.setTexture(textureButtonOn, true);
     spriteButtonOff.setTexture(textureButtonOff, true);
 
 
     // Scaling button
-    spriteTitle.scale(BUTTON_SCALE * scale.x, BUTTON_SCALE * scale.y);
-    spriteButtonOn.scale(BUTTON_SCALE * scale.x, BUTTON_SCALE * scale.y);
-    spriteButtonOff.scale(BUTTON_SCALE * scale.x, BUTTON_SCALE * scale.y);
-
+    auto newScale = sf::Vector2<float>(BUTTON_SCALE * scale.x, BUTTON_SCALE * scale.y);
+    text.setScale(newScale);
+    spriteButtonOn.scale(newScale);
+    spriteButtonOff.scale(newScale);
 
     spriteButtonOn.setPosition(buttonPosition);
     spriteButtonOff.setPosition(buttonPosition);
-    spriteTitle.setPosition(buttonPosition.x + (float(textureButtonOn.getSize().x) * spriteButtonOn.getScale().x -
-                                                float(textureTitle.getSize().x) * spriteTitle.getScale().x) / 2,
-                            buttonPosition.y + (float(textureButtonOn.getSize().y) * spriteButtonOn.getScale().y -
-                                                float(textureTitle.getSize().y) * spriteTitle.getScale().y) / 2);
-    titlePosition = spriteTitle.getPosition();
+    auto centerPos = spriteButtonOn.getPosition();
+    centerPos.x += static_cast<float>(textureButtonOn.getSize().x) / 2.0f;
+    centerPos.y += static_cast<float>(textureButtonOn.getSize().y) / 2.0f;
+    text.setPosition(centerPos.x - text.getGlobalBounds().width / 2.0f, centerPos.y - text.getGlobalBounds().height / 2.0f);
+
+    textPosition = text.getPosition();
 }
 
 void Button::draw() {
     if (!pressed) {
-        spriteTitle.setColor(sf::Color::White);
-        spriteTitle.setPosition(titlePosition);
+        text.setFillColor(textColor);
+        text.setPosition(textPosition);
         window->draw(spriteButtonOn);
     } else {
-        spriteTitle.setColor(sf::Color(200, 200, 200));
-        spriteTitle.setPosition(titlePosition.x, titlePosition.y + 2 * BUTTON_SCALE * scale.y);
+        text.setFillColor(textColor - sf::Color(10, 10, 10, 10));
+        text.setPosition(textPosition.x, textPosition.y + 2 * BUTTON_SCALE * scale.y);
         window->draw(spriteButtonOff);
     }
-    window->draw(spriteTitle);
+    window->draw(text);
 }
 
 void Button::eventCheck(sf::Event &event){

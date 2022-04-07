@@ -1,8 +1,6 @@
 #ifndef BATTLE_SHIP_GAME_H
 #define BATTLE_SHIP_GAME_H
 
-
-
 #include "screen_objects.h"
 
 enum UserStatus{
@@ -22,6 +20,8 @@ public:
 
 private:
     void loadTextures();
+
+    void mainMenu();
 
     void loginFunc();
 
