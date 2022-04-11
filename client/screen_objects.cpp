@@ -26,11 +26,11 @@ Button::Button(float x, float y, sf::Vector2<float> scale_, std::function<void()
 
     spriteButtonOn.setPosition(buttonPosition);
     spriteButtonOff.setPosition(buttonPosition);
-    auto centerPos = spriteButtonOn.getPosition();
-    centerPos.x += static_cast<float>(textureButtonOn.getSize().x) / 2.0f;
-    centerPos.y += static_cast<float>(textureButtonOn.getSize().y) / 2.0f;
-    text.setPosition(centerPos.x - text.getGlobalBounds().width / 2.0f, centerPos.y - text.getGlobalBounds().height / 2.0f);
-
+    text.setPosition({spriteButtonOn.getPosition().x +
+                      (static_cast<float>(textureButtonOn.getSize().x) - text.getLocalBounds().width) * scale.x,
+                      spriteButtonOn.getPosition().y +
+                      (static_cast<float>(textureButtonOn.getSize().y) - text.getLocalBounds().height -
+                       static_cast<float>(text.getCharacterSize())) * scale.y});
     textPosition = text.getPosition();
 }
 
@@ -47,11 +47,8 @@ void Button::draw() {
     window->draw(text);
 }
 
-void Button::eventCheck(sf::Event &event){
-    if (sf::IntRect(static_cast<int>(spriteButtonOn.getPosition().x), static_cast<int>(spriteButtonOn.getPosition().y),
-                textureButtonOn.getSize().x * BUTTON_SCALE * scale.x,
-                textureButtonOn.getSize().y * BUTTON_SCALE * scale.y).contains(
-            sf::Mouse::getPosition(*window))) {
+void Button::eventCheck(sf::Event &event) {
+    if (spriteButtonOn.getGlobalBounds().contains(static_cast<sf::Vector2<float>>(sf::Mouse::getPosition(*window)))) {
         spriteButtonOn.setColor(sf::Color::White);
     } else {
         spriteButtonOn.setColor(sf::Color(225, 225, 225, 255));
@@ -59,10 +56,7 @@ void Button::eventCheck(sf::Event &event){
     }
     if (event.type == sf::Event::MouseButtonPressed) {
         if (event.mouseButton.button == sf::Mouse::Left && !lockClick) {
-            if (sf::IntRect(static_cast<int>(spriteButtonOn.getPosition().x), static_cast<int>(spriteButtonOn.getPosition().y),
-                        textureButtonOn.getSize().x * BUTTON_SCALE * scale.x,
-                        textureButtonOff.getSize().y * BUTTON_SCALE * scale.y).contains(
-                    sf::Mouse::getPosition(*window))) {
+            if (spriteButtonOn.getGlobalBounds().contains(static_cast<sf::Vector2<float>>(sf::Mouse::getPosition(*window)))) {
                 pressed = true;
             }
             lockClick = true;
@@ -70,10 +64,7 @@ void Button::eventCheck(sf::Event &event){
     }
     if (event.type == sf::Event::MouseButtonReleased) {
         if (event.mouseButton.button == sf::Mouse::Left) {
-            if (sf::IntRect(static_cast<int>(spriteButtonOn.getPosition().x), static_cast<int>(spriteButtonOn.getPosition().y),
-                        textureButtonOn.getSize().x * BUTTON_SCALE * scale.x,
-                        textureButtonOff.getSize().y * BUTTON_SCALE * scale.y).contains(
-                    sf::Mouse::getPosition(*window))) {
+            if (spriteButtonOn.getGlobalBounds().contains(static_cast<sf::Vector2<float>>(sf::Mouse::getPosition(*window)))) {
                 pressed = false;
                 if (function) {
                     function();
@@ -87,8 +78,8 @@ void Button::eventCheck(sf::Event &event){
 }
 
 Entry::Entry(sf::Vector2<float> position, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize = 24):
-        ScreenObject(window_), isActive(false), symbolsCount(21), input(""){
-    font.loadFromFile(std::string(RESOURCES_PATH) + "arialmt.ttf");
+        ScreenObject(window_), isActive(false), symbolsCount(21), input("") {
+    font.loadFromFile(std::string(RESOURCES_PATH) + "Upheavtt.ttf");
     text.setFont(font);
     text.setCharacterSize(fontSize);
     text.setFillColor(sf::Color::Black);
@@ -107,7 +98,7 @@ Entry::Entry(sf::Vector2<float> position, unsigned int size, std::shared_ptr<sf:
     cursor.setPosition(position);
 }
 
-void Entry::eventCheck(sf::Event &event)  {
+void Entry::eventCheck(sf::Event &event) {
     if (isActive) {
         if (event.type == sf::Event::TextEntered) {
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
@@ -119,13 +110,15 @@ void Entry::eventCheck(sf::Event &event)  {
                 }
             } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Tab)) {
                 input += ' ';
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) || sf::Keyboard::isKeyPressed(sf::Keyboard::Delete)) {
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) ||
+                       sf::Keyboard::isKeyPressed(sf::Keyboard::Delete)) {
 
             } else if (input.getSize() < symbolsCount) {
                 input += event.text.unicode;
             }
             text.setString(input);
-            cursor.setPosition(text.getPosition().x + static_cast<float>(text.getCharacterSize()), text.getPosition().y);
+            cursor.setPosition(text.getPosition().x + static_cast<float>(text.getCharacterSize()),
+                               text.getPosition().y);
         }
     }
 
@@ -133,7 +126,7 @@ void Entry::eventCheck(sf::Event &event)  {
 
         if (event.mouseButton.button == sf::Mouse::Left) {
             if (sf::IntRect(static_cast<int>(entry.getPosition().x), static_cast<int>(entry.getPosition().y),
-                        static_cast<int>(entry.getSize().x), static_cast<int>(entry.getSize().y)).contains(
+                            static_cast<int>(entry.getSize().x), static_cast<int>(entry.getSize().y)).contains(
                     sf::Mouse::getPosition(*window))) {
                 isActive = true;
                 entry.setFillColor(sf::Color(230, 218, 166, 255));

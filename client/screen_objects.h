@@ -2,6 +2,7 @@
 #define SCREENOBJECTS_H
 
 #include <memory>
+#include <unordered_map>
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
 
@@ -17,7 +18,7 @@ const unsigned int FRAMERATE = 30;
 
 class ScreenObject {
 public:
-    explicit ScreenObject(std::shared_ptr<sf::RenderWindow> &window_) : window(window_) {}
+    explicit ScreenObject(std::shared_ptr<sf::RenderWindow>& window_) : window(window_) {}
 
 protected:
     std::shared_ptr<sf::RenderWindow> window;
@@ -27,8 +28,7 @@ class Button : public ScreenObject {
 public:
     Button(float x, float y, sf::Vector2<float> scale_, std::function<void()> funcRef,
            std::shared_ptr<sf::RenderWindow> window_, const std::string &text_, unsigned int textSize, sf::Color textColor_,
-           const std::string &font = "Upheavtt.ttf",
-           const std::string &buttonOn = std::string(RESOURCES_PATH) + "button1.png",
+           const std::string &font = "Upheavtt.ttf", const std::string &buttonOn = std::string(RESOURCES_PATH) + "button1.png",
            const std::string &buttonOff = std::string(RESOURCES_PATH) + "button2.png");
 
     void draw();
@@ -74,9 +74,8 @@ private:
 
 class Title : public ScreenObject {
 public:
-    Title(const std::string& text_, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_,
-          const std::string& font_ = "arialmt.ttf",
-          int size = 24, sf::Color color_ = sf::Color::Black);
+    Title(const std::string &text_, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_,
+          const std::string &font_ = "arialmt.ttf", int size = 24, sf::Color color_ = sf::Color::Black);
 
     void setText(const std::string &newText) {
         text.setString(newText);
@@ -92,20 +91,21 @@ private:
 
 };
 
-class Picture : public ScreenObject{
+class Picture : public ScreenObject {
 public:
-    Picture(const std::string& fileName, sf::Vector2<float> position, sf::Vector2<float> scale_,
-            std::shared_ptr<sf::RenderWindow> window_):
-            ScreenObject(window_){
+    Picture(const std::string &fileName, sf::Vector2<float> position, sf::Vector2<float> scale_,
+            std::shared_ptr<sf::RenderWindow> window_) : ScreenObject(window_) {
         texture.loadFromFile(std::string(RESOURCES_PATH) + fileName);
         texture.setSmooth(false);
         sprite.setTexture(texture);
         sprite.setScale(scale_);
         sprite.setPosition(position);
     }
-    void draw(){
+
+    void draw() const {
         window->draw(sprite);
     }
+
 private:
     sf::Texture texture;
     sf::Sprite sprite;
