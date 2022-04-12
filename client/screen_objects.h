@@ -14,7 +14,7 @@ const char IP_ADDR[] = "localhost";
 
 const int PORT = 55555;
 
-const unsigned int FRAMERATE = 30;
+const unsigned int FRAMERATE = 60;
 
 class ScreenObject {
 public:
@@ -75,7 +75,7 @@ private:
 class Title : public ScreenObject {
 public:
     Title(const std::string &text_, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_,
-          const std::string &font_ = "arialmt.ttf", int size = 24, sf::Color color_ = sf::Color::Black);
+          const std::string &font_ = "Upheavtt.ttf", int size = 24, sf::Color color_ = sf::Color::Black);
 
     void setText(const std::string &newText) {
         text.setString(newText);

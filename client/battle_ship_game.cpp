@@ -6,6 +6,7 @@ const float BattleShipGame::WIDTH = 1920;
 const float BattleShipGame::HEIGHT = 1080;
 
 char GameField::shipSize = 0;
+float GameField::diffY = 0.f;
 
 template <char N>
 std::array<sf::Texture, 5> Ship<N>::alive;
@@ -15,7 +16,32 @@ template <char N>
 std::array<sf::Texture, 5> Ship<N>::destroyed;
 
 
-BattleShipGame::BattleShipGame() : server(std::make_unique<sf::TcpSocket>()), screen(sf::VideoMode::getDesktopMode()), status(LOGIN),
+ShipDirection& operator++(ShipDirection& other){
+    switch (other) {
+        case UP:
+            other = RIGHT;
+            break;
+        case RIGHT:
+            other = DOWN;
+            break;
+        case DOWN:
+            other = LEFT;
+            break;
+        case LEFT:
+            other = UP;
+            break;
+    }
+    return other;
+}
+
+const ShipDirection operator++(ShipDirection& other, int){
+    ShipDirection rVal = other;
+    ++other;
+    return rVal;
+}
+
+
+BattleShipGame::BattleShipGame() : server(std::make_unique<sf::TcpSocket>()), screen(sf::VideoMode::getDesktopMode()), status(IN_SP_MENU),
                                    window(std::make_shared<sf::RenderWindow>(sf::VideoMode::getDesktopMode(), "Battleship", sf::Style::Fullscreen)),
                                    screenScale(static_cast<float>(screen.width) / WIDTH, static_cast<float>(screen.height) / HEIGHT) {
     // Connection to server
@@ -87,7 +113,7 @@ void BattleShipGame::mainLoop() {
 
     DraggableAndDroppableShips ships(screenScale * 1.75f, screen, window);
 
-    GameField myField({100, 100}, {screenScale.x * 1.75f, screenScale.y * 1.75f}, GAME, window);
+    GameField myField({100, 100}, {screenScale.x * 1.75f, screenScale.y * 1.75f}, PLACEMENT, window);
 
     while (window->isOpen()) {
         while (window->pollEvent(event)) {
@@ -173,15 +199,17 @@ void BattleShipGame::multiPlayerFunc() {
 }
 
 
-DraggableAndDroppableShips::DraggableAndDroppableShips(const sf::Vector2<float> &scale, const sf::VideoMode &screen,
-                                                       std::shared_ptr<sf::RenderWindow> window_): ScreenObject(window_) {
-    for (int i = 1; i <= 4; i++) {
+DraggableAndDroppableShips::DraggableAndDroppableShips(const sf::Vector2<float> &scale_, const sf::VideoMode &screen,
+                                                       std::shared_ptr<sf::RenderWindow> window_): ScreenObject(window_), scale(scale_) {
+    float nextYPosition = 0;
+    for (char i = 1; i <= 4; i++) {
         tShip[i].loadFromFile(std::string(RESOURCES_PATH) + "Ship" + std::to_string(i) + "_a.png");
         sShip[i].setTexture(tShip[i]);
         sShip[i].setScale(scale);
         startPos[i] = sf::Vector2<float>(
                 static_cast<float>(screen.width) * 0.5f - sShip[i].getGlobalBounds().width / 2.0f,
-                static_cast<float>(screen.height) * 0.25f + (static_cast<float>(i) - 1.0f) * sShip[i].getGlobalBounds().height / 2.0f);
+                static_cast<float>(screen.height) * 0.1f + nextYPosition);
+        nextYPosition += sShip[i].getGlobalBounds().height;
         sShip[i].setPosition(startPos[i]);
         dragged[i] = false;
     }
@@ -195,10 +223,16 @@ void DraggableAndDroppableShips::draw() const {
 
 void DraggableAndDroppableShips::eventCheck(sf::Event& event) {
     for (char i = 1; i <= 4; i++) {
-        if (sf::IntRect(sShip[i].getGlobalBounds()).contains(sf::Mouse::getPosition(*window))) {
+        auto rect = sShip[i].getGlobalBounds();
+        rect.height -= 32 * scale.y;
+        rect.width -= 32 * scale.x;
+        rect.top += 16 * scale.y;
+        rect.left += 16 * scale.x;
+        if (sf::IntRect(rect).contains(sf::Mouse::getPosition(*window))) {
             if (event.type == sf::Event::MouseButtonPressed) {
                 dragged[i] = true;
                 GameField::shipSize = i;
+                GameField::diffY = static_cast<float>(sf::Mouse::getPosition(*window).y) - rect.top;
                 tempPos[i] = static_cast<sf::Vector2<float>>(sf::Mouse::getPosition(*window)) - sShip[i].getPosition();
             }
         }
@@ -217,7 +251,7 @@ void DraggableAndDroppableShips::eventCheck(sf::Event& event) {
 
 
 GameFieldCell::GameFieldCell(sf::Vector2<float> scale, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_):
-        ScreenObject(window_), underShip(false) {
+        ScreenObject(window_), availability(true) {
     cell.setSize({32, 32});
     cell.setScale(scale);
     cell.setFillColor(sf::Color(255, 255, 255, 0));
@@ -228,11 +262,458 @@ void GameFieldCell::setPosition(sf::Vector2<float> newPosition) {
     cell.setPosition(newPosition);
 }
 
-void GameFieldCell::eventCheck(sf::Event& event) {
-    if (sf::IntRect(cell.getGlobalBounds()).contains(sf::Mouse::getPosition(*window))) {
-        cell.setFillColor(sf::Color(255, 255, 255, 100));
-    } else {
-        cell.setFillColor(sf::Color(255, 255, 255, 0));
+void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField& parent,
+                               size_t i, size_t j, sf::Vector2<float> scale) {
+    auto mouse = sf::Mouse::getPosition(*window);
+    switch (state) {
+        case GAME:
+            if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                parent[i][j].setAlpha(100);
+            } else {
+                parent[i][j].setAlpha(0);
+            }
+            break;
+        case PLACEMENT:
+            switch (GameField::shipSize) {
+                case 1:
+                    if (event.type == sf::Event::MouseMoved || event.type == sf::Event::MouseButtonReleased) {
+                        if (GameField::diffY <= 32.f * scale.y) {
+                            if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                if (event.type == sf::Event::MouseButtonReleased) {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (parent.addShip(i, j, GameField::shipSize)) {
+
+                                        }
+                                        for (int j_ = 0; j_ <= 0; j_++) {
+                                            if (j + j_ >= 0 && j + j_ <= 9) {
+                                                parent[i][j + j_].setAlpha(0);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 0 && j <= 9 && parent[i][j].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    }
+                                }
+                            } else {
+                                parent[i][j].setAlpha(0);
+                            }
+                        }
+                    }
+                    break;
+                case 2:
+                    if (event.type == sf::Event::MouseMoved || event.type == sf::Event::MouseButtonReleased) {
+                        if (GameField::diffY <= 32.f * scale.y) {
+                            if ((sf::IntRect(cell.getGlobalBounds()).contains(mouse) ||
+                                 (j >= 1 && sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse)))) {
+                                if (event.type == sf::Event::MouseButtonReleased) {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (parent.addShip(i, j, GameField::shipSize)) {
+
+                                        }
+                                        for (int j_ = 0; j_ <= 1; j_++) {
+                                            if (j + j_ >= 0 && j + j_ <= 9) {
+                                                parent[i][j + j_].setAlpha(0);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 0 && j <= 8 && parent[i][j].isAvailable() && parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j >= 1 && sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 1 && j <= 9 && parent[i][j].isAvailable() && parent[i][j - 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    }
+                                }
+                            } else {
+                                parent[i][j].setAlpha(0);
+                            }
+                        } else {
+                            if ((sf::IntRect(cell.getGlobalBounds()).contains(mouse) ||
+                                 (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse)))) {
+                                if (event.type == sf::Event::MouseButtonReleased) {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (parent.addShip(i, j - 1, GameField::shipSize)) {
+
+                                        }
+                                        for (int j_ = -1; j_ <= 0; j_++) {
+                                            if (j + j_ >= 0 && j + j_ <= 9) {
+                                                parent[i][j + j_].setAlpha(0);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 1 && j <= 9 && parent[i][j].isAvailable() && parent[i][j - 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 0 && j <= 8 && parent[i][j].isAvailable() && parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    }
+                                }
+                            } else {
+                                parent[i][j].setAlpha(0);
+                            }
+                        }
+                    }
+                    break;
+                case 3:
+                    if (event.type == sf::Event::MouseMoved || event.type == sf::Event::MouseButtonReleased) {
+                        if (GameField::diffY <= 32.f * scale.y) {
+                            if ((sf::IntRect(cell.getGlobalBounds()).contains(mouse)) ||
+                                (j >= 1 && sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse)) ||
+                                (j >= 2 && sf::IntRect(parent[i][j - 2].cell.getGlobalBounds()).contains(mouse))) {
+                                if (event.type == sf::Event::MouseButtonReleased) {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (parent.addShip(i, j, GameField::shipSize)) {
+
+                                        }
+                                        for (int j_ = 0; j_ <= 2; j_++) {
+                                            if (j + j_ >= 0 && j + j_ <= 9) {
+                                                parent[i][j + j_].setAlpha(0);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (j >= 1 && sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 1 && j <= 8 && parent[i][j].isAvailable() && parent[i][j - 1].isAvailable() &&
+                                            parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j >= 2 && sf::IntRect(parent[i][j - 2].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 2 && j <= 9 && parent[i][j].isAvailable() && parent[i][j - 1].isAvailable() &&
+                                            parent[i][j - 2].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 0 && j <= 7 && parent[i][j].isAvailable() && parent[i][j + 2].isAvailable() &&
+                                            parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    }
+                                }
+                            } else {
+                                parent[i][j].setAlpha(0);
+                            }
+                        } else if (GameField::diffY > 32 * scale.y && GameField::diffY <= 64 * scale.y) {
+                            if ((sf::IntRect(cell.getGlobalBounds()).contains(mouse)) ||
+                                (j >= 1 && sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse)) ||
+                                (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse))) {
+                                if (event.type == sf::Event::MouseButtonReleased) {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (parent.addShip(i, j - 1, GameField::shipSize)) {
+
+                                        }
+                                        for (int j_ = -1; j_ <= 1; j_++) {
+                                            if (j + j_ >= 0 && j + j_ <= 9) {
+                                                parent[i][j + j_].setAlpha(0);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if ((sf::IntRect(cell.getGlobalBounds()).contains(mouse))) {
+                                        if (j >= 1 && j <= 8 && parent[i][j].isAvailable() && parent[i][j - 1].isAvailable() &&
+                                            parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j >= 1 && sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 2 && j <= 9 && parent[i][j].isAvailable() && parent[i][j - 1].isAvailable() &&
+                                            parent[i][j - 2].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 0 && j <= 7 && parent[i][j].isAvailable() && parent[i][j + 2].isAvailable() &&
+                                            parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    }
+                                }
+                            } else {
+                                parent[i][j].setAlpha(0);
+                            }
+                        } else {
+                            if ((sf::IntRect(cell.getGlobalBounds()).contains(mouse)) ||
+                                (j <= 7 && sf::IntRect(parent[i][j + 2].cell.getGlobalBounds()).contains(mouse)) ||
+                                (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse))) {
+                                if (event.type == sf::Event::MouseButtonReleased) {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (parent.addShip(i, j - 2, GameField::shipSize)) {
+
+                                        }
+                                        for (int j_ = -2; j_ <= 0; j_++) {
+                                            if (j + j_ >= 0 && j + j_ <= 9) {
+                                                parent[i][j + j_].setAlpha(0);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 1 && j <= 8 && parent[i][j].isAvailable() && parent[i][j - 1].isAvailable() &&
+                                            parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 2 && j <= 9 && parent[i][j].isAvailable() && parent[i][j - 1].isAvailable() &&
+                                            parent[i][j - 2].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j <= 7 && sf::IntRect(parent[i][j + 2].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 0 && j <= 7 && parent[i][j].isAvailable() && parent[i][j + 2].isAvailable() &&
+                                            parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    }
+                                }
+                            } else {
+                                parent[i][j].setAlpha(0);
+                            }
+                        }
+                    }
+                    break;
+                case 4:
+                    if (event.type == sf::Event::MouseMoved || event.type == sf::Event::MouseButtonReleased) {
+                        if (GameField::diffY <= 32.f * scale.y) {
+                            if ((sf::IntRect(cell.getGlobalBounds()).contains(mouse)) ||
+                                sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse) ||
+                                sf::IntRect(parent[i][j - 2].cell.getGlobalBounds()).contains(mouse) ||
+                                sf::IntRect(parent[i][j - 3].cell.getGlobalBounds()).contains(mouse)) {
+                                if (event.type == sf::Event::MouseButtonReleased) {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (parent.addShip(i, j, GameField::shipSize)) {
+
+                                        }
+                                        for (int j_ = 0; j_ <= 3; j_++) {
+                                            if (j + j_ >= 0 && j + j_ <= 9) {
+                                                parent[i][j + j_].setAlpha(0);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (sf::IntRect(parent[i][j].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 0 && j <= 6 && parent[i][j + 0].isAvailable() && parent[i][j + 1].isAvailable() &&
+                                            parent[i][j + 2].isAvailable() && parent[i][j + 3].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j >= 1 && sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 1 && j <= 7 && parent[i][j - 1].isAvailable() && parent[i][j + 0].isAvailable() &&
+                                            parent[i][j + 1].isAvailable() && parent[i][j + 2].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j >= 2 && sf::IntRect(parent[i][j - 2].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 2 && j <= 8 && parent[i][j - 2].isAvailable() && parent[i][j - 1].isAvailable() &&
+                                            parent[i][j + 0].isAvailable() && parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j >= 3 && sf::IntRect(parent[i][j - 3].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 3 && j <= 9 && parent[i][j - 3].isAvailable() && parent[i][j - 2].isAvailable() &&
+                                            parent[i][j - 1].isAvailable() && parent[i][j + 0].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    }
+                                }
+                            } else {
+                                parent[i][j].setAlpha(0);
+                            }
+                        } else if (GameField::diffY > 32.f * scale.y && GameField::diffY <= 64.f * scale.y) {
+                            if ((sf::IntRect(cell.getGlobalBounds()).contains(mouse)) ||
+                                sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse) ||
+                                sf::IntRect(parent[i][j - 2].cell.getGlobalBounds()).contains(mouse) ||
+                                sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse)) {
+                                if (event.type == sf::Event::MouseButtonReleased) {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (parent.addShip(i, j - 1, GameField::shipSize)) {
+
+                                        }
+                                        for (int j_ = -1; j_ <= 2; j_++) {
+                                            if (j + j_ >= 0 && j + j_ <= 9) {
+                                                parent[i][j + j_].setAlpha(0);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (sf::IntRect(parent[i][j].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 1 && j <= 7 && parent[i][j - 1].isAvailable() && parent[i][j + 0].isAvailable() &&
+                                            parent[i][j + 1].isAvailable() && parent[i][j + 2].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j >= 1 && sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 2 && j <= 8 && parent[i][j - 2].isAvailable() && parent[i][j - 1].isAvailable() &&
+                                            parent[i][j + 0].isAvailable() && parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j >= 2 && sf::IntRect(parent[i][j - 2].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 3 && j <= 9 && parent[i][j - 3].isAvailable() && parent[i][j - 2].isAvailable() &&
+                                            parent[i][j - 1].isAvailable() && parent[i][j + 0].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 0 && j <= 6 && parent[i][j + 0].isAvailable() && parent[i][j + 1].isAvailable() &&
+                                            parent[i][j + 2].isAvailable() && parent[i][j + 3].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    }
+                                }
+                            } else {
+                                parent[i][j].setAlpha(0);
+                            }
+                        } else if (GameField::diffY > 64.f * scale.y && GameField::diffY <= 96.f * scale.y) {
+                            if ((sf::IntRect(cell.getGlobalBounds()).contains(mouse)) ||
+                                sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse) ||
+                                sf::IntRect(parent[i][j + 2].cell.getGlobalBounds()).contains(mouse) ||
+                                sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse)) {
+                                if (event.type == sf::Event::MouseButtonReleased) {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (parent.addShip(i, j - 2, GameField::shipSize)) {
+
+                                        }
+                                        for (int j_ = -2; j_ <= 1; j_++) {
+                                            if (j + j_ >= 0 && j + j_ <= 9) {
+                                                parent[i][j + j_].setAlpha(0);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (sf::IntRect(parent[i][j].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 2 && j <= 8 && parent[i][j - 2].isAvailable() && parent[i][j - 1].isAvailable() &&
+                                            parent[i][j + 0].isAvailable() && parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j >= 1 && sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 3 && j <= 9 && parent[i][j - 3].isAvailable() && parent[i][j - 2].isAvailable() &&
+                                            parent[i][j - 1].isAvailable() && parent[i][j + 0].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j <= 7 && sf::IntRect(parent[i][j + 2].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 0 && j <= 6 && parent[i][j + 0].isAvailable() && parent[i][j + 1].isAvailable() &&
+                                            parent[i][j + 2].isAvailable() && parent[i][j + 3].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 1 && j <= 7 && parent[i][j - 1].isAvailable() && parent[i][j + 0].isAvailable() &&
+                                            parent[i][j + 1].isAvailable() && parent[i][j + 2].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    }
+                                }
+                            } else {
+                                parent[i][j].setAlpha(0);
+                            }
+                        } else {
+                            if ((sf::IntRect(cell.getGlobalBounds()).contains(mouse)) ||
+                                sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse) ||
+                                sf::IntRect(parent[i][j + 2].cell.getGlobalBounds()).contains(mouse) ||
+                                sf::IntRect(parent[i][j + 3].cell.getGlobalBounds()).contains(mouse)) {
+                                if (event.type == sf::Event::MouseButtonReleased) {
+                                    if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                                        if (parent.addShip(i, j - 3, GameField::shipSize)) {
+
+                                        }
+                                        for (int j_ = -3; j_ <= 0; j_++) {
+                                            if (j + j_ >= 0 && j + j_ <= 9) {
+                                                parent[i][j + j_].setAlpha(0);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (sf::IntRect(parent[i][j].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 3 && j <= 9 && parent[i][j - 3].isAvailable() && parent[i][j - 2].isAvailable() &&
+                                            parent[i][j - 1].isAvailable() && parent[i][j + 0].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j <= 6 && sf::IntRect(parent[i][j + 3].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 0 && j <= 6 && parent[i][j + 0].isAvailable() && parent[i][j + 1].isAvailable() &&
+                                            parent[i][j + 2].isAvailable() && parent[i][j + 3].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j <= 7 && sf::IntRect(parent[i][j + 2].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 1 && j <= 7 && parent[i][j - 1].isAvailable() && parent[i][j + 0].isAvailable() &&
+                                            parent[i][j + 1].isAvailable() && parent[i][j + 2].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    } else if (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse)) {
+                                        if (j >= 2 && j <= 8 && parent[i][j - 2].isAvailable() && parent[i][j - 1].isAvailable() &&
+                                            parent[i][j + 0].isAvailable() && parent[i][j + 1].isAvailable()) {
+                                            parent[i][j].setAlpha(100);
+                                        } else {
+                                            parent[i][j].cell.setFillColor(sf::Color(255, 0, 0, 100));
+                                        }
+                                    }
+                                }
+                            } else {
+                                parent[i][j].setAlpha(0);
+                            }
+                        }
+                    }
+                    break;
+            }
+            break;
+        case INACTIVE:
+            break;
     }
 }
 
@@ -241,15 +722,16 @@ void GameFieldCell::draw() const {
 }
 
 
-GameField::GameField(sf::Vector2<float> position, sf::Vector2<float> scale, GameFieldState state_, std::shared_ptr<sf::RenderWindow> window_) :
-        ScreenObject(window_), field("Field1.bmp", position, scale, window_), aliveCount(10), cells(10), state(state_) {
+GameField::GameField(sf::Vector2<float> position_, sf::Vector2<float> scale_, GameFieldState state_, std::shared_ptr<sf::RenderWindow> window_) :
+        ScreenObject(window_), field("Field1.bmp", position_, scale_, window_), aliveCount(10), cells(10), state(state_),
+        scale(scale_), position(position_){
     int row = 0, col = 0;
     const int rectSize = 32;
-    for (auto &i: cells) {
+    for (auto &item: cells) {
         col = 0;
         for (int j = 0; j < 10; j++) {
-            i.emplace_back(scale, position, window_);
-            i[j].setPosition({position.x + static_cast<float>(rectSize * row + row) * scale.x,
+            item.emplace_back(scale, position, window_);
+            item[j].setPosition({position.x + static_cast<float>(rectSize * row + row) * scale.x,
                               position.y + static_cast<float>(rectSize * col + col) * scale.y});
             col++;
         }
@@ -258,18 +740,10 @@ GameField::GameField(sf::Vector2<float> position, sf::Vector2<float> scale, Game
 }
 
 void GameField::eventCheck(sf::Event &event) {
-    switch (state) {
-        case INACTIVE:
-            break;
-        case GAME:
-            for (auto &i: cells) {
-                for (auto &c: i) {
-                    c.eventCheck(event);
-                }
-            }
-            break;
-        case PLACEMENT:
-            break;
+    for (size_t i = 0; i < cells.size(); i++){
+        for (size_t j = 0; j < cells[i].size(); j++) {
+            cells[i][j].eventCheck(event, state, *this, i, j, scale);
+        }
     }
 }
 
