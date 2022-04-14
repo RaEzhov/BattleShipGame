@@ -1,10 +1,18 @@
 #ifndef BATTLE_SHIP_GAME_H
 #define BATTLE_SHIP_GAME_H
 
+#include <list>
 #include <utility>
 #include <iostream>
 
 #include "screen_objects.h"
+
+
+class GameFieldCell;
+
+template <char N>
+class Ship;
+
 
 enum UserStatus {
     LOGIN = 1,
@@ -27,13 +35,18 @@ enum GameFieldState{
 };
 
 enum ShipDirection{
-    UP = 0,
-    RIGHT = 1,
-    DOWN = 2,
-    LEFT = 3
+    UP,
+    RIGHT,
+    DOWN,
+    LEFT
 };
 
-class GameField;
+enum ShipCheckStatus{
+    REMOVED,
+    ROTATED,
+    NONE
+};
+
 
 ShipDirection& operator++(ShipDirection& other);
 
@@ -57,6 +70,50 @@ private:
     sf::Vector2<float> scale;
 };
 
+
+class GameField: public ScreenObject {
+public:
+    GameField(sf::Vector2<float> position_, sf::Vector2<float> scale, GameFieldState state_,
+              std::shared_ptr<sf::RenderWindow> window_);
+
+    void eventCheck(sf::Event &event);
+
+    void draw() const;
+
+    bool addShip(char i, char j, char shipType);
+
+    void removeShip(std::pair<char, char> coords, char shipType);
+
+    template <char N>
+    void updateAvailability(Ship<N>& ship);
+
+    void clearAvailability();
+
+    std::vector<GameFieldCell>& operator[](size_t i);
+
+    /**Size of dragged ship for DraggableAndDroppableShip class*/
+    static char shipSize;
+
+    /**Difference between cursor and upper left ship corner on y-axis*/
+    static float diffY;
+
+private:
+    template<char N>
+    void drawShips(const std::list<Ship<N>> &ships) const;
+
+private:
+    Picture field;
+    std::list<Ship<1>> ship1;
+    std::list<Ship<2>> ship2;
+    std::list<Ship<3>> ship3;
+    std::list<Ship<4>> ship4;
+    unsigned char aliveCount;
+    sf::Vector2<float> scale, position;
+    GameFieldState state;
+
+    std::vector<std::vector<GameFieldCell>> cells;
+};
+
 class GameFieldCell : public ScreenObject {
 public:
     GameFieldCell(sf::Vector2<float> scale, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_);
@@ -64,21 +121,17 @@ public:
     void setPosition(sf::Vector2<float> newPosition);
 
     void eventCheck(sf::Event& event, GameFieldState state, GameField& parent,
-                    size_t i, size_t j, sf::Vector2<float> scale);
+                    char i, char j, sf::Vector2<float> scale);
 
     void draw() const;
 
-    void setAlpha(unsigned char alpha) {
-        cell.setFillColor(sf::Color(255, 255, 255, alpha));
-    }
+    void setAlpha(unsigned char alpha);
 
-    bool isAvailable() const{
-        return availability;
-    }
+    bool isAvailable() const;
 
-    void rmAvailability(){
-        availability = false;
-    }
+    void rmAvailability();
+
+    void addAvailability();
 
 private:
     sf::RectangleShape cell;
@@ -89,8 +142,9 @@ template <char N>
 class Ship : public ScreenObject {
     static_assert(N >= 1 and N <= 4);
 public:
-    Ship(sf::Vector2<float> scale, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_) :
-            ScreenObject(window_), sprite(alive[N]), state(ALIVE), aliveParts(N), direction(UP) {
+    Ship(sf::Vector2<float> scale, std::pair<char, char> coordinates, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_) :
+            ScreenObject(window_), sprite(alive[N]), state(ALIVE), aliveParts(N), direction(UP), coords(std::move(coordinates)) {
+        sprite.setOrigin(32.f, 32.f);
         sprite.setPosition(position);
         sprite.setScale(scale);
     }
@@ -99,8 +153,134 @@ public:
         window->draw(sprite);
     }
 
-    void changeDirection(){
+    static bool coordsValid(std::pair<char, char> coords){
+        return coords.first >= 0 && coords.first <= 9 && coords.second >= 0 && coords.second <= 9;
+    }
+
+    void changeDirection(std::vector<std::vector<GameFieldCell>>& cells){
+        sprite.rotate(90);
         direction++;
+    }
+
+    ShipDirection getDirection() const{
+        return direction;
+    }
+
+    const std::pair<char, char>& getCoords() const{
+        return coords;
+    }
+
+    /**Updates availability for this ship*/
+    void updateAvailability(std::vector<std::vector<GameFieldCell>>& cells, bool remove = true){
+        switch (direction) {
+            case UP:
+                for (char i = -1; i <= 1; i++){
+                    for (char j = -1; j <= N; j++){
+                        if (coordsValid({coords.first + i, coords.second + j})){
+                            if (remove) {
+                                cells[coords.first + i][coords.second + j].rmAvailability();
+                            } else {
+                                cells[coords.first + i][coords.second + j].addAvailability();
+                            }
+                        }
+                    }
+                }
+                break;
+            case RIGHT:
+                for (char i = -1; i <= 1; i++){
+                    for (char j = -1; j <= N; j++){
+                        if (coordsValid({coords.first - j, coords.second + i})){
+                            if (remove) {
+                                cells[coords.first - j][coords.second + i].rmAvailability();
+                            } else {
+                                cells[coords.first - j][coords.second + i].addAvailability();
+                            }
+                        }
+                    }
+                }
+                break;
+            case DOWN:
+                for (char i = -1; i <= 1; i++){
+                    for (char j = -1; j <= N; j++){
+                        if (coordsValid({coords.first + i, coords.second - j})){
+                            if (remove) {
+                                cells[coords.first + i][coords.second - j].rmAvailability();
+                            } else {
+                                cells[coords.first + i][coords.second - j].addAvailability();
+                            }
+                        }
+                    }
+                }
+                break;
+            case LEFT:
+                for (char i = -1; i <= 1; i++){
+                    for (char j = -1; j <= N; j++){
+                        if (coordsValid({coords.first + j, coords.second + i})){
+                            if (remove) {
+                                cells[coords.first + j][coords.second + i].rmAvailability();
+                            } else {
+                                cells[coords.first + j][coords.second + i].addAvailability();
+                            }
+                        }
+                    }
+                }
+                break;
+        }
+    }
+
+    ShipCheckStatus eventCheck(sf::Event& event, std::vector<std::vector<GameFieldCell>>& cells,
+                          std::function<void(Ship<N>& ship)> updateAllShipsAvailability, GameField& field) {
+        updateAvailability(cells, false);
+        updateAllShipsAvailability(*this);
+        auto rect = sprite.getGlobalBounds();
+        auto scale = sprite.getScale();
+        rect.width  -= 32.f * scale.x;
+        rect.height -= 32.f * scale.y;
+        rect.left   += 16.f * scale.x;
+        rect.top    += 16.f * scale.y;
+        auto mousePos = sf::Mouse::getPosition(*window);
+        if (sf::IntRect(rect).contains(mousePos)) {
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Right)){
+                field.removeShip(coords, N);
+                return REMOVED;
+            }
+            if (event.type == sf::Event::MouseButtonReleased) {
+                switch (direction) {
+                    case UP:
+                        for (char i = 0; i < N; i++) {
+                            if (coords.first - i < 0 || !cells[coords.first - i][coords.second].isAvailable()) {
+                                return NONE;
+                            }
+                        }
+                        break;
+                    case RIGHT:
+                        for (char i = 0; i < N; i++) {
+                            if (coords.second - i < 0 || !cells[coords.first][coords.second - i].isAvailable()) {
+                                return NONE;
+                            }
+                        }
+                        break;
+                    case DOWN:
+                        for (char i = 0; i < N; i++) {
+                            if (coords.first + i > 9 || !cells[coords.first + i][coords.second].isAvailable()) {
+                                return NONE;
+                            }
+                        }
+                        break;
+                    case LEFT:
+                        for (char i = 0; i < N; i++) {
+                            if (coords.second + i > 9 || !cells[coords.first][coords.second + i].isAvailable()) {
+                                return NONE;
+                            }
+                        }
+                        break;
+                }
+                changeDirection(cells);
+                return ROTATED;
+            }
+        }
+        updateAvailability(cells);
+        return NONE;
     }
 
     void shoot() {
@@ -127,125 +307,9 @@ private:
     ShipState state;
     unsigned char aliveParts;
     ShipDirection direction;
+    std::pair<char, char> coords;
 };
 
-class GameField: public ScreenObject {
-public:
-    GameField(sf::Vector2<float> position_, sf::Vector2<float> scale, GameFieldState state_,
-              std::shared_ptr<sf::RenderWindow> window_);
-
-    void eventCheck(sf::Event &event);
-
-    void draw() const;
-
-    bool addShip(size_t i, size_t j, char shipType) {
-        if (cells[i][j].isAvailable()) {
-            switch (shipType) {
-                case 1:
-                    if (cells[i][j].isAvailable()){
-                        ship1.emplace_back(scale, sf::Vector2<float>(position.x + (33.f * static_cast<float>(i) - 16.f) * scale.x,
-                                                                     position.y + (33.f * static_cast<float>(j) - 16.f) * scale.y),
-                                           window);
-                        for (int i_ = -1; i_ <= 1; i_++) {
-                            for (int j_ = -1; j_ <= 1; j_++) {
-                                if (i + i_ >= 0 && i + i_ <= 9 &&
-                                    j + j_ >= 0 && j + j_ <= 9) {
-                                    cells[i + i_][j + j_].rmAvailability();
-                                }
-                            }
-                        }
-                    } else {
-                        return false;
-                    }
-                    break;
-                case 2:
-                    if (j <= 8 && cells[i][j].isAvailable() && cells[i][j+1].isAvailable()){
-                        ship2.emplace_back(scale, sf::Vector2<float>(position.x + (33.f * static_cast<float>(i) - 16.f) * scale.x,
-                                                                     position.y + (33.f * static_cast<float>(j) - 16.f) * scale.y),
-                                           window);
-                        for (int i_ = -1; i_ <= 1; i_++) {
-                            for (int j_ = -1; j_ <= 2; j_++) {
-                                if (i + i_ >= 0 && i + i_ <= 9 &&
-                                    j + j_ >= 0 && j + j_ <= 9) {
-                                    cells[i + i_][j + j_].rmAvailability();
-                                }
-                            }
-                        }
-                    } else {
-                        return false;
-                    }
-                    break;
-                case 3:
-                    if (j <= 7 && cells[i][j].isAvailable() && cells[i][j+1].isAvailable() && cells[i][j+2].isAvailable()){
-                        ship3.emplace_back(scale, sf::Vector2<float>(position.x + (33.f * static_cast<float>(i) - 16.f) * scale.x,
-                                                                     position.y + (33.f * static_cast<float>(j) - 16.f) * scale.y),
-                                           window);
-                        for (int i_ = -1; i_ <= 1; i_++) {
-                            for (int j_ = -1; j_ <= 3; j_++) {
-                                if (i + i_ >= 0 && i + i_ <= 9 &&
-                                    j + j_ >= 0 && j + j_ <= 9) {
-                                    cells[i + i_][j + j_].rmAvailability();
-                                }
-                            }
-                        }
-                    } else {
-                        return false;
-                    }
-                    break;
-                case 4:
-                    if (j <= 6 && cells[i][j].isAvailable() && cells[i][j+1].isAvailable() && cells[i][j+2].isAvailable() && cells[i][j+3].isAvailable()){
-                        ship4.emplace_back(scale, sf::Vector2<float>(position.x + (33.f * static_cast<float>(i) - 16.f) * scale.x,
-                                                                     position.y + (33.f * static_cast<float>(j) - 16.f) * scale.y),
-                                           window);
-                        for (int i_ = -1; i_ <= 1; i_++) {
-                            for (int j_ = -1; j_ <= 4; j_++) {
-                                if (i + i_ >= 0 && i + i_ <= 9 &&
-                                    j + j_ >= 0 && j + j_ <= 9) {
-                                    cells[i + i_][j + j_].rmAvailability();
-                                }
-                            }
-                        }
-                    } else {
-                        return false;
-                    }
-                    break;
-                default:
-                    std::cerr << "Wrong ship type!\n";
-                    break;
-            }
-            return true;
-        }
-        return false;
-    }
-    std::vector<GameFieldCell>& operator[](size_t i){
-        if (i <= cells.size()) {
-            return cells[i];
-        }
-        throw std::runtime_error("Invalid index in GameField!\n");
-    }
-
-    /**Size of dragged ship for DraggableAndDroppableShip class*/
-    static char shipSize;
-
-    /**Difference between cursor and upper left ship corner on y-axis*/
-    static float diffY;
-
-private:
-    template<char N>
-    void drawShips(const std::vector<Ship<N>> &ships) const;
-
-private:
-    Picture field;
-    std::vector<Ship<1>> ship1;
-    std::vector<Ship<2>> ship2;
-    std::vector<Ship<3>> ship3;
-    std::vector<Ship<4>> ship4;
-    unsigned char aliveCount;
-    sf::Vector2<float> scale, position;
-    GameFieldState state;
-
-    std::vector<std::vector<GameFieldCell>> cells;
-};
 
 class BattleShipGame final {
 public:
