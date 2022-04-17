@@ -1,10 +1,40 @@
-#ifndef SCREENOBJECTS_H
-#define SCREENOBJECTS_H
+#ifndef SCREEN_OBJECTS_H
+#define SCREEN_OBJECTS_H
 
+#include <iostream>
+#include <random>
+#include <chrono>
+#include <list>
+#include <utility>
 #include <memory>
 #include <unordered_map>
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
+
+enum GameFieldState{
+    PLACEMENT,
+    INACTIVE,
+    GAME
+};
+
+enum ShipState {
+    ALIVE,
+    INJURED,
+    DESTROYED
+};
+
+enum ShipDirection{
+    UP,
+    RIGHT,
+    DOWN,
+    LEFT
+};
+
+enum ShipCheckStatus{
+    REMOVED,
+    ROTATED,
+    NONE
+};
 
 const char RESOURCES_PATH[] = "/home/roman/clionProjects/BattleShipGame/client/resources/";
 
@@ -75,7 +105,7 @@ private:
 class Title : public ScreenObject {
 public:
     Title(const std::string &text_, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_,
-          const std::string &font_ = "Upheavtt.ttf", int size = 24, sf::Color color_ = sf::Color::Black);
+          int size = 24, sf::Color color_ = sf::Color::Black, const std::string &font_ = "Upheavtt.ttf");
 
     void setText(const std::string &newText) {
         text.setString(newText);
@@ -111,4 +141,4 @@ private:
     sf::Sprite sprite;
 };
 
-#endif//SCREENOBJECTS_H
+#endif//SCREEN_OBJECTS_H

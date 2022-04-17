@@ -1,5 +1,4 @@
 #include "screen_objects.h"
-#include <iostream>
 
 Button::Button(float x, float y, sf::Vector2<float> scale_, std::function<void()> funcRef, std::shared_ptr<sf::RenderWindow> window_,
                const std::string &text_, unsigned int textSize, sf::Color textColor_, const std::string &font, const std::string &buttonOn,
@@ -149,8 +148,8 @@ void Entry::draw() {
     }
 }
 
-Title::Title(const std::string& text_, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_, const std::string& font_,int size,
-             sf::Color color_): ScreenObject(window_) {
+Title::Title(const std::string& text_, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_,int size,
+             sf::Color color_, const std::string& font_): ScreenObject(window_) {
     font.loadFromFile(std::string(RESOURCES_PATH) + font_);
     text.setString(text_);
     text.setPosition(position);
