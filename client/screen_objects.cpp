@@ -1,5 +1,7 @@
 #include "screen_objects.h"
 
+#include <utility>
+
 Button::Button(float x, float y, sf::Vector2<float> scale_, std::function<void()> funcRef, std::shared_ptr<sf::RenderWindow> window_,
                const std::string &text_, unsigned int textSize, sf::Color textColor_, const std::string &font, const std::string &buttonOn,
                const std::string &buttonOff) : ScreenObject(window_), function(std::move(funcRef)), scale(scale_), buttonPosition({x, y}),
@@ -76,8 +78,9 @@ void Button::eventCheck(sf::Event &event) {
     }
 }
 
-Entry::Entry(sf::Vector2<float> position, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize = 24):
-        ScreenObject(window_), isActive(false), symbolsCount(21), input("") {
+Entry::Entry(sf::Vector2<float> position, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize = 24,
+             bool isLogOrPass, std::function<void()> enterFunc): ScreenObject(window_), isActive(false), symbolsCount(21), input(""),
+             isLoginOrPassword(isLogOrPass), enterPressedFunc(std::move(enterFunc)) {
     font.loadFromFile(std::string(RESOURCES_PATH) + "Upheavtt.ttf");
     text.setFont(font);
     text.setCharacterSize(fontSize);
@@ -109,11 +112,19 @@ void Entry::eventCheck(sf::Event &event) {
                 }
             } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Tab)) {
                 input += ' ';
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) ||
-                       sf::Keyboard::isKeyPressed(sf::Keyboard::Delete)) {
-
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) && enterPressedFunc != nullptr) {
+                enterPressedFunc();
             } else if (input.getSize() < symbolsCount) {
-                input += event.text.unicode;
+                if (isLoginOrPassword) {
+                    if (availableLetters.find(static_cast<char>(event.text.unicode)) != std::string::npos) {
+                        input += event.text.unicode;
+                    }
+                } else {
+                    if (availableLetters.find(static_cast<char>(event.text.unicode)) != std::string::npos ||
+                        availableSymbols.find(static_cast<char>(event.text.unicode)) != std::string::npos) {
+                        input += event.text.unicode;
+                    }
+                }
             }
             text.setString(input);
             cursor.setPosition(text.getPosition().x + static_cast<float>(text.getCharacterSize()),

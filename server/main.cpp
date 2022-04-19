@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <SFML/Network.hpp>
 #include <memory>
+#include <csignal>
 
 #include "db_connection.h"
 
@@ -12,6 +13,8 @@ using namespace sf;
 const char IP_ADDR[] = "127.0.0.1";
 
 const int PORT = 55555;
+
+TcpListener listener;
 
 static std::unique_ptr<DBConnection> conn;
 
@@ -42,7 +45,12 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
     while (connected == Socket::Status::Done && !isAuth) {
         connected = (*user)->receive(packet);
         packet >> login >> password;
-        isAuth = conn->isPasswordCorrect(login, password);
+        if (login[0] != '@') {
+            isAuth = conn->isPasswordCorrect(login, password);
+        } else {
+            login.erase(login.cbegin());
+            isAuth = conn->isUserRegistered(login, password);
+        }
         packet.clear();
         packet << isAuth;
         (*user)->send(packet);
@@ -56,7 +64,15 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
     }
 }
 
+
+void signalCallbackHandler(int signum) {
+    listener.close();
+    std::cout << "Program terminated\n";
+    exit(signum);
+}
+
 int main() {
+    signal(SIGINT, signalCallbackHandler);
     try {
         conn = std::make_unique<DBConnection>();
         std::cout << "Database connected\n";
@@ -66,7 +82,6 @@ int main() {
         return 1;
     }
 
-    TcpListener listener;
     // bind the listener to a port
     if (listener.listen(PORT) != sf::Socket::Done) {
         std::cout << "Listen error!";
@@ -83,6 +98,4 @@ int main() {
         std::thread clientThread(authUser, --clients.end());
         clientThread.detach();
     }
-    listener.close();
-    return 0;
 }

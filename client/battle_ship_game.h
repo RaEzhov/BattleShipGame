@@ -27,6 +27,8 @@ private:
 
     void loginFunc();
 
+    void registerFunc();
+
     void singlePlayerFunc();
 
     void multiPlayerFunc();

@@ -82,7 +82,8 @@ private:
 
 class Entry : public ScreenObject {
 public:
-    Entry(sf::Vector2<float> position, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize);
+    Entry(sf::Vector2<float> position, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize,
+          bool isLogOrPass = true, std::function<void()> enterFunc = nullptr);
 
     void eventCheck(sf::Event &event);
 
@@ -93,6 +94,7 @@ public:
     }
 
 private:
+    bool isLoginOrPassword;
     sf::String input;
     sf::Text text, cursor;
     sf::Font font;
@@ -100,6 +102,9 @@ private:
     bool isActive;
     int symbolsCount;
     sf::Clock clock;
+    const std::string availableLetters = {"abcdefghijklmnopqrstuvwxyz0123456789"};
+    const std::string availableSymbols = {",.?!- +=*/@#$&()'\\|~`"};
+    std::function<void()> enterPressedFunc;
 };
 
 class Title : public ScreenObject {

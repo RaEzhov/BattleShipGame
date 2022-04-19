@@ -60,13 +60,19 @@ void BattleShipGame::loadTextures() {
                                                nullptr, window, "exit", 40, beige);
 
     buttons["login"] = std::make_unique<Button>(float(screen.width) * 0.22f, float(screen.height) * 0.6f, screenScale * 0.5f,
-                                                [this] { loginFunc(); }, window, "login", 40, sf::Color(213, 190, 164));
+                                                [this] { loginFunc(); }, window, "sign in", 40, beige);
 
-    entries["login"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.2f, float(screen.height) * 0.4f}, 12,
+    entries["login"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.2f, float(screen.height) * 0.37f}, 12,
                                                window, 24);
 
-    entries["password"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.2f, float(screen.height) * 0.5f},
-                                                  12, window, 24);
+    entries["password"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.2f, float(screen.height) * 0.47f},
+                                                  12, window, 24, true, [this] { loginFunc(); });
+
+    buttons["register"] = std::make_unique<Button>(float(screen.width) * 0.22f, float(screen.height) * 0.7f, screenScale * 0.5f,
+                                                   [this] { registerFunc(); }, window, "sign up", 40, beige);
+
+    pictures["loginTable"] = std::make_unique<Picture>("loginTable.png", sf::Vector2<float>{screen.width * 0.16f, 0},
+                                                       screenScale * 3.6f, window);
 
     buttons["single"] = std::make_unique<Button>(static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.15f,
                                                  screenScale, [this] { singlePlayerFunc(); }, window, "singleplayer", 25, beige);
@@ -81,11 +87,11 @@ void BattleShipGame::loadTextures() {
 
     titles["login"] = std::make_unique<Title>(std::string("Login:"),
                                               sf::Vector2<float>{static_cast<float>(screen.width) * 0.2f + 10.0f,
-                                                                 static_cast<float>(screen.height) * 0.4f - 30.0f},
+                                                                 static_cast<float>(screen.height) * 0.37f - 30.0f},
                                               window);
     titles["password"] = std::make_unique<Title>(std::string("Password:"),
                                                  sf::Vector2<float>{static_cast<float>(screen.width) * 0.2f + 10.0f,
-                                                                    static_cast<float>(screen.height) * 0.5f - 30.0f},
+                                                                    static_cast<float>(screen.height) * 0.47f - 30.0f},
                                                  window);
     buttons["mainMenu"] = std::make_unique<Button>(float(screen.width) * 0.05f, float(screen.height) * 0.85f, screenScale,
                                                    [this] { mainMenu(); }, window, "back", 40, beige);
@@ -149,6 +155,7 @@ void BattleShipGame::mainLoop() {
                     entries["password"]->eventCheck(event);
                     buttons["login"]->eventCheck(event);
                     buttons["exit"]->eventCheck(event);
+                    buttons["register"]->eventCheck(event);
                     break;
                 case MAIN_MENU:
                     buttons["single"]->eventCheck(event);
@@ -176,12 +183,14 @@ void BattleShipGame::mainLoop() {
         switch (status) {
             case LOGIN:
                 pictures["background"]->draw();
+                pictures["loginTable"]->draw();
                 pictures["battleShipText"]->draw();
                 entries["login"]->draw();
                 titles["login"]->draw();
                 entries["password"]->draw();
                 titles["password"]->draw();
                 buttons["login"]->draw();
+                buttons["register"]->draw();
                 buttons["exit"]->draw();
                 break;
             case MAIN_MENU:
@@ -234,6 +243,21 @@ void BattleShipGame::mainLoop() {
 
 void BattleShipGame::loginFunc() {
     auto login = entries["login"]->getStr();
+    auto password = entries["password"]->getStr();
+    sf::Packet packet;
+    packet << login << password;
+    server->send(packet);
+    packet.clear();
+    bool authDone;
+    server->receive(packet);
+    packet >> authDone;
+    if (authDone) {
+        mainMenu();
+    }
+}
+
+void BattleShipGame::registerFunc(){
+    auto login = '@' + entries["login"]->getStr();
     auto password = entries["password"]->getStr();
     sf::Packet packet;
     packet << login << password;
