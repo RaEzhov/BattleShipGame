@@ -17,7 +17,7 @@ DraggableAndDroppableShips::DraggableAndDroppableShips(const sf::Vector2<float> 
         sShip[i].setScale(scale);
         startPos[i] = sf::Vector2<float>(
                 static_cast<float>(screen.width) * 0.5f - sShip[i].getGlobalBounds().width / 2.0f - 50.f,
-                static_cast<float>(screen.height) * 0.1f + nextYPosition);
+                static_cast<float>(screen.height) * 0.15f + nextYPosition);
         nextYPosition += sShip[i].getGlobalBounds().height;
         sShip[i].setPosition(startPos[i]);
     }
@@ -59,8 +59,9 @@ void DraggableAndDroppableShips::eventCheck(sf::Event& event) {
 
 
 GameField::GameField(sf::Vector2<float> position_, sf::Vector2<float> scale_, GameFieldState state_, std::shared_ptr<sf::RenderWindow> window_) :
-        ScreenObject(window_), field("Field1.bmp", position_, scale_, window_), aliveCount(10), cells(10), state(state_),
-        scale(scale_), position(position_){
+        ScreenObject(window_), field("Field1.bmp", position_, scale_, window_),
+        border("fieldLetters.png", sf::Vector2<float>(position_.x - 32* scale_.x, position_.y - 32 * scale_.y), scale_, window_),
+        aliveCount(10), cells(10), state(state_), scale(scale_), position(position_){
     int row = 0, col = 0;
     const int rectSize = 32;
     for (auto &item: cells) {
@@ -147,7 +148,6 @@ void GameField::eventCheck(sf::Event &event) {
                 s.updateAvailability(cells);
             }
 
-
             for (char i = 0; i < cells.size(); i++){
                 for (char j = 0; j < cells[i].size(); j++) {
                     cells[i][j].eventCheck(event, state, *this, i, j, scale);
@@ -155,6 +155,11 @@ void GameField::eventCheck(sf::Event &event) {
             }
             break;
         case GAME:
+            for (char i = 0; i < cells.size(); i++){
+                for (char j = 0; j < cells[i].size(); j++) {
+                    cells[i][j].eventCheck(event, state, *this, i, j, scale);
+                }
+            }
             break;
     }
 
@@ -162,10 +167,20 @@ void GameField::eventCheck(sf::Event &event) {
 
 void GameField::draw() const {
     field.draw();
-    drawShips(ship1);
-    drawShips(ship2);
-    drawShips(ship3);
-    drawShips(ship4);
+    border.draw();
+    switch (state) {
+        case INACTIVE:
+            break;
+        case GAME:
+            break;
+        case PLACEMENT:
+            drawShips(ship1);
+            drawShips(ship2);
+            drawShips(ship3);
+            drawShips(ship4);
+            break;
+    }
+
     for (auto &i: cells) {
         for (auto &c: i) {
             c.draw();
@@ -274,10 +289,36 @@ void GameField::clearShips() {
 
 void GameField::placeShipsRand() {
     clearShips();
+    clearAvailability();
     std::mt19937 engine;
-    engine.seed(0);
-    for (char i = 1; i <= 4; i++){
-
+    engine.seed(std::time(nullptr));
+    for (char size = 1; size <= 4; size++){
+        for (char i = 0; i <= 4 - size; i++){
+            if (!addShip(static_cast<char>(engine() % 10), static_cast<char>(engine() % 10), size)){
+                for (char i_ = 0; i_ < 10; i_++){
+                    for (char j_ = 0; j_ < 10; j_++){
+                        if (addShip(i_, j_, size)){
+                            i_ = 10;
+                            j_ = 10;
+                        }
+                    }
+                }
+            }
+            switch (size) {
+                case 1:
+                    (--(ship1.end()))->updateAvailability(cells);
+                    break;
+                case 2:
+                    (--(ship2.end()))->updateAvailability(cells);
+                    break;
+                case 3:
+                    (--(ship3.end()))->updateAvailability(cells);
+                    break;
+                case 4:
+                    (--(ship4.end()))->updateAvailability(cells);
+                    break;
+            }
+        }
     }
 }
 

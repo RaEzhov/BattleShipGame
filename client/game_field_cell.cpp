@@ -19,10 +19,16 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
     auto mouse = sf::Mouse::getPosition(*window);
     switch (state) {
         case GAME:
-            if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
-                parent[i][j].setAlpha(100);
-            } else {
-                parent[i][j].setAlpha(0);
+            if (availability) {
+                if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
+                    setAlpha(100);
+                    if (event.type == sf::Event::MouseButtonReleased) {
+                        availability = false;
+
+                    }
+                } else {
+                    setAlpha(0);
+                }
             }
             break;
         case PLACEMENT:

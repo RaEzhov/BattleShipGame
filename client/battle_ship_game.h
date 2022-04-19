@@ -5,13 +5,13 @@
 #include "game_field.h"
 
 enum UserStatus {
-    LOGIN = 1,
-    MAIN_MENU = 2,
-    GET = 3,
-    IN_SP_MENU = 4,
-    IN_SP_GAME = 5,
-    IN_MP_MENU = 6,
-    IN_MP_GAME = 7
+    LOGIN,
+    MAIN_MENU,
+    GET,
+    IN_SP_MENU,
+    IN_SP_GAME,
+    IN_MP_MENU,
+    IN_MP_GAME
 };
 
 class BattleShipGame final {

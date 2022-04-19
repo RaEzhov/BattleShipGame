@@ -59,7 +59,7 @@ private:
     void drawShips(const std::list<Ship<N>> &ships) const;
 
 private:
-    Picture field;
+    Picture field, border;
     std::list<Ship<1>> ship1;
     std::list<Ship<2>> ship2;
     std::list<Ship<3>> ship3;
