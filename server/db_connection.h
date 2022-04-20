@@ -24,6 +24,8 @@ public:
     /**Insert new user*/
     bool isUserRegistered(const std::string &login, const std::string &password);
 
+    std::pair<unsigned int, unsigned int> getUserIdRating(const std::string &login);
+
 private:
     std::unique_ptr<pqxx::connection> conn;
     std::unique_ptr<pqxx::work> w;

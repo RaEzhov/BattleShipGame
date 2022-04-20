@@ -50,3 +50,14 @@ bool DBConnection::isUserRegistered(const std::string &login, const std::string 
     m.unlock();
     return false;
 }
+
+std::pair<unsigned int, unsigned int> DBConnection::getUserIdRating(const std::string &login) {
+    sf::Mutex m;
+    m.lock();
+    auto idRating = w->exec("SELECT id, rating FROM users WHERE users.login = '" + login + "';");
+    m.unlock();
+    if (idRating.empty() || idRating[0].empty()) {
+        return {0, 0};
+    }
+    return {idRating[0][0].as<unsigned int>(), idRating[0][1].as<unsigned int>()};
+}

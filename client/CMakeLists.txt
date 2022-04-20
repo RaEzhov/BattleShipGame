@@ -3,7 +3,7 @@ project(BattleShipClient)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(BattleShipClient main.cpp screen_objects.cpp battle_ship_game.cpp game_field.cpp game_field_cell.cpp)
+add_executable(BattleShipClient main.cpp screen_objects.cpp battle_ship_game.cpp game_field.cpp game_field_cell.cpp user.cpp user.h)
 
 find_package(SFML COMPONENTS system window graphics audio network REQUIRED)
 

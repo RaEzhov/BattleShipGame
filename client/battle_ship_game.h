@@ -3,16 +3,7 @@
 
 #include "screen_objects.h"
 #include "game_field.h"
-
-enum UserStatus {
-    LOGIN,
-    MAIN_MENU,
-    GET,
-    IN_SP_MENU,
-    IN_SP_GAME,
-    IN_MP_MENU,
-    IN_MP_GAME
-};
+#include "user.h"
 
 class BattleShipGame final {
 public:
@@ -50,7 +41,7 @@ private:
     sf::Texture cursorTex;
     sf::Sprite cursor;
 
-    UserStatus status;
+    User user;
 
     static const float WIDTH, HEIGHT;
 };

@@ -58,6 +58,11 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
     }
     if (connected == Socket::Status::Done) {
         std::cout << "Client " << userIp << ":" << userPort<< " has authenticated!\n";
+        auto idRating = conn->getUserIdRating(login);
+        std::cout << idRating.first << idRating.second << '\n';
+        packet.clear();
+        packet << idRating.first << idRating.second;
+        (*user)->send(packet);
         clientLoop(user);
     } else {
         std::cout << "Client " << userIp << ":" << userPort << " disconnected!\n";

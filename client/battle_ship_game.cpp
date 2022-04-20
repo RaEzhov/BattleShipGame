@@ -28,7 +28,7 @@ const ShipDirection operator++(ShipDirection& other, int){
 }
 
 
-BattleShipGame::BattleShipGame(): server(std::make_unique<sf::TcpSocket>()), screen(sf::VideoMode::getDesktopMode()), status(LOGIN),
+BattleShipGame::BattleShipGame(): server(std::make_unique<sf::TcpSocket>()), screen(sf::VideoMode::getDesktopMode()),
                                    window(std::make_shared<sf::RenderWindow>(sf::VideoMode::getDesktopMode(), "Battleship", sf::Style::Fullscreen)),
                                    screenScale(static_cast<float>(screen.width) / WIDTH, static_cast<float>(screen.height) / HEIGHT) {
     // Connection to server
@@ -59,24 +59,24 @@ void BattleShipGame::loadTextures() {
     buttons["exit"] = std::make_unique<Button>(float(screen.width) * 0.05f, float(screen.height) * 0.85f, screenScale,
                                                nullptr, window, "exit", 40, beige);
 
-    buttons["login"] = std::make_unique<Button>(float(screen.width) * 0.22f, float(screen.height) * 0.6f, screenScale * 0.5f,
+    buttons["login"] = std::make_unique<Button>(float(screen.width) * 0.085f, float(screen.height) * 0.6f, screenScale * 0.7f,
                                                 [this] { loginFunc(); }, window, "sign in", 40, beige);
 
-    entries["login"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.2f, float(screen.height) * 0.37f}, 12,
+    entries["login"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.08f, float(screen.height) * 0.37f}, 12,
                                                window, 24);
 
-    entries["password"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.2f, float(screen.height) * 0.47f},
+    entries["password"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.08f, float(screen.height) * 0.47f},
                                                   12, window, 24, true, [this] { loginFunc(); });
 
-    buttons["register"] = std::make_unique<Button>(float(screen.width) * 0.22f, float(screen.height) * 0.7f, screenScale * 0.5f,
+    buttons["register"] = std::make_unique<Button>(float(screen.width) * 0.085f, float(screen.height) * 0.7f, screenScale * 0.7f,
                                                    [this] { registerFunc(); }, window, "sign up", 40, beige);
 
-    pictures["loginTable"] = std::make_unique<Picture>("loginTable.png", sf::Vector2<float>{screen.width * 0.16f, 0},
+    pictures["loginTable"] = std::make_unique<Picture>("loginTable.png", sf::Vector2<float>{screen.width * 0.04f, 0},
                                                        screenScale * 3.6f, window);
 
-    buttons["single"] = std::make_unique<Button>(static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.15f,
+    buttons["single"] = std::make_unique<Button>(static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.25f,
                                                  screenScale, [this] { singlePlayerFunc(); }, window, "singleplayer", 25, beige);
-    buttons["multi"] = std::make_unique<Button>(static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.35f,
+    buttons["multi"] = std::make_unique<Button>(static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.45f,
                                                 screenScale, [this] { multiPlayerFunc(); }, window, "multiplayer", 25, beige);
     pictures["background"] = std::make_unique<Picture>("mainMenu.jpg",
                                                        sf::Vector2<float>{0, 0}, screenScale, window);
@@ -86,11 +86,11 @@ void BattleShipGame::loadTextures() {
                                                            screenScale, window);
 
     titles["login"] = std::make_unique<Title>(std::string("Login:"),
-                                              sf::Vector2<float>{static_cast<float>(screen.width) * 0.2f + 10.0f,
+                                              sf::Vector2<float>{static_cast<float>(screen.width) * 0.08f + 10.0f,
                                                                  static_cast<float>(screen.height) * 0.37f - 30.0f},
                                               window);
     titles["password"] = std::make_unique<Title>(std::string("Password:"),
-                                                 sf::Vector2<float>{static_cast<float>(screen.width) * 0.2f + 10.0f,
+                                                 sf::Vector2<float>{static_cast<float>(screen.width) * 0.08f + 10.0f,
                                                                     static_cast<float>(screen.height) * 0.47f - 30.0f},
                                                  window);
     buttons["mainMenu"] = std::make_unique<Button>(float(screen.width) * 0.05f, float(screen.height) * 0.85f, screenScale,
@@ -126,16 +126,16 @@ void BattleShipGame::loadTextures() {
                                                     INACTIVE, window);
     dragDropShips["placement"] = std::make_unique<DraggableAndDroppableShips>(screenScale * 1.75f, screen, window);
     pictures["gameBackground"] = std::make_unique<Picture>("gameMenu.jpg", sf::Vector2<float>{0, 0}, screenScale, window);
-    titles["myName"] = std::make_unique<Title>("roman", sf::Vector2<float>{static_cast<float>(screen.width) * 0.02f,
+    titles["myName"] = std::make_unique<Title>(user.login, sf::Vector2<float>{static_cast<float>(screen.width) * 0.02f,
                                                                            static_cast<float>(screen.height) * 0.03f},
                                                window, 80, sf::Color::White);
-    titles["myLevel"] = std::make_unique<Title>("level: ", sf::Vector2<float>{static_cast<float>(screen.width) * 0.02f,
+    titles["myLevel"] = std::make_unique<Title>(user.getRatingStr(), sf::Vector2<float>{static_cast<float>(screen.width) * 0.02f,
                                                                            static_cast<float>(screen.height) * 0.1f},
                                                window, 40, sf::Color::White);
     titles["enemyName"] = std::make_unique<Title>("computer", sf::Vector2<float>{static_cast<float>(screen.width) * 0.75f,
                                                                            static_cast<float>(screen.height) * 0.03f},
                                                window, 80, sf::Color::White);
-    titles["enemyLevel"] = std::make_unique<Title>("level: ", sf::Vector2<float>{static_cast<float>(screen.width) * 0.9f,
+    titles["enemyLevel"] = std::make_unique<Title>("level: -", sf::Vector2<float>{static_cast<float>(screen.width) * 0.9f,
                                                                                  static_cast<float>(screen.height) * 0.1f},
                                                   window, 40, sf::Color::White);
 
@@ -149,7 +149,7 @@ void BattleShipGame::mainLoop() {
             if (event.type == sf::Event::Closed) {
                 window->close();
             }
-            switch (status) {
+            switch (user.status) {
                 case LOGIN:
                     entries["login"]->eventCheck(event);
                     entries["password"]->eventCheck(event);
@@ -180,7 +180,7 @@ void BattleShipGame::mainLoop() {
             }
         }
 
-        switch (status) {
+        switch (user.status) {
             case LOGIN:
                 pictures["background"]->draw();
                 pictures["loginTable"]->draw();
@@ -195,6 +195,8 @@ void BattleShipGame::mainLoop() {
                 break;
             case MAIN_MENU:
                 pictures["background"]->draw();
+                titles["myName"]->draw();
+                titles["myLevel"]->draw();
                 pictures["battleShipText"]->draw();
                 buttons["single"]->draw();
                 buttons["multi"]->draw();
@@ -228,6 +230,8 @@ void BattleShipGame::mainLoop() {
                 break;
             case IN_SP_GAME:
                 pictures["gameBackground"]->draw();
+                titles["myName"]->draw();
+                titles["myLevel"]->draw();
                 buttons["mainMenu"]->draw();
                 fields["myField"]->draw();
                 fields["enemyField"]->draw();
@@ -252,6 +256,11 @@ void BattleShipGame::loginFunc() {
     server->receive(packet);
     packet >> authDone;
     if (authDone) {
+        packet.clear();
+        server->receive(packet);
+        std::pair<unsigned int, unsigned int> idRating;
+        packet >> idRating.first >> idRating.second;
+        user.init(login, idRating.first, idRating.second);
         mainMenu();
     }
 }
@@ -267,16 +276,32 @@ void BattleShipGame::registerFunc(){
     server->receive(packet);
     packet >> authDone;
     if (authDone) {
+        packet.clear();
+        server->receive(packet);
+        std::pair<unsigned int, unsigned int> idRating;
+        packet >> idRating.first >> idRating.second;
+        user.init(login, idRating.first, idRating.second);
         mainMenu();
     }
 }
 
 void BattleShipGame::mainMenu(){
-    status = MAIN_MENU;
+    titles["myName"]->setText(user.login);
+    titles["myName"]->setColor(sf::Color::Black);
+    //sf::Color(123, 113, 180) - purple
+    titles["myLevel"]->setText(user.getRatingStr());
+    titles["myLevel"]->setColor(sf::Color::Black);
+    user.status = MAIN_MENU;
 }
 
 void BattleShipGame::singlePlayerFunc() {
-    status = IN_SP_MENU;
+    user.status = IN_SP_MENU;
+    titles["myName"]->setColor(sf::Color::White);
+    titles["myLevel"]->setColor(sf::Color::White);
+    titles["enemyName"]->setPosition(sf::Vector2<float>{static_cast<float>(screen.width) * 0.98f - titles["enemyName"]->getSize().width,
+                                                            static_cast<float>(screen.height) * 0.03f});
+    titles["enemyLevel"]->setPosition(sf::Vector2<float>{static_cast<float>(screen.width) * 0.98f - titles["enemyLevel"]->getSize().width,
+                                                         static_cast<float>(screen.height) * 0.1f});
     fields["myField"]->setState(PLACEMENT);
     fields["enemyField"]->setState(INACTIVE);
     fields["myField"]->clearShips();
@@ -289,7 +314,7 @@ void BattleShipGame::multiPlayerFunc() {
 
 void BattleShipGame::startBattle(bool singlePlayer){
     if (Ship<1>::aliveShips == 4 && Ship<2>::aliveShips == 3 && Ship<3>::aliveShips == 2 && Ship<4>::aliveShips == 1) {
-        status = (singlePlayer ? IN_SP_GAME : IN_MP_GAME);
+        user.status = (singlePlayer ? IN_SP_GAME : IN_MP_GAME);
         if (singlePlayer) {
             fields["enemyField"]->placeShipsRand();
             fields["myField"]->setState(INACTIVE);

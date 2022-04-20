@@ -116,6 +116,19 @@ public:
         text.setString(newText);
     }
 
+    void setColor(sf::Color clr){
+        text.setFillColor(clr);
+        text.setOutlineColor(sf::Color::White);
+    }
+
+    auto getSize() const{
+        return text.getGlobalBounds();
+    }
+
+    void setPosition(sf::Vector2<float> pos){
+        text.setPosition(pos);
+    }
+
     void draw() {
         window->draw(text);
     }
