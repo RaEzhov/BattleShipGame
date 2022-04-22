@@ -57,7 +57,7 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
         packet.clear();
     }
     if (connected == Socket::Status::Done) {
-        std::cout << "Client " << userIp << ":" << userPort<< " has authenticated!\n";
+        std::cout << "Client " << userIp << ":" << userPort << " has authenticated!\n";
         auto idRating = conn->getUserIdRating(login);
         packet.clear();
         packet << idRating.first << idRating.second;

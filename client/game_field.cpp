@@ -1,9 +1,5 @@
 #include "game_field.h"
 
-#include <utility>
-#include "game_field_cell.h"
-#include "ship.h"
-
 
 char GameField::shipSize = 0;
 float GameField::diffY = 0.f;
@@ -11,7 +7,7 @@ float GameField::diffY = 0.f;
 
 DraggableAndDroppableShips::DraggableAndDroppableShips(const sf::Vector2<float> &scale_, const sf::VideoMode &screen,
                                                        std::shared_ptr<sf::RenderWindow> window_): ScreenObject(window_), scale(scale_),
-                                                                                                   dragged({false}){
+                                                                                                   dragged({false}) {
     float nextYPosition = 0;
     for (char i = 1; i <= 4; i++) {
         tShip[i].loadFromFile(std::string(RESOURCES_PATH) + "Ship" + std::to_string(i) + "_a.png");
@@ -64,7 +60,7 @@ GameField::GameField(sf::Vector2<float> position_, sf::Vector2<float> scale_, Ga
                      std::shared_ptr<sf::RenderWindow> window_, std::function<void()> changeSide_):
         ScreenObject(window_), field("Field1.bmp", position_, scale_, window_), changeSide(std::move(changeSide_)),
         border("fieldLetters.png", sf::Vector2<float>(position_.x - 32 * scale_.x, position_.y - 32 * scale_.y), scale_, window_),
-        aliveCount(10), cells(10), state(state_), scale(scale_), position(position_){
+        aliveCount(10), cells(10), state(state_), scale(scale_), position(position_) {
     int row = 0, col = 0;
     const int rectSize = 32;
     for (auto &item: cells) {
@@ -81,27 +77,26 @@ GameField::GameField(sf::Vector2<float> position_, sf::Vector2<float> scale_, Ga
 
 template <char N>
 void GameField::updateAvailability(Ship<N> &ship) {
-    for (auto& s: ship1){
-        if (s.getCoords() != ship.getCoords()){
+    for (auto &s: ship1) {
+        if (s.getCoords() != ship.getCoords()) {
             s.updateAvailability(cells);
         }
     }
-    for (auto& s: ship2){
-        if (s.getCoords() != ship.getCoords()){
+    for (auto &s: ship2) {
+        if (s.getCoords() != ship.getCoords()) {
             s.updateAvailability(cells);
         }
     }
-    for (auto& s: ship3){
-        if (s.getCoords() != ship.getCoords()){
+    for (auto &s: ship3) {
+        if (s.getCoords() != ship.getCoords()) {
             s.updateAvailability(cells);
         }
     }
-    for (auto& s: ship4){
-        if (s.getCoords() != ship.getCoords()){
+    for (auto &s: ship4) {
+        if (s.getCoords() != ship.getCoords()) {
             s.updateAvailability(cells);
         }
     }
-
 }
 
 void GameField::clearAvailability(bool onlyAvailability) {
@@ -122,53 +117,52 @@ void GameField::eventCheck(sf::Event &event) {
         case PLACEMENT:
             clearAvailability();
 
-            for (auto& s: ship1){
-                if (s.eventCheck(event, cells, [this](Ship<1>& ship) { updateAvailability(ship);},
-                                 [this](std::pair<char, char> coords, char shipSize){ removeShip(coords, shipSize);}) == REMOVED) {
+            for (auto &s: ship1) {
+                if (s.eventCheck(event, cells, [this](Ship<1> &ship) { updateAvailability(ship); },
+                                 [this](std::pair<char, char> coords, char shipSize) { removeShip(coords, shipSize); }) == REMOVED) {
                     return;
                 }
                 s.updateAvailability(cells);
             }
 
-            for (auto& s: ship2){
-                if (s.eventCheck(event, cells, [this](Ship<2>& ship) { updateAvailability(ship);},
-                                 [this](std::pair<char, char> coords, char shipSize){ removeShip(coords, shipSize);}) == REMOVED) {
+            for (auto &s: ship2) {
+                if (s.eventCheck(event, cells, [this](Ship<2> &ship) { updateAvailability(ship); },
+                                 [this](std::pair<char, char> coords, char shipSize) { removeShip(coords, shipSize); }) == REMOVED) {
                     return;
                 }
                 s.updateAvailability(cells);
             }
 
-            for (auto& s: ship3){
-                if (s.eventCheck(event, cells, [this](Ship<3>& ship) { updateAvailability(ship);},
-                                 [this](std::pair<char, char> coords, char shipSize){ removeShip(coords, shipSize);}) == REMOVED) {
+            for (auto &s: ship3) {
+                if (s.eventCheck(event, cells, [this](Ship<3> &ship) { updateAvailability(ship); },
+                                 [this](std::pair<char, char> coords, char shipSize) { removeShip(coords, shipSize); }) == REMOVED) {
                     return;
                 }
                 s.updateAvailability(cells);
             }
 
-            for (auto& s: ship4){
-                if (s.eventCheck(event, cells, [this](Ship<4>& ship) { updateAvailability(ship);},
-                                 [this](std::pair<char, char> coords, char shipSize){ removeShip(coords, shipSize);}) == REMOVED) {
+            for (auto &s: ship4) {
+                if (s.eventCheck(event, cells, [this](Ship<4> &ship) { updateAvailability(ship); },
+                                 [this](std::pair<char, char> coords, char shipSize) { removeShip(coords, shipSize); }) == REMOVED) {
                     return;
                 }
                 s.updateAvailability(cells);
             }
 
-            for (char i = 0; i < cells.size(); i++){
+            for (char i = 0; i < cells.size(); i++) {
                 for (char j = 0; j < cells[i].size(); j++) {
                     cells[i][j].eventCheck(event, state, *this, i, j, scale);
                 }
             }
             break;
         case GAME:
-            for (char i = 0; i < cells.size(); i++){
+            for (char i = 0; i < cells.size(); i++) {
                 for (char j = 0; j < cells[i].size(); j++) {
                     cells[i][j].eventCheck(event, state, *this, i, j, scale);
                 }
             }
             break;
     }
-
 }
 
 void GameField::draw() const {
@@ -216,28 +210,29 @@ bool GameField::addShip(char i, char j, char shipType) {
                                               position.y + (33.f * static_cast<float>(j) + 16.f) * scale.y);
         switch (shipType) {
             case 1:
-                if (cells[i][j].isAvailable()){
+                if (cells[i][j].isAvailable()) {
                     ship1.emplace_back(scale, std::pair{i, j}, newPosition, window);
                 } else {
                     return false;
                 }
                 break;
             case 2:
-                if (j <= 8 && cells[i][j].isAvailable() && cells[i][j+1].isAvailable()){
+                if (j <= 8 && cells[i][j].isAvailable() && cells[i][j + 1].isAvailable()) {
                     ship2.emplace_back(scale, std::pair{i, j}, newPosition, window);
                 } else {
                     return false;
                 }
                 break;
             case 3:
-                if (j <= 7 && cells[i][j].isAvailable() && cells[i][j+1].isAvailable() && cells[i][j+2].isAvailable()){
+                if (j <= 7 && cells[i][j].isAvailable() && cells[i][j + 1].isAvailable() && cells[i][j + 2].isAvailable()) {
                     ship3.emplace_back(scale, std::pair{i, j}, newPosition, window);
                 } else {
                     return false;
                 }
                 break;
             case 4:
-                if (j <= 6 && cells[i][j].isAvailable() && cells[i][j+1].isAvailable() && cells[i][j+2].isAvailable() && cells[i][j+3].isAvailable()){
+                if (j <= 6 && cells[i][j].isAvailable() && cells[i][j + 1].isAvailable() && cells[i][j + 2].isAvailable() &&
+                    cells[i][j + 3].isAvailable()) {
                     ship4.emplace_back(scale, std::pair{i, j}, newPosition, window);
                 } else {
                     return false;
@@ -259,32 +254,32 @@ void GameField::setState(GameFieldState newState) {
 void GameField::removeShip(std::pair<char, char> coords, char shipType) {
     switch (shipType) {
         case 1:
-            for (auto it = ship1.begin(); it != ship1.end(); it++){
-                if (it->getCoords().first == coords.first && it->getCoords().second == coords.second){
+            for (auto it = ship1.begin(); it != ship1.end(); it++) {
+                if (it->getCoords().first == coords.first && it->getCoords().second == coords.second) {
                     ship1.erase(it);
                     return;
                 }
             }
             break;
         case 2:
-            for (auto it = ship2.begin(); it != ship2.end(); it++){
-                if (it->getCoords().first == coords.first && it->getCoords().second == coords.second){
+            for (auto it = ship2.begin(); it != ship2.end(); it++) {
+                if (it->getCoords().first == coords.first && it->getCoords().second == coords.second) {
                     ship2.erase(it);
                     return;
                 }
             }
             break;
         case 3:
-            for (auto it = ship3.begin(); it != ship3.end(); it++){
-                if (it->getCoords().first == coords.first && it->getCoords().second == coords.second){
+            for (auto it = ship3.begin(); it != ship3.end(); it++) {
+                if (it->getCoords().first == coords.first && it->getCoords().second == coords.second) {
                     ship3.erase(it);
                     return;
                 }
             }
             break;
         case 4:
-            for (auto it = ship4.begin(); it != ship4.end(); it++){
-                if (it->getCoords().first == coords.first && it->getCoords().second == coords.second){
+            for (auto it = ship4.begin(); it != ship4.end(); it++) {
+                if (it->getCoords().first == coords.first && it->getCoords().second == coords.second) {
                     ship4.erase(it);
                     return;
                 }
@@ -307,12 +302,12 @@ void GameField::placeShipsRand() {
     clearAvailability();
     std::mt19937 engine;
     engine.seed(std::time(nullptr));
-    for (char size = 1; size <= 4; size++){
-        for (char i = 0; i <= 4 - size; i++){
-            if (!addShip(static_cast<char>(engine() % 10), static_cast<char>(engine() % 10), size)){
-                for (char i_ = 0; i_ < 10; i_++){
-                    for (char j_ = 0; j_ < 10; j_++){
-                        if (addShip(i_, j_, size)){
+    for (char size = 1; size <= 4; size++) {
+        for (char i = 0; i <= 4 - size; i++) {
+            if (!addShip(static_cast<char>(engine() % 10), static_cast<char>(engine() % 10), size)) {
+                for (char i_ = 0; i_ < 10; i_++) {
+                    for (char j_ = 0; j_ < 10; j_++) {
+                        if (addShip(i_, j_, size)) {
                             i_ = 10;
                             j_ = 10;
                         }
@@ -337,9 +332,80 @@ void GameField::placeShipsRand() {
     }
 }
 
-std::vector<GameFieldCell>& GameField::operator[](size_t i){
+std::vector<GameFieldCell>& GameField::operator[](size_t i) {
     if (i <= cells.size()) {
         return cells[i];
     }
     throw std::runtime_error("Invalid index in GameField!\n");
+}
+
+void GameField::selfMove() {
+    sf::sleep(sf::seconds(0.1f));
+    char i = 0, j = 0;
+    for (auto &v: cells) {
+        for (auto &c: v) {
+            if (c.isAvailable()) {
+                c.shoot();
+                if (c.underShip) {
+                    findShip(std::pair<char, char>(i, j));
+                }
+                changeSide();
+                return;
+            }
+            j++;
+        }
+        i++;
+        j = 0;
+    }
+}
+
+template<char N>
+void GameField::shoot(std::pair<char, char> coords, Ship<N> &ship) {
+    for (int i = 0; i < N; i++) {
+        switch (ship.getDirection()) {
+            case UP:
+                if (coords.first == ship.getCoords().first &&
+                    coords.second == ship.getCoords().second + i) {
+                    ship.shoot();
+                    return;
+                }
+                break;
+            case RIGHT:
+                if (coords.first == ship.getCoords().first - i &&
+                    coords.second == ship.getCoords().second) {
+                    ship.shoot();
+                    return;
+                }
+                break;
+            case DOWN:
+                if (coords.first == ship.getCoords().first &&
+                    coords.second == ship.getCoords().second - i) {
+                    ship.shoot();
+                    return;
+                }
+                break;
+            case LEFT:
+                if (coords.first == ship.getCoords().first + i &&
+                    coords.second == ship.getCoords().second + i) {
+                    ship.shoot();
+                    return;
+                }
+                break;
+        }
+    }
+}
+
+void GameField::findShip(std::pair<char, char> coords) {
+    for (auto &s: ship1) {
+        shoot(coords, s);
+    }
+    for (auto &s: ship2) {
+        shoot(coords, s);
+    }
+    for (auto &s: ship3) {
+        shoot(coords, s);
+    }
+    for (auto &s: ship4) {
+        shoot(coords, s);
+    }
 }

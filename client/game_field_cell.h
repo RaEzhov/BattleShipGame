@@ -13,7 +13,7 @@ public:
 
     void setPosition(sf::Vector2<float> newPosition);
 
-    void eventCheck(sf::Event& event, GameFieldState state, GameField& parent,
+    void eventCheck(sf::Event &event, GameFieldState state, GameField &parent,
                     char i, char j, sf::Vector2<float> scale);
 
     void shoot();

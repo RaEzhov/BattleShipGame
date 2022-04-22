@@ -34,7 +34,7 @@ bool DBConnection::isPasswordCorrect(const std::string &login, const std::string
 }
 
 bool DBConnection::isUserRegistered(const std::string &login, const std::string &password) {
-    if (login.size() < 4 || password.size() < 4){
+    if (login.size() < 4 || password.size() < 4) {
         return false;
     }
     sf::Mutex m;
@@ -42,7 +42,7 @@ bool DBConnection::isUserRegistered(const std::string &login, const std::string 
     auto countUsers =
             w->exec1("SELECT count(users.login) FROM users WHERE login = '" + login + "';");
     auto maxId = (w->exec1("SELECT max(id) FROM users;"))[0].as<int>();
-    if (countUsers[0].as<int>() == 0){
+    if (countUsers[0].as<int>() == 0) {
         w->exec("INSERT INTO users VALUES ('" + login + "', '" + password + "', " + std::to_string(maxId + 1) + ", 0);");
         m.unlock();
         return true;
@@ -61,3 +61,9 @@ std::pair<unsigned int, unsigned int> DBConnection::getUserIdRating(const std::s
     }
     return {idRating[0][0].as<unsigned int>(), idRating[0][1].as<unsigned int>()};
 }
+
+DBConnection::~DBConnection() {
+    w->commit();
+}
+
+DBConnection::DBConnection() : conn(std::make_unique<pqxx::connection>(CONN_STR)), w(std::make_unique<pqxx::work>(*conn)){}

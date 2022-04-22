@@ -476,14 +476,6 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
             }
             break;
         case INACTIVE:
-            //TODO
-            /*if (!availability){
-                if (underShip){
-                    cell.setFillColor(sf::Color(255, 0, 0, 100));
-                } else {
-                    cell.setFillColor(sf::Color(50, 50, 50, 100));
-                }
-            }*/
             break;
     }
 }
@@ -496,21 +488,21 @@ void GameFieldCell::setAlpha(unsigned char alpha) {
     cell.setFillColor(sf::Color(255, 255, 255, alpha));
 }
 
-bool GameFieldCell::isAvailable() const{
+bool GameFieldCell::isAvailable() const {
     return availability;
 }
 
-void GameFieldCell::rmAvailability(){
+void GameFieldCell::rmAvailability() {
     availability = false;
 }
 
-void GameFieldCell::addAvailability(){
+void GameFieldCell::addAvailability() {
     availability = true;
 }
 
 void GameFieldCell::shoot() {
     rmAvailability();
-    if (underShip){
+    if (underShip) {
         cell.setFillColor(sf::Color(255, 0, 0, 100));
     } else {
         cell.setFillColor(sf::Color(50, 50, 50, 100));

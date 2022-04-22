@@ -49,7 +49,7 @@ const unsigned int FRAMERATE = 60;
 
 class ScreenObject {
 public:
-    explicit ScreenObject(std::shared_ptr<sf::RenderWindow>& window_) : window(window_) {}
+    explicit ScreenObject(std::shared_ptr<sf::RenderWindow> &window_) : window(window_) {}
 
 protected:
     std::shared_ptr<sf::RenderWindow> window;
@@ -90,9 +90,7 @@ public:
 
     void draw();
 
-    std::string getStr() {
-        return text.getString();
-    }
+    std::string getStr();
 
 private:
     bool isLoginOrPassword;
@@ -113,26 +111,15 @@ public:
     Title(const std::string &text_, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_,
           int size = 24, sf::Color color_ = sf::Color::Black, const std::string &font_ = "Upheavtt.ttf");
 
-    void setText(const std::string &newText) {
-        text.setString(newText);
-    }
+    void setText(const std::string &newText);
 
-    void setColor(sf::Color clr){
-        text.setFillColor(clr);
-        text.setOutlineColor(sf::Color::White);
-    }
+    void setColor(sf::Color clr);
 
-    auto getSize() const{
-        return text.getGlobalBounds();
-    }
+    sf::FloatRect getSize() const;
 
-    void setPosition(sf::Vector2<float> pos){
-        text.setPosition(pos);
-    }
+    void setPosition(sf::Vector2<float> pos);
 
-    void draw() {
-        window->draw(text);
-    }
+    void draw();
 
 private:
     sf::Text text;
@@ -143,17 +130,9 @@ private:
 class Picture : public ScreenObject {
 public:
     Picture(const std::string &fileName, sf::Vector2<float> position, sf::Vector2<float> scale_,
-            std::shared_ptr<sf::RenderWindow> window_) : ScreenObject(window_) {
-        texture.loadFromFile(std::string(RESOURCES_PATH) + fileName);
-        texture.setSmooth(false);
-        sprite.setTexture(texture);
-        sprite.setScale(scale_);
-        sprite.setPosition(position);
-    }
+            std::shared_ptr<sf::RenderWindow> window_);
 
-    void draw() const {
-        window->draw(sprite);
-    }
+    void draw() const;
 
 private:
     sf::Texture texture;

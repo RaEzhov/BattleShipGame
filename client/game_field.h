@@ -41,83 +41,19 @@ public:
 
     void clearShips();
 
-    void selfMove(){
-        sf::sleep(sf::seconds(0.1f));
-        char i = 0, j = 0;
-        for (auto& v: cells){
-            for (auto& c: v){
-                if (c.isAvailable()){
-                    c.shoot();
-                    if (c.underShip) {
-                        findShip(std::pair<char, char>(i, j));
-                    }
-                    changeSide();
-                    return;
-                }
-                j++;
-            }
-            i++;
-            j = 0;
-        }
-    }
+    void selfMove();
 
     template<char N>
-    void shoot(std::pair<char, char> coords, Ship<N>& ship) {
-        for (int i = 0; i < N; i++) {
-            switch (ship.getDirection()) {
-                case UP:
-                    if (coords.first == ship.getCoords().first &&
-                        coords.second == ship.getCoords().second + i){
-                        ship.shoot();
-                        return;
-                    }
-                    break;
-                case RIGHT:
-                    if (coords.first == ship.getCoords().first - i &&
-                        coords.second == ship.getCoords().second){
-                        ship.shoot();
-                        return;
-                    }
-                    break;
-                case DOWN:
-                    if (coords.first == ship.getCoords().first &&
-                        coords.second == ship.getCoords().second - i){
-                        ship.shoot();
-                        return;
-                    }
-                    break;
-                case LEFT:
-                    if (coords.first == ship.getCoords().first + i &&
-                        coords.second == ship.getCoords().second + i){
-                        ship.shoot();
-                        return;
-                    }
-                    break;
-            }
-        }
-    }
+    void shoot(std::pair<char, char> coords, Ship<N> &ship);
 
-    void findShip(std::pair<char, char> coords) {
-        for (auto& s: ship1){
-            shoot(coords, s);
-        }
-        for (auto& s: ship2){
-            shoot(coords, s);
-        }
-        for (auto& s: ship3){
-            shoot(coords, s);
-        }
-        for (auto& s: ship4){
-            shoot(coords, s);
-        }
-    }
+    void findShip(std::pair<char, char> coords);
 
-    template <char N>
-    void updateAvailability(Ship<N>& ship);
+    template<char N>
+    void updateAvailability(Ship<N> &ship);
 
     void clearAvailability(bool onlyAvailability = false);
 
-    std::vector<GameFieldCell>& operator[](size_t i);
+    std::vector<GameFieldCell> &operator[](size_t i);
 
     /**Size of dragged ship for DraggableAndDroppableShip class*/
     static char shipSize;

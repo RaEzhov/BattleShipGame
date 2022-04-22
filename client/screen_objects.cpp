@@ -1,7 +1,5 @@
 #include "screen_objects.h"
 
-#include <utility>
-
 Button::Button(float x, float y, sf::Vector2<float> scale_, std::function<void()> funcRef, std::shared_ptr<sf::RenderWindow> window_,
                const std::string &text_, unsigned int textSize, sf::Color textColor_, const std::string &font, const std::string &buttonOn,
                const std::string &buttonOff) : ScreenObject(window_), function(std::move(funcRef)), scale(scale_), buttonPosition({x, y}),
@@ -159,6 +157,10 @@ void Entry::draw() {
     }
 }
 
+std::string Entry::getStr() {
+    return text.getString();
+}
+
 Title::Title(const std::string& text_, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_,int size,
              sf::Color color_, const std::string& font_): ScreenObject(window_) {
     font.loadFromFile(std::string(RESOURCES_PATH) + font_);
@@ -167,4 +169,38 @@ Title::Title(const std::string& text_, sf::Vector2<float> position, std::shared_
     text.setFont(font);
     text.setFillColor(color_);
     text.setCharacterSize(size);
+}
+
+void Title::setText(const std::string &newText) {
+    text.setString(newText);
+}
+
+void Title::setColor(sf::Color clr) {
+    text.setFillColor(clr);
+    text.setOutlineColor(sf::Color::White);
+}
+
+sf::FloatRect Title::getSize() const {
+    return text.getGlobalBounds();
+}
+
+void Title::setPosition(sf::Vector2<float> pos) {
+    text.setPosition(pos);
+}
+
+void Title::draw() {
+    window->draw(text);
+}
+
+Picture::Picture(const std::string &fileName, sf::Vector2<float> position, sf::Vector2<float> scale_,
+                 std::shared_ptr<sf::RenderWindow> window_): ScreenObject(window_) {
+    texture.loadFromFile(std::string(RESOURCES_PATH) + fileName);
+    texture.setSmooth(false);
+    sprite.setTexture(texture);
+    sprite.setScale(scale_);
+    sprite.setPosition(position);
+}
+
+void Picture::draw() const {
+    window->draw(sprite);
 }

@@ -26,9 +26,7 @@ private:
 
     void startBattle(bool);
 
-    void changeSide(){
-        user.myMove = !user.myMove;
-    }
+    void changeSide();
 
 private:
     std::unique_ptr<sf::TcpSocket> server;

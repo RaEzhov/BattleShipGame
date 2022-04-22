@@ -21,18 +21,11 @@ public:
 
     void draw() const;
 
-    void changeDirection(std::vector<std::vector<GameFieldCell>>& cells){
-        sprite.rotate(90);
-        direction++;
-    }
+    void changeDirection(std::vector<std::vector<GameFieldCell>>& cells);
 
-    ShipDirection getDirection() const{
-        return direction;
-    }
+    ShipDirection getDirection() const;
 
-    std::pair<char, char> getCoords() const{
-        return coords;
-    }
+    std::pair<char, char> getCoords() const;
 
     /**Updates availability for this ship*/
     void updateAvailability(std::vector<std::vector<GameFieldCell>>& cells, bool remove = true);
@@ -41,21 +34,9 @@ public:
                                std::function<void(Ship<N>& ship)> updateAllShipsAvailability,
                                std::function<void(std::pair<char, char> coords, char shipSize)> removeShip);
 
-    void shoot() {
-        if (state != DESTROYED) {
-            if (--aliveParts != 0) {
-                sprite.setTexture(injured);
-            } else {
-                sprite.setTexture(destroyed);
-            }
-        } else {
-            std::cerr << "Ship" << N << " already destroyed!\n";
-        }
-    }
+    void shoot();
 
-    bool isAlive() const{
-        return aliveParts > 0;
-    }
+    bool isAlive() const;
 
     static bool coordsValid(std::pair<char, char> coords){
         return coords.first >= 0 && coords.first <= 9 && coords.second >= 0 && coords.second <= 9;
@@ -226,5 +207,38 @@ ShipCheckStatus Ship<N>::eventCheck(sf::Event& event, std::vector<std::vector<Ga
     return NONE;
 }
 
+template<char N>
+void Ship<N>::changeDirection(std::vector<std::vector<GameFieldCell>> &cells) {
+    sprite.rotate(90);
+    direction++;
+}
+
+template<char N>
+ShipDirection Ship<N>::getDirection() const {
+    return direction;
+}
+
+template<char N>
+std::pair<char, char> Ship<N>::getCoords() const {
+    return coords;
+}
+
+template<char N>
+void Ship<N>::shoot() {
+    if (state != DESTROYED) {
+        if (--aliveParts != 0) {
+            sprite.setTexture(injured);
+        } else {
+            sprite.setTexture(destroyed);
+        }
+    } else {
+        std::cerr << "Ship" << N << " already destroyed!\n";
+    }
+}
+
+template<char N>
+bool Ship<N>::isAlive() const {
+    return aliveParts > 0;
+}
 
 #endif//SHIP_H

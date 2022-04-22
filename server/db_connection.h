@@ -8,9 +8,9 @@
 
 class DBConnection {
 public:
-    DBConnection() : conn(std::make_unique<pqxx::connection>(CONN_STR)), w(std::make_unique<pqxx::work>(*conn)){}
+    DBConnection();
 
-    ~DBConnection() { w->commit(); }
+    ~DBConnection();
 
     /** Inserts new user to table users.\n Login and password must already be checked for correctness */
     void insertNewUser(const std::string &login, const std::string &password);
