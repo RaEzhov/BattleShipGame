@@ -30,7 +30,7 @@ public:
         return direction;
     }
 
-    const std::pair<char, char>& getCoords() const{
+    std::pair<char, char> getCoords() const{
         return coords;
     }
 
@@ -51,6 +51,10 @@ public:
         } else {
             std::cerr << "Ship" << N << " already destroyed!\n";
         }
+    }
+
+    bool isAlive() const{
+        return aliveParts > 0;
     }
 
     static bool coordsValid(std::pair<char, char> coords){
@@ -102,11 +106,14 @@ void Ship<N>::updateAvailability(std::vector<std::vector<GameFieldCell>> &cells,
         case UP:
             for (char i = -1; i <= 1; i++){
                 for (char j = -1; j <= N; j++){
-                    if (coordsValid({coords.first + i, coords.second + j})){
+                    if (coordsValid({coords.first + i, coords.second + j})) {
                         if (remove) {
                             cells[coords.first + i][coords.second + j].rmAvailability();
                         } else {
                             cells[coords.first + i][coords.second + j].addAvailability();
+                        }
+                        if (i == 0 && j >= 0 && j <= N - 1) {
+                            cells[coords.first + i][coords.second + j].setUnderShip(remove);
                         }
                     }
                 }
@@ -114,12 +121,15 @@ void Ship<N>::updateAvailability(std::vector<std::vector<GameFieldCell>> &cells,
             break;
         case RIGHT:
             for (char i = -1; i <= 1; i++){
-                for (char j = -1; j <= N; j++){
-                    if (coordsValid({coords.first - j, coords.second + i})){
+                for (char j = -1; j <= N; j++) {
+                    if (coordsValid({coords.first - j, coords.second + i})) {
                         if (remove) {
                             cells[coords.first - j][coords.second + i].rmAvailability();
                         } else {
                             cells[coords.first - j][coords.second + i].addAvailability();
+                        }
+                        if (i == 0 && j >= 0 && j <= N - 1) {
+                            cells[coords.first - j][coords.second + i].setUnderShip(remove);
                         }
                     }
                 }
@@ -127,25 +137,31 @@ void Ship<N>::updateAvailability(std::vector<std::vector<GameFieldCell>> &cells,
             break;
         case DOWN:
             for (char i = -1; i <= 1; i++){
-                for (char j = -1; j <= N; j++){
-                    if (coordsValid({coords.first + i, coords.second - j})){
+                for (char j = -1; j <= N; j++) {
+                    if (coordsValid({coords.first + i, coords.second - j})) {
                         if (remove) {
                             cells[coords.first + i][coords.second - j].rmAvailability();
                         } else {
                             cells[coords.first + i][coords.second - j].addAvailability();
+                        }
+                        if (i == 0 && j >= 0 && j <= N - 1) {
+                            cells[coords.first + i][coords.second - j].setUnderShip(remove);
                         }
                     }
                 }
             }
             break;
         case LEFT:
-            for (char i = -1; i <= 1; i++){
-                for (char j = -1; j <= N; j++){
-                    if (coordsValid({coords.first + j, coords.second + i})){
+            for (char i = -1; i <= 1; i++) {
+                for (char j = -1; j <= N; j++) {
+                    if (coordsValid({coords.first + j, coords.second + i})) {
                         if (remove) {
                             cells[coords.first + j][coords.second + i].rmAvailability();
                         } else {
                             cells[coords.first + j][coords.second + i].addAvailability();
+                        }
+                        if (i == 0 && j >= 0 && j <= N - 1) {
+                            cells[coords.first + j][coords.second + i].setUnderShip(remove);
                         }
                     }
                 }

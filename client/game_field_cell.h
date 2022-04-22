@@ -14,6 +14,10 @@ public:
     void eventCheck(sf::Event& event, GameFieldState state, GameField& parent,
                     char i, char j, sf::Vector2<float> scale);
 
+    void shoot();
+
+    void setUnderShip(bool under);
+
     void draw() const;
 
     void setAlpha(unsigned char alpha);
@@ -27,6 +31,7 @@ public:
 private:
     sf::RectangleShape cell;
     bool availability;
+    bool underShip;
 };
 
 #endif//GAME_FIELD_CELL_H

@@ -60,7 +60,7 @@ void DraggableAndDroppableShips::eventCheck(sf::Event& event) {
 
 GameField::GameField(sf::Vector2<float> position_, sf::Vector2<float> scale_, GameFieldState state_, std::shared_ptr<sf::RenderWindow> window_) :
         ScreenObject(window_), field("Field1.bmp", position_, scale_, window_),
-        border("fieldLetters.png", sf::Vector2<float>(position_.x - 32* scale_.x, position_.y - 32 * scale_.y), scale_, window_),
+        border("fieldLetters.png", sf::Vector2<float>(position_.x - 32 * scale_.x, position_.y - 32 * scale_.y), scale_, window_),
         aliveCount(10), cells(10), state(state_), scale(scale_), position(position_){
     int row = 0, col = 0;
     const int rectSize = 32;
@@ -101,14 +101,16 @@ void GameField::updateAvailability(Ship<N> &ship) {
 
 }
 
-void GameField::clearAvailability(){
-    for (auto& i: cells){
-        for (auto& c: i){
+void GameField::clearAvailability(bool onlyAvailability) {
+    for (auto &i: cells) {
+        for (auto &c: i) {
             c.addAvailability();
+            if (!onlyAvailability) {
+                c.setUnderShip(false);
+            }
         }
     }
 }
-
 void GameField::eventCheck(sf::Event &event) {
     switch (state) {
         case INACTIVE:
@@ -168,11 +170,15 @@ void GameField::eventCheck(sf::Event &event) {
 void GameField::draw() const {
     field.draw();
     border.draw();
+    for (auto &i: cells) {
+        for (auto &c: i) {
+            c.draw();
+        }
+    }
     switch (state) {
         case INACTIVE:
             break;
         case GAME:
-            break;
         case PLACEMENT:
             drawShips(ship1);
             drawShips(ship2);
@@ -180,18 +186,24 @@ void GameField::draw() const {
             drawShips(ship4);
             break;
     }
-
-    for (auto &i: cells) {
-        for (auto &c: i) {
-            c.draw();
-        }
-    }
 }
 
 template<char N>
 void GameField::drawShips(const std::list<Ship<N>> &ships) const {
-    for (auto &ship: ships) {
-        ship.draw();
+    switch (state) {
+        case GAME:
+            for (auto &ship: ships) {
+                if (!ship.isAlive()) {
+                    ship.draw();
+                }
+            }
+            break;
+        case INACTIVE:
+        case PLACEMENT:
+            for (auto &ship: ships) {
+                ship.draw();
+            }
+            break;
     }
 }
 

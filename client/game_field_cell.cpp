@@ -3,7 +3,7 @@
 #include "ship.h"
 
 GameFieldCell::GameFieldCell(sf::Vector2<float> scale, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_):
-        ScreenObject(window_), availability(true) {
+        ScreenObject(window_), availability(true), underShip(false) {
     cell.setSize({32, 32});
     cell.setScale(scale);
     cell.setFillColor(sf::Color(255, 255, 255, 0));
@@ -23,8 +23,10 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                 if (sf::IntRect(cell.getGlobalBounds()).contains(mouse)) {
                     setAlpha(100);
                     if (event.type == sf::Event::MouseButtonReleased) {
-                        availability = false;
-
+                        shoot();
+                        if (underShip) {
+                            parent.findShip(std::pair<char, char>(i, j));
+                        }
                     }
                 } else {
                     setAlpha(0);
@@ -495,4 +497,17 @@ void GameFieldCell::rmAvailability(){
 
 void GameFieldCell::addAvailability(){
     availability = true;
+}
+
+void GameFieldCell::shoot() {
+    rmAvailability();
+    if (underShip){
+        cell.setFillColor(sf::Color(255, 0, 0, 100));
+    } else {
+        cell.setFillColor(sf::Color(50, 50, 50, 100));
+    }
+}
+
+void GameFieldCell::setUnderShip(bool under) {
+    underShip = under;
 }

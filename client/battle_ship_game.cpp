@@ -230,11 +230,15 @@ void BattleShipGame::mainLoop() {
                 break;
             case IN_SP_GAME:
                 pictures["gameBackground"]->draw();
-                titles["myName"]->draw();
-                titles["myLevel"]->draw();
                 buttons["mainMenu"]->draw();
+
                 fields["myField"]->draw();
                 fields["enemyField"]->draw();
+
+                titles["myName"]->draw();
+                titles["myLevel"]->draw();
+                titles["enemyName"]->draw();
+                titles["enemyLevel"]->draw();
                 break;
             default:
                 std::cerr << "Wrong status\n";
@@ -317,9 +321,9 @@ void BattleShipGame::startBattle(bool singlePlayer){
         user.status = (singlePlayer ? IN_SP_GAME : IN_MP_GAME);
         if (singlePlayer) {
             fields["enemyField"]->placeShipsRand();
+            fields["enemyField"]->clearAvailability(true);
             fields["myField"]->setState(INACTIVE);
             fields["enemyField"]->setState(GAME);
-
         } else {
 
         }

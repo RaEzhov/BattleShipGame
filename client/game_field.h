@@ -41,10 +41,61 @@ public:
 
     void clearShips();
 
+    template<char N>
+    void shoot(std::pair<char, char> coords, Ship<N>& ship) {
+        for (int i = 0; i < N; i++) {
+            switch (ship.getDirection()) {
+                case UP:
+                    if (coords.first == ship.getCoords().first &&
+                        coords.second == ship.getCoords().second + i){
+                        ship.shoot();
+                        return;
+                    }
+                    break;
+                case RIGHT:
+                    if (coords.first == ship.getCoords().first - i &&
+                        coords.second == ship.getCoords().second){
+                        ship.shoot();
+                        return;
+                    }
+                    break;
+                case DOWN:
+                    if (coords.first == ship.getCoords().first &&
+                        coords.second == ship.getCoords().second - i){
+                        ship.shoot();
+                        return;
+                    }
+                    break;
+                case LEFT:
+                    if (coords.first == ship.getCoords().first + i &&
+                        coords.second == ship.getCoords().second + i){
+                        ship.shoot();
+                        return;
+                    }
+                    break;
+            }
+        }
+    }
+
+    void findShip(std::pair<char, char> coords) {
+        for (auto& s: ship1){
+            shoot(coords, s);
+        }
+        for (auto& s: ship2){
+            shoot(coords, s);
+        }
+        for (auto& s: ship3){
+            shoot(coords, s);
+        }
+        for (auto& s: ship4){
+            shoot(coords, s);
+        }
+    }
+
     template <char N>
     void updateAvailability(Ship<N>& ship);
 
-    void clearAvailability();
+    void clearAvailability(bool onlyAvailability = false);
 
     std::vector<GameFieldCell>& operator[](size_t i);
 

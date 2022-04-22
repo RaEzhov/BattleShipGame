@@ -14,7 +14,7 @@ const char IP_ADDR[] = "127.0.0.1";
 
 const int PORT = 55555;
 
-TcpListener listener;
+static std::unique_ptr<TcpListener> listener;
 
 static std::unique_ptr<DBConnection> conn;
 
@@ -59,7 +59,6 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
     if (connected == Socket::Status::Done) {
         std::cout << "Client " << userIp << ":" << userPort<< " has authenticated!\n";
         auto idRating = conn->getUserIdRating(login);
-        std::cout << idRating.first << idRating.second << '\n';
         packet.clear();
         packet << idRating.first << idRating.second;
         (*user)->send(packet);
@@ -71,12 +70,13 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
 
 
 void signalCallbackHandler(int signum) {
-    listener.close();
+    listener->close();
     std::cout << "Program terminated\n";
     exit(signum);
 }
 
 int main() {
+    listener = std::make_unique<TcpListener>();
     signal(SIGINT, signalCallbackHandler);
     try {
         conn = std::make_unique<DBConnection>();
@@ -88,14 +88,14 @@ int main() {
     }
 
     // bind the listener to a port
-    if (listener.listen(PORT) != sf::Socket::Done) {
+    if (listener->listen(PORT) != sf::Socket::Done) {
         std::cout << "Listen error!";
         return 1;
     }
     std::cout << "Listener started\n";
     while (true) {
         clients.push_back(std::make_unique<TcpSocket>());
-        if (listener.accept(**(--clients.end())) != Socket::Done) {
+        if (listener->accept(**(--clients.end())) != Socket::Done) {
             std::cout << "Accept error!\n";
         }
         std::cout << "Client " << (**(--clients.end())).getRemoteAddress() << ":"
