@@ -32,3 +32,32 @@ bool DBConnection::isPasswordCorrect(const std::string &login, const std::string
     }
     return dbPassword[0][0].as<std::string>() == password;
 }
+
+bool DBConnection::isUserRegistered(const std::string &login, const std::string &password) {
+    if (login.size() < 4 || password.size() < 4){
+        return false;
+    }
+    sf::Mutex m;
+    m.lock();
+    auto countUsers =
+            w->exec1("SELECT count(users.login) FROM users WHERE login = '" + login + "';");
+    auto maxId = (w->exec1("SELECT max(id) FROM users;"))[0].as<int>();
+    if (countUsers[0].as<int>() == 0){
+        w->exec("INSERT INTO users VALUES ('" + login + "', '" + password + "', " + std::to_string(maxId + 1) + ", 0);");
+        m.unlock();
+        return true;
+    }
+    m.unlock();
+    return false;
+}
+
+std::pair<unsigned int, unsigned int> DBConnection::getUserIdRating(const std::string &login) {
+    sf::Mutex m;
+    m.lock();
+    auto idRating = w->exec("SELECT id, rating FROM users WHERE users.login = '" + login + "';");
+    m.unlock();
+    if (idRating.empty() || idRating[0].empty()) {
+        return {0, 0};
+    }
+    return {idRating[0][0].as<unsigned int>(), idRating[0][1].as<unsigned int>()};
+}

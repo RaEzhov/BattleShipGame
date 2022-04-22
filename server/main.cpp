@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <SFML/Network.hpp>
 #include <memory>
+#include <csignal>
 
 #include "db_connection.h"
 
@@ -12,6 +13,8 @@ using namespace sf;
 const char IP_ADDR[] = "127.0.0.1";
 
 const int PORT = 55555;
+
+static std::unique_ptr<TcpListener> listener;
 
 static std::unique_ptr<DBConnection> conn;
 
@@ -42,7 +45,12 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
     while (connected == Socket::Status::Done && !isAuth) {
         connected = (*user)->receive(packet);
         packet >> login >> password;
-        isAuth = conn->isPasswordCorrect(login, password);
+        if (login[0] != '@') {
+            isAuth = conn->isPasswordCorrect(login, password);
+        } else {
+            login.erase(login.cbegin());
+            isAuth = conn->isUserRegistered(login, password);
+        }
         packet.clear();
         packet << isAuth;
         (*user)->send(packet);
@@ -50,13 +58,26 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
     }
     if (connected == Socket::Status::Done) {
         std::cout << "Client " << userIp << ":" << userPort<< " has authenticated!\n";
+        auto idRating = conn->getUserIdRating(login);
+        packet.clear();
+        packet << idRating.first << idRating.second;
+        (*user)->send(packet);
         clientLoop(user);
     } else {
         std::cout << "Client " << userIp << ":" << userPort << " disconnected!\n";
     }
 }
 
+
+void signalCallbackHandler(int signum) {
+    listener->close();
+    std::cout << "Program terminated\n";
+    exit(signum);
+}
+
 int main() {
+    listener = std::make_unique<TcpListener>();
+    signal(SIGINT, signalCallbackHandler);
     try {
         conn = std::make_unique<DBConnection>();
         std::cout << "Database connected\n";
@@ -66,16 +87,15 @@ int main() {
         return 1;
     }
 
-    TcpListener listener;
     // bind the listener to a port
-    if (listener.listen(PORT) != sf::Socket::Done) {
+    if (listener->listen(PORT) != sf::Socket::Done) {
         std::cout << "Listen error!";
         return 1;
     }
     std::cout << "Listener started\n";
     while (true) {
         clients.push_back(std::make_unique<TcpSocket>());
-        if (listener.accept(**(--clients.end())) != Socket::Done) {
+        if (listener->accept(**(--clients.end())) != Socket::Done) {
             std::cout << "Accept error!\n";
         }
         std::cout << "Client " << (**(--clients.end())).getRemoteAddress() << ":"
@@ -83,6 +103,4 @@ int main() {
         std::thread clientThread(authUser, --clients.end());
         clientThread.detach();
     }
-    listener.close();
-    return 0;
 }

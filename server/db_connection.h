@@ -18,8 +18,13 @@ public:
     /** Select all logins from database and insert it to userLogins set*/
     void selectUsers(std::unordered_set<std::string> &userLogins);
 
-    /**Checks is password is correct for user*/
+    /**Checks if password is correct for user*/
     bool isPasswordCorrect(const std::string &login, const std::string &password);
+
+    /**Insert new user*/
+    bool isUserRegistered(const std::string &login, const std::string &password);
+
+    std::pair<unsigned int, unsigned int> getUserIdRating(const std::string &login);
 
 private:
     std::unique_ptr<pqxx::connection> conn;
