@@ -26,6 +26,10 @@ private:
 
     void startBattle(bool);
 
+    void changeSide(){
+        user.myMove = !user.myMove;
+    }
+
 private:
     std::unique_ptr<sf::TcpSocket> server;
     std::shared_ptr<sf::RenderWindow> window;

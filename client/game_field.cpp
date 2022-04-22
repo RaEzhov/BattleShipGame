@@ -1,4 +1,6 @@
 #include "game_field.h"
+
+#include <utility>
 #include "game_field_cell.h"
 #include "ship.h"
 
@@ -58,8 +60,9 @@ void DraggableAndDroppableShips::eventCheck(sf::Event& event) {
 }
 
 
-GameField::GameField(sf::Vector2<float> position_, sf::Vector2<float> scale_, GameFieldState state_, std::shared_ptr<sf::RenderWindow> window_) :
-        ScreenObject(window_), field("Field1.bmp", position_, scale_, window_),
+GameField::GameField(sf::Vector2<float> position_, sf::Vector2<float> scale_, GameFieldState state_,
+                     std::shared_ptr<sf::RenderWindow> window_, std::function<void()> changeSide_):
+        ScreenObject(window_), field("Field1.bmp", position_, scale_, window_), changeSide(std::move(changeSide_)),
         border("fieldLetters.png", sf::Vector2<float>(position_.x - 32 * scale_.x, position_.y - 32 * scale_.y), scale_, window_),
         aliveCount(10), cells(10), state(state_), scale(scale_), position(position_){
     int row = 0, col = 0;
@@ -111,6 +114,7 @@ void GameField::clearAvailability(bool onlyAvailability) {
         }
     }
 }
+
 void GameField::eventCheck(sf::Event &event) {
     switch (state) {
         case INACTIVE:
@@ -177,7 +181,6 @@ void GameField::draw() const {
     }
     switch (state) {
         case INACTIVE:
-            break;
         case GAME:
         case PLACEMENT:
             drawShips(ship1);

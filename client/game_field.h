@@ -25,7 +25,7 @@ private:
 class GameField: public ScreenObject {
 public:
     GameField(sf::Vector2<float> position_, sf::Vector2<float> scale, GameFieldState state_,
-              std::shared_ptr<sf::RenderWindow> window_);
+              std::shared_ptr<sf::RenderWindow> window_, std::function<void()> changeSide_);
 
     void eventCheck(sf::Event &event);
 
@@ -40,6 +40,26 @@ public:
     void placeShipsRand();
 
     void clearShips();
+
+    void selfMove(){
+        sf::sleep(sf::seconds(0.1f));
+        char i = 0, j = 0;
+        for (auto& v: cells){
+            for (auto& c: v){
+                if (c.isAvailable()){
+                    c.shoot();
+                    if (c.underShip) {
+                        findShip(std::pair<char, char>(i, j));
+                    }
+                    changeSide();
+                    return;
+                }
+                j++;
+            }
+            i++;
+            j = 0;
+        }
+    }
 
     template<char N>
     void shoot(std::pair<char, char> coords, Ship<N>& ship) {
@@ -104,6 +124,8 @@ public:
 
     /**Difference between cursor and upper left ship corner on y-axis*/
     static float diffY;
+
+    std::function<void()> changeSide;
 
 private:
     template<char N>

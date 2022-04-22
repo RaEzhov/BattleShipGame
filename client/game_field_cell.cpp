@@ -27,6 +27,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                         if (underShip) {
                             parent.findShip(std::pair<char, char>(i, j));
                         }
+                        parent.changeSide();
                     }
                 } else {
                     setAlpha(0);
@@ -475,6 +476,14 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
             }
             break;
         case INACTIVE:
+            //TODO
+            /*if (!availability){
+                if (underShip){
+                    cell.setFillColor(sf::Color(255, 0, 0, 100));
+                } else {
+                    cell.setFillColor(sf::Color(50, 50, 50, 100));
+                }
+            }*/
             break;
     }
 }

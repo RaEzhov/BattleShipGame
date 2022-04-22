@@ -29,12 +29,16 @@ public:
         id = id_;
         rating = rating_;
         status = LOGIN;
+        wait = myMove = true;
     }
+
 private:
     std::string login;
     unsigned int id;
     unsigned int rating;
     UserStatus status;
+    bool myMove;
+    bool wait;
 };
 
 #endif//USER_H

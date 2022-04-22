@@ -119,11 +119,11 @@ void BattleShipGame::loadTextures() {
     fields["myField"] = std::make_unique<GameField>(sf::Vector2<float>{static_cast<float>(screen.width) * 0.04f,
                                                                                 static_cast<float>(screen.height) * 0.25f},
                                                     sf::Vector2<float>{screenScale.x * 1.75f, screenScale.y * 1.75f},
-                                                    PLACEMENT, window);
+                                                    PLACEMENT, window, [this]{changeSide();});
     fields["enemyField"] = std::make_unique<GameField>(sf::Vector2<float>{static_cast<float>(screen.width) * 0.66f,
                                                                                    static_cast<float>(screen.height) * 0.25f},
                                                     sf::Vector2<float>{screenScale.x * 1.75f, screenScale.y * 1.75f},
-                                                    INACTIVE, window);
+                                                    INACTIVE, window, [this]{changeSide();});
     dragDropShips["placement"] = std::make_unique<DraggableAndDroppableShips>(screenScale * 1.75f, screen, window);
     pictures["gameBackground"] = std::make_unique<Picture>("gameMenu.jpg", sf::Vector2<float>{0, 0}, screenScale, window);
     titles["myName"] = std::make_unique<Title>(user.login, sf::Vector2<float>{static_cast<float>(screen.width) * 0.02f,
@@ -171,8 +171,15 @@ void BattleShipGame::mainLoop() {
                     buttons["randomPlace"]->eventCheck(event);
                     break;
                 case IN_SP_GAME:
+                    if (user.myMove) {
+                        user.wait = false;
+                        fields["enemyField"]->eventCheck(event);
+                    } else if (!user.wait){
+                        std::thread wait([this]{fields["myField"]->selfMove();});
+                        wait.detach();
+                        user.wait = true;
+                    }
                     fields["myField"]->eventCheck(event);
-                    fields["enemyField"]->eventCheck(event);
                     buttons["mainMenu"]->eventCheck(event);
                     break;
                 default:
@@ -322,6 +329,7 @@ void BattleShipGame::startBattle(bool singlePlayer){
         if (singlePlayer) {
             fields["enemyField"]->placeShipsRand();
             fields["enemyField"]->clearAvailability(true);
+            fields["myField"]->clearAvailability(true);
             fields["myField"]->setState(INACTIVE);
             fields["enemyField"]->setState(GAME);
         } else {

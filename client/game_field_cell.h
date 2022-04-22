@@ -7,6 +7,8 @@ class GameField;
 
 class GameFieldCell : public ScreenObject {
 public:
+    friend GameField;
+
     GameFieldCell(sf::Vector2<float> scale, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_);
 
     void setPosition(sf::Vector2<float> newPosition);
