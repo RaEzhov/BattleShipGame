@@ -43,6 +43,8 @@ public:
 
     void selfMove();
 
+    void clearColors();
+
     template<char N>
     void shoot(std::pair<char, char> coords, Ship<N> &ship);
 
@@ -62,6 +64,8 @@ public:
     static float diffY;
 
     std::function<void()> changeSide;
+
+    unsigned char getAliveShips() const;
 
 private:
     template<char N>

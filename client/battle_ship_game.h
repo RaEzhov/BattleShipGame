@@ -26,6 +26,8 @@ private:
 
     void startBattle(bool);
 
+    void finishBattle(bool);
+
     void changeSide();
 
 private:

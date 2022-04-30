@@ -139,6 +139,9 @@ void BattleShipGame::loadTextures() {
     titles["enemyLevel"] = std::make_unique<Title>("level: -", sf::Vector2<float>{static_cast<float>(screen.width) * 0.9f,
                                                                                   static_cast<float>(screen.height) * 0.1f},
                                                    window, 40, sf::Color::White);
+    titles["end"] = std::make_unique<Title>("", sf::Vector2<float>(static_cast<float>(screen.width)*0.5f,
+                                                                             static_cast<float>(screen.height)*0.5f), window, 100,
+                                               sf::Color::White);
 
 }
 
@@ -180,7 +183,17 @@ void BattleShipGame::mainLoop() {
                         wait.detach();
                         user.wait = true;
                     }
+                    if (fields["myField"]->getAliveShips() == 0){
+                        finishBattle(false);
+                    }
+                    if (fields["enemyField"]->getAliveShips() == 0){
+                        finishBattle(true);
+                    }
+
                     fields["myField"]->eventCheck(event);
+                    buttons["mainMenu"]->eventCheck(event);
+                    break;
+                case END_OF_GAME:
                     buttons["mainMenu"]->eventCheck(event);
                     break;
                 default:
@@ -248,6 +261,21 @@ void BattleShipGame::mainLoop() {
                 titles["enemyName"]->draw();
                 titles["enemyLevel"]->draw();
                 break;
+            case END_OF_GAME:
+
+                pictures["gameBackground"]->draw();
+                buttons["mainMenu"]->draw();
+
+                fields["myField"]->draw();
+                fields["enemyField"]->draw();
+
+                titles["myName"]->draw();
+                titles["myLevel"]->draw();
+                titles["enemyName"]->draw();
+                titles["enemyLevel"]->draw();
+                titles["end"]->draw();
+
+                break;
             default:
                 std::cerr << "Wrong status\n";
         }
@@ -292,6 +320,7 @@ void BattleShipGame::registerFunc() {
         server->receive(packet);
         std::pair<unsigned int, unsigned int> idRating;
         packet >> idRating.first >> idRating.second;
+        login.erase(login.begin());
         user.init(login, idRating.first, idRating.second);
         mainMenu();
     }
@@ -302,6 +331,10 @@ void BattleShipGame::mainMenu() {
     titles["myName"]->setColor(sf::Color::Black);
     titles["myLevel"]->setText(user.getRatingStr());
     titles["myLevel"]->setColor(sf::Color::Black);
+    fields["myField"]->clearAvailability();
+    fields["myField"]->clearColors();
+    fields["enemyField"]->clearAvailability();
+    fields["enemyField"]->clearColors();
     user.status = MAIN_MENU;
 }
 
@@ -336,6 +369,20 @@ void BattleShipGame::startBattle(bool singlePlayer) {
 
         }
     }
+}
+
+void BattleShipGame::finishBattle(bool meWin){
+    fields["enemyField"]->setState(INACTIVE);
+    user.status = END_OF_GAME;
+    auto& ttl = titles["end"];
+    if (meWin){
+        ttl->setText("you win");
+    } else {
+        ttl->setText("you lose");
+    }
+    ttl->setPosition(sf::Vector2<float>(static_cast<float>(screen.width)/2.f - ttl->getSize().width/2.f,
+                                                  static_cast<float>(screen.height)/2.f - ttl->getSize().height/2.f));
+    //TODO send info to server
 }
 
 void BattleShipGame::changeSide() {

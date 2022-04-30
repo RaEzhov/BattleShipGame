@@ -11,7 +11,8 @@ enum UserStatus {
     IN_SP_MENU,
     IN_SP_GAME,
     IN_MP_MENU,
-    IN_MP_GAME
+    IN_MP_GAME,
+    END_OF_GAME
 };
 
 class User {

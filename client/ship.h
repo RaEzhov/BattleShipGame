@@ -32,7 +32,7 @@ public:
 
     ShipCheckStatus eventCheck(sf::Event& event, std::vector<std::vector<GameFieldCell>>& cells,
                                std::function<void(Ship<N>& ship)> updateAllShipsAvailability,
-                               std::function<void(std::pair<char, char> coords, char shipSize)> removeShip);
+                               const std::function<void(std::pair<char, char> coords, char shipSize)>& removeShip);
 
     void shoot();
 
@@ -153,7 +153,7 @@ void Ship<N>::updateAvailability(std::vector<std::vector<GameFieldCell>> &cells,
 
 template<char N>
 ShipCheckStatus Ship<N>::eventCheck(sf::Event& event, std::vector<std::vector<GameFieldCell>>& cells,
-                           std::function<void(Ship<N>& ship)> updateAllShipsAvailability, std::function<void(std::pair<char, char> coords, char shipSize)> removeShip) {
+                           std::function<void(Ship<N>& ship)> updateAllShipsAvailability, const std::function<void(std::pair<char, char> coords, char shipSize)>& removeShip) {
     updateAvailability(cells, false);
     updateAllShipsAvailability(*this);
     auto rect = sprite.getGlobalBounds();

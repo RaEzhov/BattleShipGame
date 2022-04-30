@@ -47,7 +47,8 @@ void Button::draw() {
 }
 
 void Button::eventCheck(sf::Event &event) {
-    if (spriteButtonOn.getGlobalBounds().contains(static_cast<sf::Vector2<float>>(sf::Mouse::getPosition(*window)))) {
+    auto mouse = static_cast<sf::Vector2<float>>(sf::Mouse::getPosition(*window));
+    if (spriteButtonOn.getGlobalBounds().contains(mouse)) {
         spriteButtonOn.setColor(sf::Color::White);
     } else {
         spriteButtonOn.setColor(sf::Color(225, 225, 225, 255));
@@ -55,7 +56,7 @@ void Button::eventCheck(sf::Event &event) {
     }
     if (event.type == sf::Event::MouseButtonPressed) {
         if (event.mouseButton.button == sf::Mouse::Left && !lockClick) {
-            if (spriteButtonOn.getGlobalBounds().contains(static_cast<sf::Vector2<float>>(sf::Mouse::getPosition(*window)))) {
+            if (spriteButtonOn.getGlobalBounds().contains(mouse)) {
                 pressed = true;
             }
             lockClick = true;
@@ -63,7 +64,7 @@ void Button::eventCheck(sf::Event &event) {
     }
     if (event.type == sf::Event::MouseButtonReleased) {
         if (event.mouseButton.button == sf::Mouse::Left) {
-            if (spriteButtonOn.getGlobalBounds().contains(static_cast<sf::Vector2<float>>(sf::Mouse::getPosition(*window)))) {
+            if (spriteButtonOn.getGlobalBounds().contains(mouse)) {
                 pressed = false;
                 if (function) {
                     function();
