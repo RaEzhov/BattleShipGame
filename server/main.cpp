@@ -20,9 +20,10 @@ static std::unique_ptr<DBConnection> conn;
 
 static std::list<std::unique_ptr<TcpSocket>> clients;
 
-void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client) {
+void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned int id) {
     Packet packet;
     unsigned short status;
+    conn->updateStatus(id, ONLINE);
     std::string msg;
     Socket::Status connected = Socket::Status::Done;
     while (connected == Socket::Status::Done) {
@@ -31,6 +32,7 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client) {
         std::cout << "Client " << (*client)->getRemoteAddress() << ":" << (*client)->getRemotePort() << " " << status << " " << msg << "\n";
         packet.clear();
     }
+    conn->updateStatus(id, OFFLINE);
     std::cout << "Client " << (*client)->getRemoteAddress() << ":" << (*client)->getRemotePort() << " disconnected!\n";
     clients.erase(client);
 }
@@ -62,7 +64,7 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
         packet.clear();
         packet << idRating.first << idRating.second;
         (*user)->send(packet);
-        clientLoop(user);
+        clientLoop(user, idRating.first);
     } else {
         std::cout << "Client " << userIp << ":" << userPort << " disconnected!\n";
     }

@@ -7,7 +7,7 @@ void DBConnection::insertNewUser(const std::string &login, const std::string &pa
     std::stringstream ss;
     m.lock();
     auto id = w->exec1("SELECT MAX(id) FROM users");
-    ss << "INSERT INTO users VALUES ('" << login << "', '" << password << "', " << id[0].as<int>() + 1 << ", 0)";
+    ss << "INSERT INTO users VALUES ('" << login << "', '" << password << "', " << id[0].as<int>() + 1 << ", 0, " << ONLINE << ")";
     w->exec(ss.str());
     m.unlock();
 }
@@ -25,9 +25,9 @@ void DBConnection::selectUsers(std::unordered_set<std::string> &userLogins) {
 bool DBConnection::isPasswordCorrect(const std::string &login, const std::string &password) {
     sf::Mutex m;
     m.lock();
-    auto dbPassword = w->exec("SELECT password FROM users WHERE users.login = '" + login + "';");
+    auto dbPassword = w->exec("SELECT password, status FROM users WHERE users.login = '" + login + "';");
     m.unlock();
-    if (dbPassword.empty() || dbPassword[0].empty()) {
+    if (dbPassword.empty() || dbPassword[0].empty() || dbPassword[0][1].as<unsigned int>() != OFFLINE) {
         return false;
     }
     return dbPassword[0][0].as<std::string>() == password;
@@ -67,3 +67,10 @@ DBConnection::~DBConnection() {
 }
 
 DBConnection::DBConnection() : conn(std::make_unique<pqxx::connection>(CONN_STR)), w(std::make_unique<pqxx::work>(*conn)){}
+
+void DBConnection::updateStatus(unsigned int id, UserStatus status) {
+    sf::Mutex m;
+    m.lock();
+    w->exec("UPDATE  users SET status = " + std::to_string(status) + " WHERE id = " + std::to_string(id) + ";");
+    m.unlock();
+}

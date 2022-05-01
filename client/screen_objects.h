@@ -2,6 +2,7 @@
 #define SCREEN_OBJECTS_H
 
 #include <iostream>
+#include <fstream>
 #include <random>
 #include <thread>
 #include <chrono>
@@ -77,11 +78,11 @@ private:
 class Entry : public ScreenObject {
 public:
     Entry(sf::Vector2<float> position, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize,
-          bool isLogOrPass = true, std::function<void()> enterFunc = nullptr);
+          bool isLogOrPass = true, std::function<void()> enterFunc = nullptr, const std::string& str = "");
 
     void eventCheck(sf::Event &event);
 
-    void draw();
+    void draw(bool hidden = false);
 
     std::string getStr();
 

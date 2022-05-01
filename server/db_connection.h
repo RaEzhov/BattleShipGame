@@ -5,6 +5,12 @@
 #include <unordered_set>
 #include <SFML/Network.hpp>
 
+enum UserStatus{
+    OFFLINE = 0,
+    ONLINE = 1,
+
+};
+
 
 class DBConnection {
 public:
@@ -23,6 +29,8 @@ public:
 
     /**Insert new user*/
     bool isUserRegistered(const std::string &login, const std::string &password);
+
+    void updateStatus(unsigned int id, UserStatus status);
 
     std::pair<unsigned int, unsigned int> getUserIdRating(const std::string &login);
 

@@ -62,11 +62,18 @@ void BattleShipGame::loadTextures() {
     buttons["login"] = std::make_unique<Button>(float(screen.width) * 0.085f, float(screen.height) * 0.6f, screenScale * 0.7f,
                                                 [this] { loginFunc(); }, window, "sign in", 40, beige);
 
+    std::string login, password;
+
+    std::ifstream cache;
+    cache.open("cache");
+    cache >> login >> password;
+    cache.close();
+
     entries["login"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.08f, float(screen.height) * 0.37f}, 12,
-                                               window, 24);
+                                               window, 24, true, [this] { loginFunc(); }, login);
 
     entries["password"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.08f, float(screen.height) * 0.47f},
-                                                  12, window, 24, true, [this] { loginFunc(); });
+                                                  12, window, 24, true, [this] { loginFunc(); }, password);
 
     buttons["register"] = std::make_unique<Button>(float(screen.width) * 0.085f, float(screen.height) * 0.7f, screenScale * 0.7f,
                                                    [this] { registerFunc(); }, window, "sign up", 40, beige);
@@ -208,7 +215,7 @@ void BattleShipGame::mainLoop() {
                 pictures["battleShipText"]->draw();
                 entries["login"]->draw();
                 titles["login"]->draw();
-                entries["password"]->draw();
+                entries["password"]->draw(true);
                 titles["password"]->draw();
                 buttons["login"]->draw();
                 buttons["register"]->draw();
@@ -285,9 +292,17 @@ void BattleShipGame::mainLoop() {
     }
 }
 
+std::string crypt(const std::string string, const std::string key){
+    std::string result;
+    for (int i = 0; i < string.size(); i++){
+        result.append(std::to_string(static_cast<int>(string[i]) + static_cast<int>(key[i % key.size()])));
+    }
+    return result;
+}
+
 void BattleShipGame::loginFunc() {
     auto login = entries["login"]->getStr();
-    auto password = entries["password"]->getStr();
+    auto password = crypt(entries["password"]->getStr(), login);
     sf::Packet packet;
     packet << login << password;
     server->send(packet);
@@ -301,13 +316,15 @@ void BattleShipGame::loginFunc() {
         std::pair<unsigned int, unsigned int> idRating;
         packet >> idRating.first >> idRating.second;
         user.init(login, idRating.first, idRating.second);
+
         mainMenu();
     }
 }
 
 void BattleShipGame::registerFunc() {
-    auto login = '@' + entries["login"]->getStr();
-    auto password = entries["password"]->getStr();
+    auto login = entries["login"]->getStr();
+    auto password = crypt(entries["password"]->getStr(), login);
+    login = '@' + login;
     sf::Packet packet;
     packet << login << password;
     server->send(packet);
@@ -327,6 +344,12 @@ void BattleShipGame::registerFunc() {
 }
 
 void BattleShipGame::mainMenu() {
+    // Saving cache login and password
+    std::ofstream cache;
+    cache.open("cache");
+    cache << entries["login"]->getStr() << '\n' << entries["password"]->getStr();
+    cache.close();
+
     titles["myName"]->setText(user.login);
     titles["myName"]->setColor(sf::Color::Black);
     titles["myLevel"]->setText(user.getRatingStr());

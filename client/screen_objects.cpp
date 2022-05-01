@@ -78,7 +78,7 @@ void Button::eventCheck(sf::Event &event) {
 }
 
 Entry::Entry(sf::Vector2<float> position, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize = 24,
-             bool isLogOrPass, std::function<void()> enterFunc): ScreenObject(window_), isActive(false), symbolsCount(21), input(""),
+             bool isLogOrPass, std::function<void()> enterFunc, const std::string& str): ScreenObject(window_), isActive(false), symbolsCount(21), input(str),
              isLoginOrPassword(isLogOrPass), enterPressedFunc(std::move(enterFunc)) {
     font.loadFromFile(Config::instance().resources + "Upheavtt.ttf");
     text.setFont(font);
@@ -147,14 +147,18 @@ void Entry::eventCheck(sf::Event &event) {
     }
 }
 
-void Entry::draw() {
+void Entry::draw(bool hidden) {
     window->draw(entry);
+    auto text_ = text;
+    if (hidden){
+        text_.setString(std::string(text_.getString().getSize(), '*'));
+    }
     if (isActive && (clock.getElapsedTime().asMilliseconds() % 1000) > 500) {
-        cursor = text;
-        cursor.setString(text.getString() + "|");
+        cursor = text_;
+        cursor.setString(text_.getString() + "|");
         window->draw(cursor);
     } else {
-        window->draw(text);
+        window->draw(text_);
     }
 }
 
