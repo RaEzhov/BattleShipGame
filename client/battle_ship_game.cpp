@@ -32,15 +32,15 @@ BattleShipGame::BattleShipGame(): server(std::make_unique<sf::TcpSocket>()), scr
                                    window(std::make_shared<sf::RenderWindow>(sf::VideoMode::getDesktopMode(), "Battleship", sf::Style::Fullscreen)),
                                    screenScale(static_cast<float>(screen.width) / WIDTH, static_cast<float>(screen.height) / HEIGHT) {
     // Connection to server
-    if (server->connect(IP_ADDR, PORT) != sf::Socket::Done) {
+    if (server->connect(Config::instance().ip, Config::instance().port) != sf::Socket::Done) {
         throw std::runtime_error("Connection error!\n");
     }
 
     // Set up framerate limit
-    window->setFramerateLimit(FRAMERATE);
+    window->setFramerateLimit(Config::instance().framerate);
 
     // Cursor init
-    cursorTex.loadFromFile(std::string(RESOURCES_PATH) + "cursor.png");
+    cursorTex.loadFromFile(Config::instance().resources + "cursor.png");
     cursor.setTexture(cursorTex);
     cursor.setScale(2, 2);
     window->setMouseCursorVisible(false);

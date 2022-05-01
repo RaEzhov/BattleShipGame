@@ -43,9 +43,9 @@ public:
     }
 
     static void loadTextures() {
-        alive.loadFromFile(std::string(RESOURCES_PATH) + "Ship" + std::to_string(N) + "_a.png");
-        injured.loadFromFile(std::string(RESOURCES_PATH) + "Ship" + std::to_string(N) + "_i.png");
-        destroyed.loadFromFile(std::string(RESOURCES_PATH) + "Ship" + std::to_string(N) + "_d.png");
+        alive.loadFromFile(Config::instance().resources + "Ship" + std::to_string(N) + "_a.png");
+        injured.loadFromFile(Config::instance().resources+ "Ship" + std::to_string(N) + "_i.png");
+        destroyed.loadFromFile(Config::instance().resources + "Ship" + std::to_string(N) + "_d.png");
     }
 
     static char aliveShips;

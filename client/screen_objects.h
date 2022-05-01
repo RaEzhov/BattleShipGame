@@ -12,6 +12,9 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
 
+#include "config.h"
+
+
 enum GameFieldState{
     PLACEMENT,
     INACTIVE,
@@ -37,16 +40,6 @@ enum ShipCheckStatus{
     NONE
 };
 
-const char RESOURCES_PATH[] = "/home/roman/clionProjects/BattleShipGame/client/resources/";
-
-const float BUTTON_SCALE = 2;
-
-const char IP_ADDR[] = "localhost";
-
-const int PORT = 55555;
-
-const unsigned int FRAMERATE = 60;
-
 class ScreenObject {
 public:
     explicit ScreenObject(std::shared_ptr<sf::RenderWindow> &window_) : window(window_) {}
@@ -59,8 +52,8 @@ class Button : public ScreenObject {
 public:
     Button(float x, float y, sf::Vector2<float> scale_, std::function<void()> funcRef,
            std::shared_ptr<sf::RenderWindow> window_, const std::string &text_, unsigned int textSize, sf::Color textColor_,
-           const std::string &font = "Upheavtt.ttf", const std::string &buttonOn = std::string(RESOURCES_PATH) + "button1.png",
-           const std::string &buttonOff = std::string(RESOURCES_PATH) + "button2.png");
+           const std::string &font = "Upheavtt.ttf", const std::string &buttonOn = Config::instance().resources + "button1.png",
+           const std::string &buttonOff = Config::instance().resources + "button2.png");
 
     void draw();
 

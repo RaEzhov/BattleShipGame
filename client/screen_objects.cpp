@@ -6,7 +6,7 @@ Button::Button(float x, float y, sf::Vector2<float> scale_, std::function<void()
                lockClick(false), pressed(false), textColor(textColor_) {
 
     // Loading sprites
-    textFont.loadFromFile(std::string(RESOURCES_PATH) + font);
+    textFont.loadFromFile(Config::instance().resources + font);
     text.setFont(textFont);
     text.setCharacterSize(textSize);
     text.setFillColor(textColor);
@@ -18,7 +18,7 @@ Button::Button(float x, float y, sf::Vector2<float> scale_, std::function<void()
 
 
     // Scaling button
-    auto newScale = sf::Vector2<float>(BUTTON_SCALE * scale.x, BUTTON_SCALE * scale.y);
+    auto newScale = sf::Vector2<float>(Config::instance().buttonScale * scale.x, Config::instance().buttonScale * scale.y);
     text.setScale(newScale);
     spriteButtonOn.scale(newScale);
     spriteButtonOff.scale(newScale);
@@ -40,7 +40,7 @@ void Button::draw() {
         window->draw(spriteButtonOn);
     } else {
         text.setFillColor(textColor - sf::Color(10, 10, 10, 10));
-        text.setPosition(textPosition.x, textPosition.y + 2 * BUTTON_SCALE * scale.y);
+        text.setPosition(textPosition.x, textPosition.y + 2 * Config::instance().buttonScale * scale.y);
         window->draw(spriteButtonOff);
     }
     window->draw(text);
@@ -80,7 +80,7 @@ void Button::eventCheck(sf::Event &event) {
 Entry::Entry(sf::Vector2<float> position, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize = 24,
              bool isLogOrPass, std::function<void()> enterFunc): ScreenObject(window_), isActive(false), symbolsCount(21), input(""),
              isLoginOrPassword(isLogOrPass), enterPressedFunc(std::move(enterFunc)) {
-    font.loadFromFile(std::string(RESOURCES_PATH) + "Upheavtt.ttf");
+    font.loadFromFile(Config::instance().resources + "Upheavtt.ttf");
     text.setFont(font);
     text.setCharacterSize(fontSize);
     text.setFillColor(sf::Color::Black);
@@ -164,7 +164,7 @@ std::string Entry::getStr() {
 
 Title::Title(const std::string& text_, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_,int size,
              sf::Color color_, const std::string& font_): ScreenObject(window_) {
-    font.loadFromFile(std::string(RESOURCES_PATH) + font_);
+    font.loadFromFile(Config::instance().resources + font_);
     text.setString(text_);
     text.setPosition(position);
     text.setFont(font);
@@ -195,7 +195,7 @@ void Title::draw() {
 
 Picture::Picture(const std::string &fileName, sf::Vector2<float> position, sf::Vector2<float> scale_,
                  std::shared_ptr<sf::RenderWindow> window_): ScreenObject(window_) {
-    texture.loadFromFile(std::string(RESOURCES_PATH) + fileName);
+    texture.loadFromFile(Config::instance().resources + fileName);
     texture.setSmooth(false);
     sprite.setTexture(texture);
     sprite.setScale(scale_);

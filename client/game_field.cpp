@@ -10,7 +10,7 @@ DraggableAndDroppableShips::DraggableAndDroppableShips(const sf::Vector2<float> 
                                                                                                    dragged({false}) {
     float nextYPosition = 0;
     for (char i = 1; i <= 4; i++) {
-        tShip[i].loadFromFile(std::string(RESOURCES_PATH) + "Ship" + std::to_string(i) + "_a.png");
+        tShip[i].loadFromFile(Config::instance().resources + "Ship" + std::to_string(i) + "_a.png");
         sShip[i].setTexture(tShip[i]);
         sShip[i].setScale(scale);
         startPos[i] = sf::Vector2<float>(
