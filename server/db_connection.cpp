@@ -2,26 +2,6 @@
 
 char DBConnection::CONN_STR[] = "hostaddr=127.0.0.1 port=5432 dbname=battleship_db user=roman password=roman";
 
-void DBConnection::insertNewUser(const std::string &login, const std::string &password) {
-    sf::Mutex m;
-    std::stringstream ss;
-    m.lock();
-    auto id = w->exec1("SELECT MAX(id) FROM users");
-    ss << "INSERT INTO users VALUES ('" << login << "', '" << password << "', " << id[0].as<int>() + 1 << ", 0, " << ONLINE << ")";
-    w->exec(ss.str());
-    m.unlock();
-}
-
-void DBConnection::selectUsers(std::unordered_set<std::string> &userLogins) {
-    sf::Mutex m;
-    m.lock();
-    auto users = w->exec("SELECT login FROM users");
-    m.unlock();
-    for (auto i: users) {
-        userLogins.insert(i[0].as<std::string>());
-    }
-}
-
 bool DBConnection::isPasswordCorrect(const std::string &login, const std::string &password) {
     sf::Mutex m;
     m.lock();
@@ -72,5 +52,40 @@ void DBConnection::updateStatus(unsigned int id, UserStatus status) {
     sf::Mutex m;
     m.lock();
     w->exec("UPDATE  users SET status = " + std::to_string(status) + " WHERE id = " + std::to_string(id) + ";");
+    m.unlock();
+}
+
+std::string DBConnection::getLogin(unsigned int id) {
+    sf::Mutex m;
+    m.lock();
+    auto result = w->exec1("SELECT login FROM users WHERE id = " + std::to_string(id) + ";");
+    m.unlock();
+    return result[0].as<std::string>();
+}
+
+std::list<unsigned int> DBConnection::getFriends(unsigned int id) {
+    sf::Mutex m;
+    m.lock();
+    auto result = w->exec("SELECT friend_id FROM friends WHERE user_id = " + std::to_string(id) + ";");
+    m.unlock();
+    std::list<unsigned int> friends;
+    for (auto row: result){
+        for (auto i: row){
+            friends.push_back(i.as<unsigned int>());
+        }
+    }
+    return std::move(friends);
+}
+
+void DBConnection::addFriend(unsigned int usr, unsigned int frnd) {
+    sf::Mutex m;
+    m.lock();
+    auto result = w->exec1(
+            "SELECT count(user_id) from friends WHERE user_id = " +
+            std::to_string(usr) + " AND friend_id = " + std::to_string(frnd) + ";");
+    if (result[0].as<unsigned int>() == 1){
+        return;
+    }
+    w->exec("INSERT INTO friends (user_id, friend_id) VALUES (" + std::to_string(usr) + ", " + std::to_string(frnd) + ");");
     m.unlock();
 }

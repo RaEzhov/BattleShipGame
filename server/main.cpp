@@ -1,4 +1,3 @@
-#include <iostream>
 #include <thread>
 #include <list>
 #include <unordered_set>
@@ -7,6 +6,7 @@
 #include <csignal>
 
 #include "db_connection.h"
+#include "logger.h"
 
 using namespace sf;
 
@@ -29,11 +29,13 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned
     while (connected == Socket::Status::Done) {
         connected = (*client)->receive(packet);
         packet >> status >> msg;
-        std::cout << "Client " << (*client)->getRemoteAddress() << ":" << (*client)->getRemotePort() << " " << status << " " << msg << "\n";
+        Logger::log("client " + (*client)->getRemoteAddress().toString() + ":" + std::to_string((*client)->getRemotePort())
+            +  " " + std::to_string(status) + " " + msg);
+
         packet.clear();
     }
     conn->updateStatus(id, OFFLINE);
-    std::cout << "Client " << (*client)->getRemoteAddress() << ":" << (*client)->getRemotePort() << " disconnected!\n";
+    Logger::log("client " + (*client)->getRemoteAddress().toString() + ":" + std::to_string((*client)->getRemotePort()) + " disconnected");
     clients.erase(client);
 }
 
@@ -59,49 +61,51 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
         packet.clear();
     }
     if (connected == Socket::Status::Done) {
-        std::cout << "Client " << userIp << ":" << userPort << " has authenticated!\n";
+        Logger::log("client " + userIp.toString() + ":" + std::to_string(userPort) + " has authenticated");
         auto idRating = conn->getUserIdRating(login);
         packet.clear();
         packet << idRating.first << idRating.second;
         (*user)->send(packet);
         clientLoop(user, idRating.first);
     } else {
-        std::cout << "Client " << userIp << ":" << userPort << " disconnected!\n";
+        Logger::log("client " + userIp.toString() + ":" + std::to_string(userPort) + " disconnected");
     }
 }
 
 
 void signalCallbackHandler(int signum) {
     listener->close();
-    std::cout << "Program terminated\n";
+    Logger::log("program terminated");
     exit(signum);
 }
 
 int main() {
     listener = std::make_unique<TcpListener>();
     signal(SIGINT, signalCallbackHandler);
+    signal(SIGTERM, signalCallbackHandler);
     try {
         conn = std::make_unique<DBConnection>();
-        std::cout << "Database connected\n";
+        Logger::log("database connected");
     }
     catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl; //log
+        Logger::log(e.what(), ERROR);
         return 1;
     }
 
     // bind the listener to a port
     if (listener->listen(PORT) != sf::Socket::Done) {
-        std::cout << "Listen error!";
+        Logger::log("listener cannot start", ERROR);
         return 1;
     }
-    std::cout << "Listener started\n";
+    Logger::log("listener started");
     while (true) {
         clients.push_back(std::make_unique<TcpSocket>());
         if (listener->accept(**(--clients.end())) != Socket::Done) {
-            std::cout << "Accept error!\n";
+            Logger::log("error accepting", WARNING);
         }
-        std::cout << "Client " << (**(--clients.end())).getRemoteAddress() << ":"
-                  << (**(--clients.end())).getRemotePort() << " accepted!\n";
+        Logger::log("client " + (**(--clients.end())).getRemoteAddress().toString() +
+        ":" + std::to_string((**(--clients.end())).getRemotePort()) + " accepted");
+
         std::thread clientThread(authUser, --clients.end());
         clientThread.detach();
     }
