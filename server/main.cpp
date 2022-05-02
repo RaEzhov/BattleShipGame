@@ -8,6 +8,8 @@
 #include "db_connection.h"
 #include "logger.h"
 
+#include "../message_status.h"
+
 using namespace sf;
 
 const char IP_ADDR[] = "127.0.0.1";
@@ -22,16 +24,33 @@ static std::list<std::unique_ptr<TcpSocket>> clients;
 
 void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned int id) {
     Packet packet;
-    unsigned short status;
+    int status;
     conn->updateStatus(id, ONLINE);
     std::string msg;
     Socket::Status connected = Socket::Status::Done;
     while (connected == Socket::Status::Done) {
         connected = (*client)->receive(packet);
-        packet >> status >> msg;
-        Logger::log("client " + (*client)->getRemoteAddress().toString() + ":" + std::to_string((*client)->getRemotePort())
-            +  " " + std::to_string(status) + " " + msg);
+        packet >> status;
 
+        std::list<unsigned int> friends;
+
+        switch (status) {
+            case GET_FRIENDS:
+                friends = conn->getFriends(id);
+                packet.clear();
+                for (auto& f: friends){
+                    packet << conn->getLogin(f);
+                }
+                (*client)->send(packet);
+                Logger::log("user " + std::to_string(id) + " get friends");
+                break;
+            case ADD_FRIEND:
+                break;
+            case DO_MOVE:
+                break;
+            default:
+                Logger::log("wrong message status from " + std::to_string(id));
+        }
         packet.clear();
     }
     conn->updateStatus(id, OFFLINE);
@@ -76,7 +95,7 @@ void authUser(std::list<std::unique_ptr<TcpSocket>>::iterator user) {
 void signalCallbackHandler(int signum) {
     listener->close();
     Logger::log("program terminated");
-    exit(signum);
+    exit(0);
 }
 
 int main() {

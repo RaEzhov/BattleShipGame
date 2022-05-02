@@ -14,6 +14,7 @@
 #include <SFML/Network.hpp>
 
 #include "config.h"
+#include "../message_status.h"
 
 
 enum GameFieldState{
@@ -53,8 +54,8 @@ class Button : public ScreenObject {
 public:
     Button(float x, float y, sf::Vector2<float> scale_, std::function<void()> funcRef,
            std::shared_ptr<sf::RenderWindow> window_, const std::string &text_, unsigned int textSize, sf::Color textColor_,
-           const std::string &font = "Upheavtt.ttf", const std::string &buttonOn = Config::instance().resources + "button1.png",
-           const std::string &buttonOff = Config::instance().resources + "button2.png");
+           const std::string &font = "Upheavtt.ttf", const std::string &buttonOn = "button1.png",
+           const std::string &buttonOff = "button2.png");
 
     void draw();
 
@@ -77,7 +78,7 @@ private:
 
 class Entry : public ScreenObject {
 public:
-    Entry(sf::Vector2<float> position, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize,
+    Entry(sf::Vector2<float> position, sf::Vector2<float> scale, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize,
           bool isLogOrPass = true, std::function<void()> enterFunc = nullptr, const std::string& str = "");
 
     void eventCheck(sf::Event &event);
@@ -102,7 +103,7 @@ private:
 
 class Title : public ScreenObject {
 public:
-    Title(const std::string &text_, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_,
+    Title(const std::string &text_, sf::Vector2<float> position, sf::Vector2<float> scale_, std::shared_ptr<sf::RenderWindow> window_,
           int size = 24, sf::Color color_ = sf::Color::Black, const std::string &font_ = "Upheavtt.ttf");
 
     void setText(const std::string &newText);
@@ -128,9 +129,34 @@ public:
 
     void draw() const;
 
+    void setPosition(sf::Vector2<float> newPosition);
+
+    sf::Rect<float> getSize() const;
+
 private:
     sf::Texture texture;
     sf::Sprite sprite;
+};
+
+class Pages : public ScreenObject {
+public:
+    Pages(sf::Vector2<float> position, sf::Vector2<float> scale_, std::shared_ptr<sf::RenderWindow> window_);
+
+    void eventCheck(sf::Event &event);
+
+    void draw();
+
+    void addTitle(const std::string &string);
+
+private:
+    void nextPage();
+
+    void previousPage();
+
+    std::unique_ptr<Button> previous, next;
+    std::unique_ptr<Picture> background;
+    std::list<Title> words;
+    sf::Vector2<float> position, scale;
 };
 
 #endif//SCREEN_OBJECTS_H
