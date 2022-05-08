@@ -38,6 +38,7 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned
             case GET_FRIENDS:
                 friends = conn->getFriends(id);
                 packet.clear();
+                packet << static_cast<unsigned int>(friends.size());
                 for (auto& f: friends){
                     packet << conn->getLogin(f);
                 }

@@ -16,6 +16,7 @@
 #include "config.h"
 #include "../message_status.h"
 
+const auto beige = sf::Color(225, 225, 225, 255);
 
 enum GameFieldState{
     PLACEMENT,
@@ -52,7 +53,7 @@ protected:
 
 class Button : public ScreenObject {
 public:
-    Button(float x, float y, sf::Vector2<float> scale_, std::function<void()> funcRef,
+    Button(sf::Vector2<float> position_, sf::Vector2<float> scale_, std::function<void()> funcRef,
            std::shared_ptr<sf::RenderWindow> window_, const std::string &text_, unsigned int textSize, sf::Color textColor_,
            const std::string &font = "Upheavtt.ttf", const std::string &buttonOn = "button1.png",
            const std::string &buttonOff = "button2.png");
@@ -60,6 +61,10 @@ public:
     void draw();
 
     void eventCheck(sf::Event &event);
+
+    void move(sf::Vector2<float> offset);
+
+    sf::Rect<float> getSize() const;
 
 private:
     sf::Text text;
@@ -78,14 +83,14 @@ private:
 
 class Entry : public ScreenObject {
 public:
-    Entry(sf::Vector2<float> position, sf::Vector2<float> scale, unsigned int size, std::shared_ptr<sf::RenderWindow> window_, unsigned int fontSize,
-          bool isLogOrPass = true, std::function<void()> enterFunc = nullptr, const std::string& str = "");
+    Entry(sf::Vector2<float> position, sf::Vector2<float> scale, unsigned int size, std::shared_ptr<sf::RenderWindow> window_,
+          unsigned int fontSize, bool isLogOrPass = true, std::function<void()> enterFunc = nullptr, const std::string &str = "");
 
     void eventCheck(sf::Event &event);
 
     void draw(bool hidden = false);
 
-    std::string getStr();
+    std::string getStr() const;
 
 private:
     bool isLoginOrPassword;
@@ -108,6 +113,10 @@ public:
 
     void setText(const std::string &newText);
 
+    std::string getText() const;
+
+    void move(sf::Vector2<float> offset);
+
     void setColor(sf::Color clr);
 
     sf::FloatRect getSize() const;
@@ -117,9 +126,21 @@ public:
     void draw();
 
 private:
-    sf::Text text;
     sf::Font font;
 
+protected:
+    sf::Text text;
+};
+
+class TitleRef : public Title {
+public:
+    TitleRef(const std::string &text_, sf::Vector2<float> position, sf::Vector2<float> scale_, std::shared_ptr<sf::RenderWindow> window_,
+             int size = 24, std::function<void()> func = nullptr, sf::Color color_ = sf::Color::Black, const std::string &font_ = "Upheavtt.ttf");
+
+    void eventCheck(sf::Event &event);
+
+private:
+    std::function<void()> function;
 };
 
 class Picture : public ScreenObject {
@@ -138,6 +159,30 @@ private:
     sf::Sprite sprite;
 };
 
+class Animation : public ScreenObject {
+public:
+    Animation(sf::Vector2<float> position_, sf::Vector2<float> scale_, unsigned int frames, float speed_,
+              const std::string &filename, std::shared_ptr<sf::RenderWindow> window_);
+
+    void draw();
+
+    sf::Rect<float> getSize() const;
+
+    bool isAnimationPlaying() const;
+
+    void playAnimation(bool reverse = false);
+
+private:
+    void changeSprites(bool reverse);
+
+    std::list<sf::Texture> textures;
+    std::list<sf::Sprite> sprites;
+    std::list<sf::Sprite>::iterator sprite;
+    float speed;
+    sf::Clock clock;
+    bool isPlaying;
+};
+
 class Pages : public ScreenObject {
 public:
     Pages(sf::Vector2<float> position, sf::Vector2<float> scale_, std::shared_ptr<sf::RenderWindow> window_);
@@ -146,7 +191,9 @@ public:
 
     void draw();
 
-    void addTitle(const std::string &string);
+    void addTitle(const std::string &string, std::function<void()> func = nullptr);
+
+    void clearTitles();
 
 private:
     void nextPage();
@@ -154,9 +201,53 @@ private:
     void previousPage();
 
     std::unique_ptr<Button> previous, next;
-    std::unique_ptr<Picture> background;
-    std::list<Title> words;
+    std::unique_ptr<Animation> background;
+    std::list<TitleRef> words;
+    size_t lastPosNum;
+    std::list<TitleRef>::iterator drown;
+    std::vector<sf::Vector2<float>> positions;
     sf::Vector2<float> position, scale;
+};
+
+class Notification : public ScreenObject {
+public:
+    friend class NotificationPool;
+
+    Notification(const std::string &text, char id_, sf::Vector2<float> position, sf::Vector2<float> scale,
+                 std::shared_ptr<sf::RenderWindow> window_, std::function<void()> function);
+
+    void eventCheck(sf::Event &event);
+
+    sf::Rect<float> getSize() const;
+
+    void draw();
+
+    void moveUp();
+
+private:
+    Picture background;
+    Title info;
+    Button close;
+    char id;
+};
+
+class NotificationPool : public ScreenObject {
+public:
+    explicit NotificationPool(sf::Vector2<float> scale_, std::shared_ptr<sf::RenderWindow> window_);
+
+    void eventCheck(sf::Event &event);
+
+    void draw();
+
+    void addNotification(const std::string &info);
+
+private:
+    void deleteNotification(char id);
+
+    std::list<Notification> notifications;
+    std::list<std::list<Notification>::iterator> moveList;
+    sf::Vector2<float> scale;
+    char nextId;
 };
 
 #endif//SCREEN_OBJECTS_H

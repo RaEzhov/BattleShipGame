@@ -66,7 +66,7 @@ std::string DBConnection::getLogin(unsigned int id) {
 std::list<unsigned int> DBConnection::getFriends(unsigned int id) {
     sf::Mutex m;
     m.lock();
-    auto result = w->exec("SELECT friend_id FROM friends WHERE user_id = " + std::to_string(id) + ";");
+    auto result = w->exec("SELECT user_id FROM friends WHERE friend_id = " + std::to_string(id) + ";");
     m.unlock();
     std::list<unsigned int> friends;
     for (auto row: result){
@@ -77,15 +77,15 @@ std::list<unsigned int> DBConnection::getFriends(unsigned int id) {
     return std::move(friends);
 }
 
-void DBConnection::addFriend(unsigned int usr, unsigned int frnd) {
+void DBConnection::addFriend(unsigned int usrId, unsigned int frndId) {
     sf::Mutex m;
     m.lock();
     auto result = w->exec1(
             "SELECT count(user_id) from friends WHERE user_id = " +
-            std::to_string(usr) + " AND friend_id = " + std::to_string(frnd) + ";");
+            std::to_string(usrId) + " AND friend_id = " + std::to_string(frndId) + ";");
     if (result[0].as<unsigned int>() == 1){
         return;
     }
-    w->exec("INSERT INTO friends (user_id, friend_id) VALUES (" + std::to_string(usr) + ", " + std::to_string(frnd) + ");");
+    w->exec("INSERT INTO friends (user_id, friend_id) VALUES (" + std::to_string(usrId) + ", " + std::to_string(frndId) + ");");
     m.unlock();
 }

@@ -22,7 +22,15 @@ private:
 
     void singlePlayerFunc();
 
-    void multiPlayerFunc();
+    void multiPlayerLobby();
+
+    void multiPlayerFunc(const std::string &enemy);
+
+    void addFriend();
+
+    void removeFriend();
+
+    void randomRival();
 
     void startBattle(bool);
 
@@ -41,6 +49,8 @@ private:
     std::unordered_map<std::string, std::unique_ptr<Title>> titles;
     std::unordered_map<std::string, std::unique_ptr<DraggableAndDroppableShips>> dragDropShips;
     std::unordered_map<std::string, std::unique_ptr<GameField>> fields;
+    std::unordered_map<std::string, std::unique_ptr<Pages>> pages;
+    std::unique_ptr<NotificationPool> notifications;
 
     sf::Texture cursorTex;
     sf::Sprite cursor;

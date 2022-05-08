@@ -27,7 +27,6 @@ const ShipDirection operator++(ShipDirection& other, int){
     return rVal;
 }
 
-
 BattleShipGame::BattleShipGame(): server(std::make_unique<sf::TcpSocket>()), screen(sf::VideoMode::getDesktopMode()),
                                    window(std::make_shared<sf::RenderWindow>(sf::VideoMode::getDesktopMode(), "Battleship", sf::Style::Fullscreen)),
                                    screenScale(static_cast<float>(screen.width) / WIDTH, static_cast<float>(screen.height) / HEIGHT) {
@@ -55,11 +54,11 @@ void BattleShipGame::loadTextures() {
     Ship<3>::loadTextures();
     Ship<4>::loadTextures();
 
-    buttons["exit"] = std::make_unique<Button>(float(screen.width) * 0.05f, float(screen.height) * 0.85f, screenScale,
-                                               nullptr, window, "exit", 40, beige);
+    buttons["exit"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.85f},
+                                               screenScale, nullptr, window, "exit", 40, beige);
 
-    buttons["login"] = std::make_unique<Button>(float(screen.width) * 0.085f, float(screen.height) * 0.6f, screenScale * 0.7f,
-                                                [this] { loginFunc(); }, window, "sign in", 40, beige);
+    buttons["login"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.085f, static_cast<float>(screen.height) * 0.6f},
+                                                screenScale * 0.7f, [this] { loginFunc(); }, window, "sign in", 40, beige);
 
     std::string login, password;
 
@@ -68,22 +67,22 @@ void BattleShipGame::loadTextures() {
     cache >> login >> password;
     cache.close();
 
-    entries["login"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.08f, float(screen.height) * 0.37f},screenScale, 12,
-                                               window, 24, true, [this] { loginFunc(); }, login);
+    entries["login"] = std::make_unique<Entry>(sf::Vector2{static_cast<float>(screen.width) * 0.08f, static_cast<float>(screen.height) * 0.37f},
+                                               screenScale, 12, window, 24, true, [this] { loginFunc(); }, login);
 
-    entries["password"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.08f, float(screen.height) * 0.47f}, screenScale,
-                                                  12, window, 24, true, [this] { loginFunc(); }, password);
+    entries["password"] = std::make_unique<Entry>(sf::Vector2{static_cast<float>(screen.width) * 0.08f, static_cast<float>(screen.height) * 0.47f},
+                                                  screenScale, 12, window, 24, true, [this] { loginFunc(); }, password);
 
-    buttons["register"] = std::make_unique<Button>(float(screen.width) * 0.085f, float(screen.height) * 0.7f, screenScale * 0.7f,
-                                                   [this] { registerFunc(); }, window, "sign up", 40, beige);
+    buttons["register"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.085f, static_cast<float>(screen.height) * 0.7f},
+                                                   screenScale * 0.7f, [this] { registerFunc(); }, window, "sign up", 40, beige);
 
-    pictures["loginTable"] = std::make_unique<Picture>("loginTable.png", sf::Vector2<float>{screen.width * 0.04f, 0},
+    pictures["loginTable"] = std::make_unique<Picture>("loginTable.png", sf::Vector2<float>{static_cast<float>(screen.width) * 0.04f, 0},
                                                        screenScale * 3.6f, window);
 
-    buttons["single"] = std::make_unique<Button>(static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.25f,
+    buttons["single"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.25f},
                                                  screenScale, [this] { singlePlayerFunc(); }, window, "singleplayer", 25, beige);
-    buttons["multi"] = std::make_unique<Button>(static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.45f,
-                                                screenScale, [this] { multiPlayerFunc(); }, window, "multiplayer", 25, beige);
+    buttons["multi"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.45f},
+                                                screenScale, [this] { multiPlayerLobby(); }, window, "multiplayer", 25, beige);
     pictures["background"] = std::make_unique<Picture>("mainMenu.jpg",
                                                        sf::Vector2<float>{0, 0}, screenScale, window);
     pictures["battleShipText"] = std::make_unique<Picture>("battleship.png",
@@ -93,14 +92,14 @@ void BattleShipGame::loadTextures() {
 
     titles["login"] = std::make_unique<Title>(std::string("Login:"),
                                               sf::Vector2<float>{static_cast<float>(screen.width) * 0.08f + 10.0f,
-                                                                 static_cast<float>(screen.height) * 0.37f - 30.0f},
-                                              screenScale, window);
+                                                                 static_cast<float>(screen.height) * 0.37f - 40.0f},
+                                              screenScale, window, 30);
     titles["password"] = std::make_unique<Title>(std::string("Password:"),
                                                  sf::Vector2<float>{static_cast<float>(screen.width) * 0.08f + 10.0f,
-                                                                    static_cast<float>(screen.height) * 0.47f - 30.0f},
-                                                 screenScale, window);
-    buttons["mainMenu"] = std::make_unique<Button>(float(screen.width) * 0.05f, float(screen.height) * 0.85f, screenScale,
-                                                   [this] { mainMenu(); }, window, "back", 40, beige);
+                                                                    static_cast<float>(screen.height) * 0.47f - 40.0f},
+                                                 screenScale, window, 30);
+    buttons["mainMenu"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.85f},
+                                                   screenScale, [this] { mainMenu(); }, window, "back", 40, beige);
     titles["ship1Amount"] = std::make_unique<Title>(std::string("x" + std::to_string(4 - Ship<1>::aliveShips)),
                                                     sf::Vector2<float>{static_cast<float>(screen.width) * 0.5f + 50.0f,
                                                                        static_cast<float>(screen.height) * 0.17f},
@@ -117,9 +116,9 @@ void BattleShipGame::loadTextures() {
                                                     sf::Vector2<float>{static_cast<float>(screen.width) * 0.5f + 50.0f,
                                                                        static_cast<float>(screen.height) * 0.71f},
                                                     screenScale, window, 60);
-    buttons["startBattle"] = std::make_unique<Button>(float(screen.width) * 0.74f, float(screen.height) * 0.85f, screenScale,
-                                                      [this] { startBattle(true); }, window, "start", 40, beige);
-    buttons["randomPlace"] = std::make_unique<Button>(static_cast<float>(screen.width) * 0.425f, static_cast<float>(screen.height) * 0.88f,
+    buttons["startBattle"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.74f, static_cast<float>(screen.height) * 0.85f},
+                                                      screenScale, [this] { startBattle(true); }, window, "start", 40, beige);
+    buttons["randomPlace"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.425f, static_cast<float>(screen.height) * 0.88f},
                                                       screenScale * 0.7f, [this] { fields["myField"]->placeShipsRand(); }, window,
                                                       "randomly",
                                                       35, beige);
@@ -145,10 +144,24 @@ void BattleShipGame::loadTextures() {
     titles["enemyLevel"] = std::make_unique<Title>("level: -", sf::Vector2<float>{static_cast<float>(screen.width) * 0.9f,
                                                                                   static_cast<float>(screen.height) * 0.1f},
                                                    screenScale, window, 40, beige);
-    titles["end"] = std::make_unique<Title>("", sf::Vector2<float>(static_cast<float>(screen.width)*0.5f,
-                                                                   static_cast<float>(screen.height)*0.5f),
+    titles["end"] = std::make_unique<Title>("", sf::Vector2<float>(static_cast<float>(screen.width) * 0.5f,
+                                                                   static_cast<float>(screen.height) * 0.5f),
                                             screenScale, window, 100, sf::Color::White);
     pictures["end"] = std::make_unique<Picture>("ribbon.png", sf::Vector2<float>{0, 0}, screenScale * 10.f, window);
+    pictures["lobby"] = std::make_unique<Picture>("lobbyMenu.png", sf::Vector2<float>{0, 0}, screenScale, window);
+    pages["friends"] = std::make_unique<Pages>(sf::Vector2<float>{static_cast<float>(screen.width) * 0.1f,
+                                                                  static_cast<float>(screen.height) * 0.1f}, screenScale, window);
+    entries["friends"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.65f, float(screen.height) * 0.25f}, screenScale,
+                                                 12, window, 24, true, nullptr);
+    buttons["addFriend"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.8f, static_cast<float>(screen.height) * 0.25f},
+                                                    screenScale * 0.6f, [this] { addFriend(); }, window,
+                                                    "add friend", 20, beige);
+    buttons["removeFriend"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.8f, static_cast<float>(screen.height) * 0.35f},
+                                                       screenScale * 0.6f, [this] { removeFriend(); }, window,
+                                                       "remove friend", 20, beige);
+    buttons["randomRival"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.7f, static_cast<float>(screen.height) * 0.8f},
+                                                      screenScale, [this] { randomRival(); }, window, "random\nrival", 30, beige);
+    notifications = std::make_unique<NotificationPool>(screenScale, window);
 }
 
 void BattleShipGame::mainLoop() {
@@ -159,6 +172,8 @@ void BattleShipGame::mainLoop() {
             if (event.type == sf::Event::Closed) {
                 window->close();
             }
+            cursor.setPosition(static_cast<float>(sf::Mouse::getPosition().x), static_cast<float>(sf::Mouse::getPosition().y));
+            notifications->eventCheck(event);
             switch (user.status) {
                 case LOGIN:
                     entries["login"]->eventCheck(event);
@@ -204,16 +219,21 @@ void BattleShipGame::mainLoop() {
                     break;
                 case IN_MP_LOBBY:
                     buttons["mainMenu"]->eventCheck(event);
+                    pages["friends"]->eventCheck(event);
+                    entries["friends"]->eventCheck(event);
+                    buttons["addFriend"]->eventCheck(event);
+                    buttons["removeFriend"]->eventCheck(event);
+                    buttons["randomRival"]->eventCheck(event);
                     break;
                 default:
                     std::cerr << "Wrong status\n";
             }
         }
-
+        window->clear();
         switch (user.status) {
             case LOGIN:
                 pictures["background"]->draw();
-                pictures["loginTable"]->draw();
+                //pictures["loginTable"]->draw();
                 pictures["battleShipText"]->draw();
                 entries["login"]->draw();
                 titles["login"]->draw();
@@ -271,7 +291,6 @@ void BattleShipGame::mainLoop() {
                 titles["enemyLevel"]->draw();
                 break;
             case END_OF_GAME:
-
                 pictures["gameBackground"]->draw();
                 buttons["mainMenu"]->draw();
 
@@ -287,19 +306,25 @@ void BattleShipGame::mainLoop() {
 
                 break;
             case IN_MP_LOBBY:
-                pictures["background"]->draw();
+                pictures["lobby"]->draw();
                 buttons["mainMenu"]->draw();
+                pages["friends"]->draw();
+                entries["friends"]->draw();
+                buttons["addFriend"]->draw();
+                buttons["removeFriend"]->draw();
+                buttons["randomRival"]->draw();
                 break;
             default:
                 std::cerr << "Wrong status\n";
         }
-        cursor.setPosition(static_cast<float>(sf::Mouse::getPosition().x), static_cast<float>(sf::Mouse::getPosition().y));
+
+        notifications->draw();
         window->draw(cursor);
         window->display();
     }
 }
 
-std::string crypt(const std::string string, const std::string key){
+std::string crypt(const std::string& string, const std::string& key){
     std::string result;
     for (int i = 0; i < string.size(); i++){
         result.append(std::to_string(static_cast<int>(string[i]) + static_cast<int>(key[i % key.size()])));
@@ -387,21 +412,25 @@ void BattleShipGame::singlePlayerFunc() {
     fields["enemyField"]->clearShips();
 }
 
-void BattleShipGame::multiPlayerFunc() {
+void BattleShipGame::multiPlayerLobby() {
     sf::Packet packet;
     packet << GET_FRIENDS;
     server->send(packet);
     packet.clear();
-
+    unsigned int size;
     std::string frnd;
     auto connected = server->receive(packet);
     //TODO check server
-    for (int i = 0; i < packet.getDataSize(); i++){
+    packet >> size;
+    for (int i = 0; i < size; i++) {
         packet >> frnd;
-        std::cout << frnd;
+        pages["friends"]->addTitle(frnd, [this, frnd] { multiPlayerFunc(frnd); });
     }
-
     user.status = IN_MP_LOBBY;
+}
+
+void BattleShipGame::multiPlayerFunc(const std::string &enemy) {
+    user.status = MAIN_MENU;
 }
 
 void BattleShipGame::startBattle(bool singlePlayer) {
@@ -419,20 +448,32 @@ void BattleShipGame::startBattle(bool singlePlayer) {
     }
 }
 
-void BattleShipGame::finishBattle(bool meWin){
+void BattleShipGame::finishBattle(bool meWin) {
     fields["enemyField"]->setState(INACTIVE);
     user.status = END_OF_GAME;
-    auto& ttl = titles["end"];
-    if (meWin){
+    auto &ttl = titles["end"];
+    if (meWin) {
         ttl->setText("you win!");
     } else {
         ttl->setText("you lose!");
     }
-    ttl->setPosition(sf::Vector2<float>(static_cast<float>(screen.width)/2.f - ttl->getSize().width/2.f,
-                                                  static_cast<float>(screen.height)/2.f - ttl->getSize().height/2.f));
+    ttl->setPosition(sf::Vector2<float>(static_cast<float>(screen.width) / 2.f - ttl->getSize().width / 2.f,
+                                        static_cast<float>(screen.height) / 2.f - ttl->getSize().height / 2.f));
     //TODO send info to server
 }
 
 void BattleShipGame::changeSide() {
     user.myMove = !user.myMove;
+}
+
+void BattleShipGame::addFriend() {
+
+}
+
+void BattleShipGame::removeFriend() {
+
+}
+
+void BattleShipGame::randomRival() {
+
 }
