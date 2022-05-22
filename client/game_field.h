@@ -41,6 +41,8 @@ public:
 
     void clearShips();
 
+    std::vector<sf::Uint16> serializedField();
+
     void selfMove();
 
     void clearColors();

@@ -46,6 +46,8 @@ BattleShipGame::BattleShipGame(): server(std::make_unique<sf::TcpSocket>()), scr
 
     // Load all textures
     loadTextures();
+
+    enemy.init("-", 0, 0);
 }
 
 void BattleShipGame::loadTextures() {
@@ -117,7 +119,7 @@ void BattleShipGame::loadTextures() {
                                                                        static_cast<float>(screen.height) * 0.71f},
                                                     screenScale, window, 60);
     buttons["startBattle"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.74f, static_cast<float>(screen.height) * 0.85f},
-                                                      screenScale, [this] { startBattle(true); }, window, "start", 40, beige);
+                                                      screenScale, [this] { startBattle(); }, window, "start", 40, beige);
     buttons["randomPlace"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.425f, static_cast<float>(screen.height) * 0.88f},
                                                       screenScale * 0.7f, [this] { fields["myField"]->placeShipsRand(); }, window,
                                                       "randomly",
@@ -162,6 +164,9 @@ void BattleShipGame::loadTextures() {
     buttons["randomRival"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.7f, static_cast<float>(screen.height) * 0.8f},
                                                       screenScale, [this] { randomRival(); }, window, "random\nrival", 30, beige);
     notifications = std::make_unique<NotificationPool>(screenScale, window);
+    buttons["ready"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.74f, static_cast<float>(screen.height) * 0.85f},
+                                                      screenScale, [this] { startBattle(); }, window, "ready", 40, beige);
+
 }
 
 void BattleShipGame::mainLoop() {
@@ -225,6 +230,31 @@ void BattleShipGame::mainLoop() {
                     buttons["removeFriend"]->eventCheck(event);
                     buttons["randomRival"]->eventCheck(event);
                     break;
+                case IN_MP_MENU:
+                    fields["myField"]->eventCheck(event);
+                    fields["enemyField"]->eventCheck(event);
+                    buttons["mainMenu"]->eventCheck(event);
+                    buttons["ready"]->eventCheck(event);
+                    dragDropShips["placement"]->eventCheck(event);
+                    buttons["randomPlace"]->eventCheck(event);
+                    break;
+                case IN_MP_GAME:
+                    if (user.myMove) {
+                        user.wait = false;
+                        fields["enemyField"]->eventCheck(event);
+                    } else if (!user.wait) {
+                        user.wait = true;
+                    }
+                    /*if (fields["myField"]->getAliveShips() == 0){
+                        finishBattle(false);
+                    }
+                    if (fields["enemyField"]->getAliveShips() == 0){
+                        finishBattle(true);
+                    }
+*/
+                    fields["myField"]->eventCheck(event);
+                    buttons["mainMenu"]->eventCheck(event);
+                    break;
                 default:
                     std::cerr << "Wrong status\n";
             }
@@ -233,7 +263,6 @@ void BattleShipGame::mainLoop() {
         switch (user.status) {
             case LOGIN:
                 pictures["background"]->draw();
-                //pictures["loginTable"]->draw();
                 pictures["battleShipText"]->draw();
                 entries["login"]->draw();
                 titles["login"]->draw();
@@ -314,10 +343,46 @@ void BattleShipGame::mainLoop() {
                 buttons["removeFriend"]->draw();
                 buttons["randomRival"]->draw();
                 break;
+            case IN_MP_MENU:
+                pictures["gameBackground"]->draw();
+                buttons["mainMenu"]->draw();
+                buttons["ready"]->draw();
+                buttons["randomPlace"]->draw();
+
+                titles["ship1Amount"]->setText("x" + std::to_string(Ship<1>::aliveShips <= 4 ? (4 - Ship<1>::aliveShips) : 0));
+                titles["ship2Amount"]->setText("x" + std::to_string(Ship<2>::aliveShips <= 3 ? (3 - Ship<2>::aliveShips) : 0));
+                titles["ship3Amount"]->setText("x" + std::to_string(Ship<3>::aliveShips <= 2 ? (2 - Ship<3>::aliveShips) : 0));
+                titles["ship4Amount"]->setText("x" + std::to_string(Ship<4>::aliveShips <= 1 ? (1 - Ship<4>::aliveShips) : 0));
+
+                titles["ship4Amount"]->draw();
+                titles["ship3Amount"]->draw();
+                titles["ship2Amount"]->draw();
+                titles["ship1Amount"]->draw();
+
+                fields["myField"]->draw();
+                fields["enemyField"]->draw();
+                dragDropShips["placement"]->draw();
+
+                titles["myName"]->draw();
+                titles["myLevel"]->draw();
+                titles["enemyName"]->draw();
+                titles["enemyLevel"]->draw();
+                break;
+            case IN_MP_GAME:
+                pictures["gameBackground"]->draw();
+                buttons["mainMenu"]->draw();
+
+                fields["myField"]->draw();
+                fields["enemyField"]->draw();
+
+                titles["myName"]->draw();
+                titles["myLevel"]->draw();
+                titles["enemyName"]->draw();
+                titles["enemyLevel"]->draw();
+                break;
             default:
                 std::cerr << "Wrong status\n";
         }
-
         notifications->draw();
         window->draw(cursor);
         window->display();
@@ -349,8 +414,11 @@ void BattleShipGame::loginFunc() {
         std::pair<unsigned int, unsigned int> idRating;
         packet >> idRating.first >> idRating.second;
         user.init(login, idRating.first, idRating.second);
-
+        std::thread listener([this]{serverListener();});
+        listener.detach();
         mainMenu();
+    } else {
+        notifications->addNotification("Incorrect\nlogin or password");
     }
 }
 
@@ -373,7 +441,11 @@ void BattleShipGame::registerFunc() {
         packet >> idRating.first >> idRating.second;
         login.erase(login.begin());
         user.init(login, idRating.first, idRating.second);
+        std::thread listener([this]{serverListener();});
+        listener.detach();
         mainMenu();
+    } else {
+        notifications->addNotification("such user\nalready exists");
     }
 }
 
@@ -395,14 +467,21 @@ void BattleShipGame::mainMenu() {
     user.status = MAIN_MENU;
 }
 
-void BattleShipGame::singlePlayerFunc() {
-    user.status = IN_SP_MENU;
-    titles["myName"]->setColor(beige);
-    titles["myLevel"]->setColor(beige);
+void BattleShipGame::setEnemyTitles(){
+    titles["enemyName"]->setText(enemy.getNameStr());
+    titles["enemyLevel"]->setText(enemy.getRatingStr());
     titles["enemyName"]->setPosition(sf::Vector2<float>{static_cast<float>(screen.width) * 0.98f - titles["enemyName"]->getSize().width,
                                                         static_cast<float>(screen.height) * 0.025f});
     titles["enemyLevel"]->setPosition(sf::Vector2<float>{static_cast<float>(screen.width) * 0.98f - titles["enemyLevel"]->getSize().width,
                                                          static_cast<float>(screen.height) * 0.1f});
+
+}
+
+void BattleShipGame::singlePlayerFunc() {
+    user.status = IN_SP_MENU;
+    titles["myName"]->setColor(beige);
+    titles["myLevel"]->setColor(beige);
+    setEnemyTitles();
     pictures["end"]->setPosition(sf::Vector2<float>{static_cast<float>(screen.width) * 0.5f - pictures["end"]->getSize().width * 0.5f,
                                                     static_cast<float>(screen.height) * 0.5f - pictures["end"]->getSize().height * 0.5f +
                                                     static_cast<float>(screen.height) * 0.1f});
@@ -416,16 +495,6 @@ void BattleShipGame::multiPlayerLobby() {
     sf::Packet packet;
     packet << GET_FRIENDS;
     server->send(packet);
-    packet.clear();
-    unsigned int size;
-    std::string frnd;
-    auto connected = server->receive(packet);
-    //TODO check server
-    packet >> size;
-    for (int i = 0; i < size; i++) {
-        packet >> frnd;
-        pages["friends"]->addTitle(frnd, [this, frnd] { multiPlayerFunc(frnd); });
-    }
     user.status = IN_MP_LOBBY;
 }
 
@@ -433,18 +502,35 @@ void BattleShipGame::multiPlayerFunc(const std::string &enemy) {
     user.status = MAIN_MENU;
 }
 
-void BattleShipGame::startBattle(bool singlePlayer) {
+void BattleShipGame::startBattle() {
     if (Ship<1>::aliveShips == 4 && Ship<2>::aliveShips == 3 && Ship<3>::aliveShips == 2 && Ship<4>::aliveShips == 1) {
-        user.status = (singlePlayer ? IN_SP_GAME : IN_MP_GAME);
-        if (singlePlayer) {
+        if (user.status == IN_SP_MENU) {
             fields["enemyField"]->placeShipsRand();
             fields["enemyField"]->clearAvailability(true);
             fields["myField"]->clearAvailability(true);
             fields["myField"]->setState(INACTIVE);
             fields["enemyField"]->setState(GAME);
-        } else {
+            user.status = IN_SP_GAME;
+        } else if (user.status == IN_MP_MENU){
+            // Enemy not found
+            if (enemy.getNameStr() == "-"){
+                notifications->addNotification("your enemy did\nnot join");
+                return;
+            }
 
+            sf::Packet packet;
+            packet << ENEMY_FIELD << enemy.id;
+            for (auto i: fields["myField"]->serializedField()){
+                packet << i;
+            }
+            auto connected = server->send(packet);
+            //TODO check server connection
+            fields["myField"]->setState(INACTIVE);
+            fields["enemyField"]->setState(GAME);
+            user.status = IN_MP_GAME;
         }
+    } else {
+        notifications->addNotification("place all ships\nto start the battle");
     }
 }
 
@@ -475,5 +561,71 @@ void BattleShipGame::removeFriend() {
 }
 
 void BattleShipGame::randomRival() {
+    // Request to server for random rival
+    sf::Packet packet;
+    packet << WANT_RAND_PLAY << user.id;
+    server->send(packet);
 
+    titles["myName"]->setColor(beige);
+    titles["myLevel"]->setColor(beige);
+    setEnemyTitles();
+    pictures["end"]->setPosition(sf::Vector2<float>{static_cast<float>(screen.width) * 0.5f - pictures["end"]->getSize().width * 0.5f,
+                                                    static_cast<float>(screen.height) * 0.5f - pictures["end"]->getSize().height * 0.5f +
+                                                    static_cast<float>(screen.height) * 0.1f});
+    fields["myField"]->setState(PLACEMENT);
+    fields["enemyField"]->setState(INACTIVE);
+    fields["myField"]->clearShips();
+    fields["enemyField"]->clearShips();
+
+    notifications->addNotification("waiting for enemy");
+    user.status = IN_MP_MENU;
+}
+
+void BattleShipGame::serverListener() {
+    sf::Packet packet;
+    while(true){
+        auto connected = server->receive(packet);
+        if (connected != sf::Socket::Status::Done){
+            notifications->addNotification("lost connection\nto server");
+        }
+        int status;
+        packet >> status;
+
+        // Variables
+        // for GET_FRIENDS
+        unsigned int size;
+        std::string frnd;
+        // for ENEMY_FOUND
+        std::string enemyLogin;
+        unsigned int enemyId, enemyRating;
+
+        switch (status) {
+            case GET_FRIENDS:
+                packet >> size;
+                pages["friends"]->clearTitles();
+                for (int i = 0; i < size; i++) {
+                    packet >> frnd;
+                    pages["friends"]->addTitle(frnd, [this, frnd] { multiPlayerFunc(frnd); });
+                }
+                break;
+            case ENEMY_FOUND:
+                packet >> enemyLogin >> enemyId >> enemyRating >> user.myMove;
+                enemy.init(enemyLogin, enemyId, enemyRating);
+                setEnemyTitles();
+                // does not waits me
+                enemy.wait = false;
+                break;
+            case ENEMY_FIELD: {
+                //TODO serialise field and put it into enemy field
+                sf::Uint16 temp;
+                const char sizes[10] = {1, 1, 1, 1, 2, 2, 2, 3, 3, 4};
+                for (int i = 0; i < 10; i++) {
+                    packet >> temp;
+                    fields["enemyField"]->addShip((temp & 960) >> 6, (temp & 60) >> 2, sizes[i]);
+                }
+                enemy.wait = true;
+                break;
+            }
+        }
+    }
 }

@@ -24,6 +24,8 @@ public:
 
     std::string getRatingStr() const;
 
+    std::string getNameStr() const;
+
     void init(std::string  login_, unsigned int id_, unsigned int rating_);
 
 private:

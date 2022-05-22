@@ -87,6 +87,12 @@ void Button::move(sf::Vector2<float> offset) {
     spriteButtonOff.move(offset);
 }
 
+void Button::press() {
+    if (function){
+        function();
+    }
+}
+
 sf::Rect<float> Button::getSize() const {
     return spriteButtonOn.getGlobalBounds();
 }
@@ -409,6 +415,7 @@ void Pages::previousPage() {
 void Pages::clearTitles() {
     words.clear();
     drown = words.end();
+    lastPosNum = 0;
 }
 
 Notification::Notification(const std::string &text, char id_, sf::Vector2<float> position, sf::Vector2<float> scale,
@@ -416,7 +423,7 @@ Notification::Notification(const std::string &text, char id_, sf::Vector2<float>
         ScreenObject(window_), background("notification.png", position, scale, window_),
         info(text,sf::Vector2<float>{background.getSize().left + 10.f * scale.x, background.getSize().top + 15.f * scale.y}, scale * 1.3f, window_),
         close(sf::Vector2<float>{background.getSize().left + background.getSize().width - 40.f * scale.x,background.getSize().top + 10.f * scale.y},
-              scale * 0.5f, std::move(function), window_, "", 25, sf::Color::White, "Upheavtt.ttf", "cross.png", "cross.png"), id(id_) {}
+              scale * 0.5f, std::move(function), window_, "", 25, sf::Color::White, "Upheavtt.ttf", "cross.png", "cross.png"), id(id_), timer() {}
 
 void Notification::eventCheck(sf::Event &event) {
     close.eventCheck(event);
@@ -453,12 +460,25 @@ void NotificationPool::eventCheck(sf::Event &event) {
     for (auto i: moveList) {
         i->moveUp();
     }
+    if (!moveList.empty()){
+        sf::Event::MouseWheelScrollEvent();
+    }
     moveList.clear();
 }
 
 void NotificationPool::draw() {
-    for (auto &n: notifications) {
-        n.draw();
+    for (auto iter = notifications.begin(); iter != notifications.end();) {
+        auto next = iter;
+        next++;
+        iter->draw();
+        if (iter->timer.getElapsedTime() >= sf::seconds(5)){
+            deleteNotification(iter->id);
+            for (auto i: moveList) {
+                i->moveUp();
+            }
+            moveList.clear();
+        }
+        iter = next;
     }
 }
 

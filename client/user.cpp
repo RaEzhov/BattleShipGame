@@ -14,3 +14,7 @@ void User::init(std::string  login_, unsigned int id_, unsigned int rating_){
     status = LOGIN;
     wait = myMove = true;
 }
+
+std::string User::getNameStr() const {
+    return login;
+}

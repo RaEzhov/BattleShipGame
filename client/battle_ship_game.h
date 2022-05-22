@@ -24,6 +24,8 @@ private:
 
     void multiPlayerLobby();
 
+    void setEnemyTitles();
+
     void multiPlayerFunc(const std::string &enemy);
 
     void addFriend();
@@ -32,11 +34,13 @@ private:
 
     void randomRival();
 
-    void startBattle(bool);
+    void startBattle();
 
     void finishBattle(bool);
 
     void changeSide();
+
+    [[noreturn]] void serverListener();
 
 private:
     std::unique_ptr<sf::TcpSocket> server;
@@ -55,7 +59,7 @@ private:
     sf::Texture cursorTex;
     sf::Sprite cursor;
 
-    User user;
+    User user, enemy;
 
     static const float WIDTH, HEIGHT;
 };

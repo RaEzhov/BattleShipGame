@@ -4,6 +4,7 @@
 #include <SFML/Network.hpp>
 #include <memory>
 #include <csignal>
+#include <queue>
 
 #include "db_connection.h"
 #include "logger.h"
@@ -22,7 +23,12 @@ static std::unique_ptr<DBConnection> conn;
 
 static std::list<std::unique_ptr<TcpSocket>> clients;
 
+static std::unordered_map<unsigned int, std::list<std::unique_ptr<TcpSocket>>::iterator> clientsMap;
+
+static std::queue<unsigned int> randPlayQueue;
+
 void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned int id) {
+    clientsMap[id] = client;
     Packet packet;
     int status;
     conn->updateStatus(id, ONLINE);
@@ -38,7 +44,7 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned
             case GET_FRIENDS:
                 friends = conn->getFriends(id);
                 packet.clear();
-                packet << static_cast<unsigned int>(friends.size());
+                packet << GET_FRIENDS << static_cast<unsigned int>(friends.size());
                 for (auto& f: friends){
                     packet << conn->getLogin(f);
                 }
@@ -49,6 +55,44 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned
                 break;
             case DO_MOVE:
                 break;
+            case WANT_RAND_PLAY:
+                if (randPlayQueue.empty()){
+                    randPlayQueue.push(id);
+                    Logger::log("User " + std::to_string(id) + " added to queue");
+                } else {
+                    // Get enemy
+                    auto enemyId = randPlayQueue.front();
+                    randPlayQueue.pop();
+
+                    // Send info to this user
+                    auto enemyLogin = conn->getLogin(enemyId);
+                    auto enemyIdRating = conn->getUserIdRating(enemyLogin);
+                    packet.clear();
+                    packet << ENEMY_FOUND << enemyLogin << enemyIdRating.first << enemyIdRating.second << true;  // he moves first
+                    (*client)->send(packet);
+
+                    // Send info to enemy
+                    auto myLogin = conn->getLogin(id);
+                    auto myIdRating = conn->getUserIdRating(myLogin);
+                    packet.clear();
+                    packet << ENEMY_FOUND << myLogin << myIdRating.first << myIdRating.second << false;  // he moves second
+                    (*(clientsMap[enemyId]))->send(packet);
+                    Logger::log("users " + std::to_string(id) + ' ' + std::to_string(enemyId) + " went to game");
+                }
+                break;
+            case ENEMY_FIELD: {
+                unsigned int enemyId;
+                packet >> enemyId;
+                sf::Packet packet2;
+                packet2 << ENEMY_FIELD;
+                sf::Uint16 temp;
+                for (int i = 0; i < 10; i++) {
+                    packet >> temp;
+                    packet2 << temp;
+                }
+                (*(clientsMap[enemyId]))->send(packet2);
+                break;
+            }
             default:
                 Logger::log("wrong message status from " + std::to_string(id));
         }
@@ -56,6 +100,7 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned
     }
     conn->updateStatus(id, OFFLINE);
     Logger::log("client " + (*client)->getRemoteAddress().toString() + ":" + std::to_string((*client)->getRemotePort()) + " disconnected");
+    clientsMap.erase(id);
     clients.erase(client);
 }
 

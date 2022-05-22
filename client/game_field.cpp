@@ -471,3 +471,20 @@ unsigned char GameField::getAliveShips() const {
     }
     return count;
 }
+
+std::vector<sf::Uint16> GameField::serializedField() {
+    std::vector<sf::Uint16> result;
+    for (auto &s: ship1) {
+        result.emplace_back((s.getCoords().first * 64) | (s.getCoords().second * 4) | s.getDirection());
+    }
+    for (auto &s: ship2) {
+        result.emplace_back((s.getCoords().first * 64) | (s.getCoords().second * 4) | s.getDirection());
+    }
+    for (auto &s: ship3) {
+        result.emplace_back((s.getCoords().first * 64) | (s.getCoords().second * 4) | s.getDirection());
+    }
+    for (auto &s: ship4) {
+        result.emplace_back((s.getCoords().first * 64) | (s.getCoords().second * 4) | s.getDirection());
+    }
+    return std::move(result);
+}

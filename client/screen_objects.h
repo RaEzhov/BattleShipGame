@@ -10,6 +10,7 @@
 #include <utility>
 #include <memory>
 #include <unordered_map>
+#include <bitset>
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
 
@@ -31,10 +32,10 @@ enum ShipState {
 };
 
 enum ShipDirection{
-    UP,
-    RIGHT,
-    DOWN,
-    LEFT
+    UP = 0,
+    RIGHT = 1,
+    DOWN = 2,
+    LEFT = 3
 };
 
 enum ShipCheckStatus{
@@ -59,6 +60,8 @@ public:
            const std::string &buttonOff = "button2.png");
 
     void draw();
+
+    void press();
 
     void eventCheck(sf::Event &event);
 
@@ -229,6 +232,7 @@ private:
     Title info;
     Button close;
     char id;
+    sf::Clock timer;
 };
 
 class NotificationPool : public ScreenObject {
