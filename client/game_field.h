@@ -24,6 +24,9 @@ private:
 
 class GameField: public ScreenObject {
 public:
+
+    friend class BattleShipGame;
+
     GameField(sf::Vector2<float> position_, sf::Vector2<float> scale, GameFieldState state_,
               std::shared_ptr<sf::RenderWindow> window_, std::function<void()> changeSide_);
 
@@ -43,7 +46,7 @@ public:
 
     std::vector<sf::Uint16> serializedField();
 
-    void selfMove();
+    void selfMove(std::pair<unsigned char, unsigned char> move = {100, 100});
 
     void clearColors();
 
@@ -79,7 +82,6 @@ private:
     std::list<Ship<2>> ship2;
     std::list<Ship<3>> ship3;
     std::list<Ship<4>> ship4;
-    unsigned char aliveCount;
     sf::Vector2<float> scale, position;
     GameFieldState state;
 

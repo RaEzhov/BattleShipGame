@@ -30,6 +30,8 @@ public:
 
     void addAvailability();
 
+    bool isUnderShip();
+
 private:
     sf::RectangleShape cell;
     bool availability;

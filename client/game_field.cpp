@@ -1,4 +1,5 @@
 #include "game_field.h"
+#include "battle_ship_game.h"
 
 
 char GameField::shipSize = 0;
@@ -61,7 +62,7 @@ GameField::GameField(sf::Vector2<float> position_, sf::Vector2<float> scale_, Ga
                      std::shared_ptr<sf::RenderWindow> window_, std::function<void()> changeSide_):
         ScreenObject(window_), field("Field1.bmp", position_, scale_, window_), changeSide(std::move(changeSide_)),
         border("fieldLetters.png", sf::Vector2<float>(position_.x - 32 * scale_.x, position_.y - 32 * scale_.y), scale_, window_),
-        aliveCount(10), cells(10), state(state_), scale(scale_), position(position_) {
+        cells(10), state(state_), scale(scale_), position(position_) {
     int row = 0, col = 0;
     const int rectSize = 32;
     for (auto &item: cells) {
@@ -195,7 +196,7 @@ void GameField::drawShips(const std::list<Ship<N>> &ships) const {
                     ship.draw();
                 }
             }
-            break;
+            //TODO break;
         case INACTIVE:
         case PLACEMENT:
             for (auto &ship: ships) {
@@ -340,23 +341,31 @@ std::vector<GameFieldCell>& GameField::operator[](size_t i) {
     throw std::runtime_error("Invalid index in GameField!\n");
 }
 
-void GameField::selfMove() {
+void GameField::selfMove(std::pair<unsigned char, unsigned char> move) {
     sf::sleep(sf::seconds(0.1f));
-    char i = 0, j = 0;
-    for (auto &v: cells) {
-        for (auto &c: v) {
-            if (c.isAvailable()) {
-                c.shoot();
-                if (c.underShip) {
-                    findShip(std::pair<char, char>(i, j));
+    if (move == std::pair<unsigned char, unsigned char>{100, 100}) {
+        char i = 0, j = 0;
+        for (auto &v: cells) {
+            for (auto &c: v) {
+                if (c.isAvailable()) {
+                    c.shoot();
+                    if (c.underShip) {
+                        findShip(std::pair<char, char>(i, j));
+                    }
+                    changeSide();
+                    return;
                 }
-                changeSide();
-                return;
+                j++;
             }
-            j++;
+            i++;
+            j = 0;
         }
-        i++;
-        j = 0;
+    } else {
+        cells[move.first][move.second].shoot();
+        if (cells[move.first][move.second].underShip) {
+            findShip(move);
+        }
+        changeSide();
     }
 }
 

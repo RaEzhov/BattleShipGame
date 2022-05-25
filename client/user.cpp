@@ -1,6 +1,6 @@
 #include "user.h"
 
-User::User():login("no-login"), id(0), rating(0), status(LOGIN),
+User::User():login("-"), id(0), rating(0), status(LOGIN),
              wait(false), myMove(true){}
 
 std::string User::getRatingStr() const {
@@ -17,4 +17,10 @@ void User::init(std::string  login_, unsigned int id_, unsigned int rating_){
 
 std::string User::getNameStr() const {
     return login;
+}
+
+void User::reset() {
+    login = "-";
+    id = 0;
+    rating = 0;
 }

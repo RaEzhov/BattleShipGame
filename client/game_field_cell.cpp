@@ -1,6 +1,7 @@
 #include "game_field.h"
 #include "game_field_cell.h"
 #include "ship.h"
+#include "battle_ship_game.h"
 
 GameFieldCell::GameFieldCell(sf::Vector2<float> scale, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_):
         ScreenObject(window_), availability(true), underShip(false) {
@@ -29,6 +30,8 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                             parent.findShip(std::pair<char, char>(i, j));
                         }
                         parent.changeSide();
+                        BattleShipGame::moveCoords = {i, j};
+                        BattleShipGame::sendMove = true;
                     }
                 } else {
                     setAlpha(0);
@@ -512,4 +515,8 @@ void GameFieldCell::shoot() {
 
 void GameFieldCell::setUnderShip(bool under) {
     underShip = under;
+}
+
+bool GameFieldCell::isUnderShip() {
+    return underShip;
 }

@@ -28,6 +28,8 @@ public:
 
     void init(std::string  login_, unsigned int id_, unsigned int rating_);
 
+    void reset();
+
 private:
     std::string login;
     unsigned int id;

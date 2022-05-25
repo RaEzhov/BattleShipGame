@@ -3,6 +3,9 @@
 const float BattleShipGame::WIDTH = 1920;
 const float BattleShipGame::HEIGHT = 1080;
 
+std::pair<unsigned char, unsigned char> BattleShipGame::moveCoords = {0, 0};
+bool BattleShipGame::sendMove = false;
+
 ShipDirection& operator++(ShipDirection& other){
     switch (other) {
         case UP:
@@ -47,7 +50,7 @@ BattleShipGame::BattleShipGame(): server(std::make_unique<sf::TcpSocket>()), scr
     // Load all textures
     loadTextures();
 
-    enemy.init("-", 0, 0);
+    enemy.reset();
 }
 
 void BattleShipGame::loadTextures() {
@@ -349,10 +352,10 @@ void BattleShipGame::mainLoop() {
                 buttons["ready"]->draw();
                 buttons["randomPlace"]->draw();
 
-                titles["ship1Amount"]->setText("x" + std::to_string(Ship<1>::aliveShips <= 4 ? (4 - Ship<1>::aliveShips) : 0));
-                titles["ship2Amount"]->setText("x" + std::to_string(Ship<2>::aliveShips <= 3 ? (3 - Ship<2>::aliveShips) : 0));
-                titles["ship3Amount"]->setText("x" + std::to_string(Ship<3>::aliveShips <= 2 ? (2 - Ship<3>::aliveShips) : 0));
-                titles["ship4Amount"]->setText("x" + std::to_string(Ship<4>::aliveShips <= 1 ? (1 - Ship<4>::aliveShips) : 0));
+                titles["ship1Amount"]->setText("x" + std::to_string(4 - fields["myField"]->ship1.size()));
+                titles["ship2Amount"]->setText("x" + std::to_string(3 - fields["myField"]->ship2.size()));
+                titles["ship3Amount"]->setText("x" + std::to_string(2 - fields["myField"]->ship3.size()));
+                titles["ship4Amount"]->setText("x" + std::to_string(1 - fields["myField"]->ship4.size()));
 
                 titles["ship4Amount"]->draw();
                 titles["ship3Amount"]->draw();
@@ -379,6 +382,12 @@ void BattleShipGame::mainLoop() {
                 titles["myLevel"]->draw();
                 titles["enemyName"]->draw();
                 titles["enemyLevel"]->draw();
+                if (BattleShipGame::sendMove){
+                    BattleShipGame::sendMove = false;
+                    sf::Packet packet;
+                    packet << DO_MOVE << enemy.id << BattleShipGame::moveCoords.first << BattleShipGame::moveCoords.second;
+                    server->send(packet);
+                }
                 break;
             default:
                 std::cerr << "Wrong status\n";
@@ -462,6 +471,7 @@ void BattleShipGame::mainMenu() {
     titles["myLevel"]->setColor(sf::Color::Black);
     fields["myField"]->clearAvailability();
     fields["myField"]->clearColors();
+    enemy.reset();
     fields["enemyField"]->clearAvailability();
     fields["enemyField"]->clearColors();
     user.status = MAIN_MENU;
@@ -503,7 +513,8 @@ void BattleShipGame::multiPlayerFunc(const std::string &enemy) {
 }
 
 void BattleShipGame::startBattle() {
-    if (Ship<1>::aliveShips == 4 && Ship<2>::aliveShips == 3 && Ship<3>::aliveShips == 2 && Ship<4>::aliveShips == 1) {
+    if (fields["myField"]->ship1.size() == 4 && fields["myField"]->ship2.size() == 3 &&
+        fields["myField"]->ship3.size() == 2 && fields["myField"]->ship4.size() == 1) {
         if (user.status == IN_SP_MENU) {
             fields["enemyField"]->placeShipsRand();
             fields["enemyField"]->clearAvailability(true);
@@ -619,13 +630,21 @@ void BattleShipGame::serverListener() {
                 //TODO serialise field and put it into enemy field
                 sf::Uint16 temp;
                 const char sizes[10] = {1, 1, 1, 1, 2, 2, 2, 3, 3, 4};
-                for (int i = 0; i < 10; i++) {
+                for (char size_ : sizes) {
                     packet >> temp;
-                    fields["enemyField"]->addShip((temp & 960) >> 6, (temp & 60) >> 2, sizes[i]);
+                    fields["enemyField"]->addShip((temp & 960) >> 6, (temp & 60) >> 2, size_);
                 }
                 enemy.wait = true;
                 break;
             }
+            case DO_MOVE:
+                std::pair<unsigned char, unsigned char> move;
+                packet >> move.first >> move.second;
+                fields["myField"]->cells[move.first][move.second].shoot();
+                if (fields["myField"]->cells[move.first][move.second].isUnderShip()) {
+                    fields["myField"]->findShip(move);
+                }
+                changeSide();
         }
     }
 }

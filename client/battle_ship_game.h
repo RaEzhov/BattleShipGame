@@ -11,6 +11,10 @@ public:
 
     void mainLoop();
 
+    static std::pair<unsigned char, unsigned char> moveCoords;
+
+    static bool sendMove;
+
 private:
     void loadTextures();
 

@@ -53,8 +53,17 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned
                 break;
             case ADD_FRIEND:
                 break;
-            case DO_MOVE:
+            case DO_MOVE:{
+                Packet packet2;
+                unsigned int enemyId;
+                std::pair<unsigned char, unsigned char> move;
+                packet >> enemyId;
+                packet >> move.first >> move.second;
+                packet.clear();
+                packet << DO_MOVE << move.first << move.second;
+                (*(clientsMap[enemyId]))->send(packet);
                 break;
+            }
             case WANT_RAND_PLAY:
                 if (randPlayQueue.empty()){
                     randPlayQueue.push(id);
