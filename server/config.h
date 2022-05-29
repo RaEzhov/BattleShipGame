@@ -9,10 +9,8 @@ public:
 
     static const Config &instance();
 
-    std::string ip, resources;
+    std::string dbIp, dbUser, dbPassword;
     int port;
-    float buttonScale;
-    unsigned int framerate;
 private:
 
     Config();

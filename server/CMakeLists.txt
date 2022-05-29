@@ -3,7 +3,7 @@ project(BattleShipServer)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(BattleShipServer main.cpp db_connection.cpp logger.cpp)
+add_executable(BattleShipServer main.cpp db_connection.cpp logger.cpp config.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpqxx -lpq -pthread")
 

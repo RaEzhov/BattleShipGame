@@ -13,9 +13,7 @@
 
 using namespace sf;
 
-const char IP_ADDR[] = "127.0.0.1";
-
-const int PORT = 55555;
+const int PORT = 12345;
 
 static std::unique_ptr<TcpListener> listener;
 
@@ -34,8 +32,9 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned
     conn->updateStatus(id, ONLINE);
     std::string msg;
     Socket::Status connected = Socket::Status::Done;
+    connected = (*client)->receive(packet);
     while (connected == Socket::Status::Done) {
-        connected = (*client)->receive(packet);
+
         packet >> status;
 
         std::list<unsigned int> friends;
@@ -61,7 +60,13 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned
                 packet >> move.first >> move.second;
                 packet.clear();
                 packet << DO_MOVE << move.first << move.second;
-                (*(clientsMap[enemyId]))->send(packet);
+                if (clientsMap.find(enemyId) != clientsMap.end()) {
+                    (*(clientsMap[enemyId]))->send(packet);
+                } else {
+                    packet.clear();
+                    packet << ENEMY_DISCONNECTED;
+                    (*client)->send(packet);
+                }
                 break;
             }
             case WANT_RAND_PLAY:
@@ -77,16 +82,20 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned
                     auto enemyLogin = conn->getLogin(enemyId);
                     auto enemyIdRating = conn->getUserIdRating(enemyLogin);
                     packet.clear();
-                    packet << ENEMY_FOUND << enemyLogin << enemyIdRating.first << enemyIdRating.second << true;  // he moves first
+                    packet << ENEMY_FOUND << enemyLogin << enemyIdRating.first << enemyIdRating.second
+                           << true;  // he moves first
                     (*client)->send(packet);
 
                     // Send info to enemy
                     auto myLogin = conn->getLogin(id);
                     auto myIdRating = conn->getUserIdRating(myLogin);
                     packet.clear();
-                    packet << ENEMY_FOUND << myLogin << myIdRating.first << myIdRating.second << false;  // he moves second
-                    (*(clientsMap[enemyId]))->send(packet);
-                    Logger::log("users " + std::to_string(id) + ' ' + std::to_string(enemyId) + " went to game");
+                    packet << ENEMY_FOUND << myLogin << myIdRating.first << myIdRating.second
+                           << false;  // he moves second
+                    if (clientsMap.find(enemyId) != clientsMap.end()) {
+                        (*(clientsMap[enemyId]))->send(packet);
+                        Logger::log("users " + std::to_string(id) + ' ' + std::to_string(enemyId) + " went to game");
+                    }
                 }
                 break;
             case ENEMY_FIELD: {
@@ -99,13 +108,20 @@ void clientLoop(std::list<std::unique_ptr<TcpSocket>>::iterator client, unsigned
                     packet >> temp;
                     packet2 << temp;
                 }
-                (*(clientsMap[enemyId]))->send(packet2);
+                if (clientsMap.find(enemyId) != clientsMap.end()) {
+                    (*(clientsMap[enemyId]))->send(packet2);
+                } else {
+                    packet.clear();
+                    packet << ENEMY_DISCONNECTED;
+                    (*client)->send(packet);
+                }
                 break;
             }
             default:
                 Logger::log("wrong message status from " + std::to_string(id));
         }
         packet.clear();
+        connected = (*client)->receive(packet);
     }
     conn->updateStatus(id, OFFLINE);
     Logger::log("client " + (*client)->getRemoteAddress().toString() + ":" + std::to_string((*client)->getRemotePort()) + " disconnected");

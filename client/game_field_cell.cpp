@@ -46,7 +46,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                             if (cellRect.contains(mouse)) {
                                 if (event.type == sf::Event::MouseButtonReleased) {
                                     if (cellRect.contains(mouse)) {
-                                        if (Ship<1>::aliveShips < 4 && parent.addShip(i, j, GameField::shipSize)) {
+                                        if (parent.ship1.size() < 4 && parent.addShip(i, j, GameField::shipSize)) {
 
                                         }
                                         for (int j_ = 0; j_ <= 0; j_++) {
@@ -77,7 +77,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                                  (j >= 1 && sf::IntRect(parent[i][j - 1].cell.getGlobalBounds()).contains(mouse)))) {
                                 if (event.type == sf::Event::MouseButtonReleased) {
                                     if (cellRect.contains(mouse)) {
-                                        if (Ship<2>::aliveShips < 3 && parent.addShip(i, j, GameField::shipSize)) {
+                                        if (parent.ship2.size() < 3 && parent.addShip(i, j, GameField::shipSize)) {
 
                                         }
                                         for (int j_ = 0; j_ <= 1; j_++) {
@@ -109,7 +109,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                                  (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse)))) {
                                 if (event.type == sf::Event::MouseButtonReleased) {
                                     if (cellRect.contains(mouse)) {
-                                        if (Ship<2>::aliveShips < 3 && parent.addShip(i, j - 1, GameField::shipSize)) {
+                                        if (parent.ship2.size() < 3 && parent.addShip(i, j - 1, GameField::shipSize)) {
 
                                         }
                                         for (int j_ = -1; j_ <= 0; j_++) {
@@ -147,7 +147,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                                 (j >= 2 && sf::IntRect(parent[i][j - 2].cell.getGlobalBounds()).contains(mouse))) {
                                 if (event.type == sf::Event::MouseButtonReleased) {
                                     if (cellRect.contains(mouse)) {
-                                        if (Ship<3>::aliveShips < 2 && parent.addShip(i, j, GameField::shipSize)) {
+                                        if (parent.ship3.size() < 2 && parent.addShip(i, j, GameField::shipSize)) {
 
                                         }
                                         for (int j_ = 0; j_ <= 2; j_++) {
@@ -189,7 +189,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                                 (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse))) {
                                 if (event.type == sf::Event::MouseButtonReleased) {
                                     if (cellRect.contains(mouse)) {
-                                        if (Ship<3>::aliveShips < 2 && parent.addShip(i, j - 1, GameField::shipSize)) {
+                                        if (parent.ship3.size() < 2 && parent.addShip(i, j - 1, GameField::shipSize)) {
 
                                         }
                                         for (int j_ = -1; j_ <= 1; j_++) {
@@ -231,7 +231,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                                 (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse))) {
                                 if (event.type == sf::Event::MouseButtonReleased) {
                                     if (cellRect.contains(mouse)) {
-                                        if (Ship<3>::aliveShips < 2 && parent.addShip(i, j - '\2', GameField::shipSize)) {
+                                        if (parent.ship3.size() < 2 && parent.addShip(i, j - '\2', GameField::shipSize)) {
 
                                         }
                                         for (int j_ = -2; j_ <= 0; j_++) {
@@ -279,7 +279,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                                 (j >= 3 && sf::IntRect(parent[i][j - 3].cell.getGlobalBounds()).contains(mouse))) {
                                 if (event.type == sf::Event::MouseButtonReleased) {
                                     if (cellRect.contains(mouse)) {
-                                        if (Ship<4>::aliveShips < 1 && parent.addShip(i, j, GameField::shipSize)) {
+                                        if (parent.ship4.size() < 1 && parent.addShip(i, j, GameField::shipSize)) {
 
                                         }
                                         for (int j_ = 0; j_ <= 3; j_++) {
@@ -329,7 +329,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                                 (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse))) {
                                 if (event.type == sf::Event::MouseButtonReleased) {
                                     if (cellRect.contains(mouse)) {
-                                        if (Ship<4>::aliveShips < 1 && parent.addShip(i, j - 1, GameField::shipSize)) {
+                                        if (parent.ship4.size() < 1 && parent.addShip(i, j - 1, GameField::shipSize)) {
 
                                         }
                                         for (int j_ = -1; j_ <= 2; j_++) {
@@ -379,7 +379,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                                 (j <= 8 && sf::IntRect(parent[i][j + 1].cell.getGlobalBounds()).contains(mouse))) {
                                 if (event.type == sf::Event::MouseButtonReleased) {
                                     if (cellRect.contains(mouse)) {
-                                        if (Ship<4>::aliveShips < 1 && parent.addShip(i, j - 2, GameField::shipSize)) {
+                                        if (parent.ship4.size() < 1 && parent.addShip(i, j - 2, GameField::shipSize)) {
 
                                         }
                                         for (int j_ = -2; j_ <= 1; j_++) {
@@ -429,7 +429,7 @@ void GameFieldCell::eventCheck(sf::Event& event, GameFieldState state, GameField
                                 (j <= 6 && sf::IntRect(parent[i][j + 3].cell.getGlobalBounds()).contains(mouse))) {
                                 if (event.type == sf::Event::MouseButtonReleased) {
                                     if (cellRect.contains(mouse)) {
-                                        if (Ship<4>::aliveShips < 1 && parent.addShip(i, j - 3, GameField::shipSize)) {
+                                        if (parent.ship4.size() < 1 && parent.addShip(i, j - 3, GameField::shipSize)) {
 
                                         }
                                         for (int j_ = -3; j_ <= 0; j_++) {

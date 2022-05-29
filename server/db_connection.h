@@ -4,6 +4,8 @@
 #include <pqxx/pqxx>
 #include <SFML/Network.hpp>
 
+#include "config.h"
+
 enum UserStatus{
     OFFLINE = 0,
     ONLINE = 1,
@@ -36,7 +38,7 @@ public:
 private:
     std::unique_ptr<pqxx::connection> conn;
     std::unique_ptr<pqxx::work> w;
-    static char CONN_STR[];
+    static std::string CONN_STR;
 };
 
 #endif//DB_CONNECTION_H

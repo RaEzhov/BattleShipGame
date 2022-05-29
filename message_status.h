@@ -9,5 +9,6 @@
 #define WANT_RAND_PLAY 3
 #define ENEMY_FOUND 4
 #define ENEMY_FIELD 5
+#define ENEMY_DISCONNECTED 6
 
 #endif//MESSAGE_STATUS_H

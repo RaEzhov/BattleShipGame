@@ -10,11 +10,11 @@ const Config &Config::instance() {
     return *pInstance;
 }
 
-Config::Config(): port(int{}), buttonScale(float{}), framerate((unsigned int){}) {
+Config::Config(): port(int{}) {
     std::ifstream cfg;
     cfg.open("./config");
 
-    cfg >> ip >> port >> resources >> framerate >> buttonScale;
+    cfg >> port >> dbIp >> dbUser >> dbPassword;
 
     cfg.close();
 }

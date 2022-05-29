@@ -1,4 +1,6 @@
 #include "game_field.h"
+
+#include <cmath>
 #include "battle_ship_game.h"
 
 
@@ -150,19 +152,39 @@ void GameField::eventCheck(sf::Event &event) {
                 }
                 s.updateAvailability(cells);
             }
+            {
+                auto mouse = sf::Mouse::getPosition(*window);
 
-            for (char i = 0; i < cells.size(); i++) {
-                for (char j = 0; j < cells[i].size(); j++) {
-                    cells[i][j].eventCheck(event, state, *this, i, j, scale);
+                if (field.getSize().contains(mouse.x, mouse.y)) {
+                    unsigned int w = field.getSize().width, h = field.getSize().height;
+                    unsigned char posI = std::floor(((mouse.x - field.getSize().left) / w) * 10),
+                            posJ = std::floor(((mouse.y - field.getSize().top) / h) * 10);
+                    for (int i = -2; i < 3; i++) {
+                        for (int j = -2; j < 5; j++) {
+                            if (posI + i > -1 && posI + i < 10 && posJ + j > -1 && posJ + j < 10) {
+                                cells[posI + i][posJ + j].eventCheck(event, state, *this, posI + i, posJ + j, scale);
+                            }
+                        }
+                    }
                 }
             }
             break;
-        case GAME:
-            for (char i = 0; i < cells.size(); i++) {
-                for (char j = 0; j < cells[i].size(); j++) {
-                    cells[i][j].eventCheck(event, state, *this, i, j, scale);
+        case GAME: {
+            auto mouse = sf::Mouse::getPosition(*window);
+
+            if (field.getSize().contains(mouse.x, mouse.y)) {
+                unsigned int w = field.getSize().width, h = field.getSize().height;
+                unsigned char posI = std::floor(((mouse.x - field.getSize().left) / w) * 10),
+                        posJ = std::floor(((mouse.y - field.getSize().top) / h) * 10);
+                for (int i = -2; i < 3; i++) {
+                    for (int j = -2; j < 3; j++) {
+                        if (posI + i > -1 && posI + i < 10 && posJ + j > -1 && posJ + j < 10) {
+                            cells[posI + i][posJ + j].eventCheck(event, state, *this, posI + i, posJ + j, scale);
+                        }
+                    }
                 }
             }
+        }
             break;
     }
 }
@@ -177,12 +199,13 @@ void GameField::draw() const {
     }
     switch (state) {
         case INACTIVE:
-        case GAME:
         case PLACEMENT:
             drawShips(ship1);
             drawShips(ship2);
             drawShips(ship3);
             drawShips(ship4);
+            break;
+        case GAME:
             break;
     }
 }

@@ -27,6 +27,8 @@ public:
 
     friend class BattleShipGame;
 
+    friend class GameFieldCell;
+
     GameField(sf::Vector2<float> position_, sf::Vector2<float> scale, GameFieldState state_,
               std::shared_ptr<sf::RenderWindow> window_, std::function<void()> changeSide_);
 

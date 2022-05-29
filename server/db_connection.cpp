@@ -1,6 +1,8 @@
 #include "db_connection.h"
+#include "logger.h"
 
-char DBConnection::CONN_STR[] = "hostaddr=127.0.0.1 port=5432 dbname=battleship_db user=roman password=roman";
+std::string DBConnection::CONN_STR = std::move(std::string("hostaddr=" + Config::instance().dbIp + " port=5432 dbname=battleship_db user=" +
+        Config::instance().dbUser + " password=" + Config::instance().dbPassword));
 
 bool DBConnection::isPasswordCorrect(const std::string &login, const std::string &password) {
     sf::Mutex m;
@@ -46,7 +48,9 @@ DBConnection::~DBConnection() {
     w->commit();
 }
 
-DBConnection::DBConnection() : conn(std::make_unique<pqxx::connection>(CONN_STR)), w(std::make_unique<pqxx::work>(*conn)){}
+DBConnection::DBConnection() : conn(std::make_unique<pqxx::connection>(CONN_STR)), w(std::make_unique<pqxx::work>(*conn)){
+    Logger::log("database connection string is " + CONN_STR);
+}
 
 void DBConnection::updateStatus(unsigned int id, UserStatus status) {
     sf::Mutex m;

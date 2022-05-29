@@ -248,15 +248,24 @@ void BattleShipGame::mainLoop() {
                     } else if (!user.wait) {
                         user.wait = true;
                     }
-                    /*if (fields["myField"]->getAliveShips() == 0){
-                        finishBattle(false);
-                    }
-                    if (fields["enemyField"]->getAliveShips() == 0){
-                        finishBattle(true);
-                    }
-*/
                     fields["myField"]->eventCheck(event);
                     buttons["mainMenu"]->eventCheck(event);
+
+                    if (BattleShipGame::sendMove){
+                        BattleShipGame::sendMove = false;
+                        sf::Packet packet;
+                        packet << DO_MOVE << enemy.id << BattleShipGame::moveCoords.first << BattleShipGame::moveCoords.second;
+                        server->send(packet);
+                    }
+
+                    if (fields["enemyField"]->ship1.size() == 4 && fields["myField"]->ship1.size() == 4) {
+                        if (fields["myField"]->getAliveShips() == 0) {
+                            finishBattle(false);
+                        }
+                        if (fields["enemyField"]->getAliveShips() == 0) {
+                            finishBattle(true);
+                        }
+                    }
                     break;
                 default:
                     std::cerr << "Wrong status\n";
@@ -382,12 +391,6 @@ void BattleShipGame::mainLoop() {
                 titles["myLevel"]->draw();
                 titles["enemyName"]->draw();
                 titles["enemyLevel"]->draw();
-                if (BattleShipGame::sendMove){
-                    BattleShipGame::sendMove = false;
-                    sf::Packet packet;
-                    packet << DO_MOVE << enemy.id << BattleShipGame::moveCoords.first << BattleShipGame::moveCoords.second;
-                    server->send(packet);
-                }
                 break;
             default:
                 std::cerr << "Wrong status\n";
@@ -630,14 +633,31 @@ void BattleShipGame::serverListener() {
                 //TODO serialise field and put it into enemy field
                 sf::Uint16 temp;
                 const char sizes[10] = {1, 1, 1, 1, 2, 2, 2, 3, 3, 4};
-                for (char size_ : sizes) {
+                fields["enemyField"]->clearShips();
+                fields["enemyField"]->clearAvailability();
+                for (char size_: sizes) {
                     packet >> temp;
                     fields["enemyField"]->addShip((temp & 960) >> 6, (temp & 60) >> 2, size_);
+                    switch (size_) {
+                        case 1:
+                            (--(fields["enemyField"]->ship1.end()))->updateAvailability(fields["enemyField"]->cells);
+                            break;
+                        case 2:
+                            (--(fields["enemyField"]->ship2.end()))->updateAvailability(fields["enemyField"]->cells);
+                            break;
+                        case 3:
+                            (--(fields["enemyField"]->ship3.end()))->updateAvailability(fields["enemyField"]->cells);
+                            break;
+                        case 4:
+                            (--(fields["enemyField"]->ship4.end()))->updateAvailability(fields["enemyField"]->cells);
+                            break;
+                    }
                 }
+                fields["enemyField"]->clearAvailability(true);
                 enemy.wait = true;
                 break;
             }
-            case DO_MOVE:
+            case DO_MOVE: {
                 std::pair<unsigned char, unsigned char> move;
                 packet >> move.first >> move.second;
                 fields["myField"]->cells[move.first][move.second].shoot();
@@ -645,6 +665,12 @@ void BattleShipGame::serverListener() {
                     fields["myField"]->findShip(move);
                 }
                 changeSide();
+                break;
+            }
+            case ENEMY_DISCONNECTED:
+                notifications->addNotification("enemy\ndisconnected");
+                mainMenu();
+                break;
         }
     }
 }
