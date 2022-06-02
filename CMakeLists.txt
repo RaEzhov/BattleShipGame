@@ -3,4 +3,6 @@ project(BattleShipGame)
 
 add_subdirectory(client)
 
-add_subdirectory(server)
+IF("${CMAKE_SYSTEM}" MATCHES "Linux")
+    add_subdirectory(server)
+ENDIF()

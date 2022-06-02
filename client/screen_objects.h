@@ -7,8 +7,10 @@
 #include <thread>
 #include <chrono>
 #include <list>
+#include <array>
 #include <utility>
 #include <memory>
+#include <functional>
 #include <unordered_map>
 #include <bitset>
 #include <SFML/Graphics.hpp>

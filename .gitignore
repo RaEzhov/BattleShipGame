@@ -1,6 +1,12 @@
 .idea/*
+.vs/*
 cmake-build-*/*
+build/*
 CMakeFiles/*
+SetupBattleShip/*
+CMakeSettings.json
+BattleShipSetup/*
+out/*
 # Prerequisites
 *.d
 

@@ -36,6 +36,7 @@ BattleShipGame::BattleShipGame(): server(std::make_unique<sf::TcpSocket>()), scr
     // Connection to server
     if (server->connect(Config::instance().ip, Config::instance().port) != sf::Socket::Done) {
         throw std::runtime_error("Connection error!\n");
+        std::cout << "Conn err\n";
     }
 
     // Set up framerate limit

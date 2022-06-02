@@ -10,9 +10,9 @@ const Config &Config::instance() {
     return *pInstance;
 }
 
-Config::Config(): port(int{}), buttonScale(float{}), framerate((unsigned int){}) {
+Config::Config(): port(int{}), buttonScale(float{}), framerate(60) {
     std::ifstream cfg;
-    cfg.open("./config");
+    cfg.open("config");
 
     cfg >> ip >> port >> resources >> framerate >> buttonScale;
 
