@@ -3,7 +3,7 @@
 Button::Button(sf::Vector2<float> position_, sf::Vector2<float> scale_, std::function<void()> funcRef, std::shared_ptr<sf::RenderWindow> window_,
                const std::string &text_, unsigned int textSize, sf::Color textColor_, const std::string &font, const std::string &buttonOn,
                const std::string &buttonOff) : ScreenObject(window_), function(std::move(funcRef)), scale(scale_), buttonPosition(position_),
-               lockClick(false), pressed(false), textColor(textColor_) {
+               lockClick(false), pressed(false), textColor(textColor_), sound("button.wav") {
 
     // Loading sprites
     textFont.loadFromFile(Config::instance().resources + font);
@@ -69,6 +69,7 @@ void Button::eventCheck(sf::Event &event) {
             if (spriteButtonOn.getGlobalBounds().contains(mouse)) {
                 pressed = false;
                 spriteButtonOn.setColor(sf::Color(225, 225, 225, 255));
+                sound.play();
                 if (function) {
                     function();
                     return;
@@ -506,4 +507,15 @@ void NotificationPool::deleteNotification(char id) {
             return;
         }
     }
+}
+
+Sound::Sound(const std::string &file) {
+    if (!buffer.loadFromFile(Config::instance().resources + file)){
+        throw std::runtime_error("Load sound error!\n");
+    }
+    sound.setBuffer(buffer);
+}
+
+void Sound::play() {
+    sound.play();
 }

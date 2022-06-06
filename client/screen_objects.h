@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <bitset>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <SFML/Network.hpp>
 
 #include "config.h"
@@ -24,7 +25,8 @@ const auto beige = sf::Color(225, 225, 225, 255);
 enum GameFieldState{
     PLACEMENT,
     INACTIVE,
-    GAME
+    GAME,
+    ENEMY_INACTIVE
 };
 
 enum ShipState {
@@ -52,6 +54,17 @@ public:
 
 protected:
     std::shared_ptr<sf::RenderWindow> window;
+};
+
+class Sound {
+public:
+    explicit Sound(const std::string &file);
+
+    void play();
+
+private:
+    sf::SoundBuffer buffer;
+    sf::Sound sound;
 };
 
 class Button : public ScreenObject {
@@ -82,6 +95,7 @@ private:
     bool pressed;
     sf::Vector2<float> buttonPosition;
     sf::Vector2<float> scale;
+    Sound sound;
 
     std::function<void()> function;
 };

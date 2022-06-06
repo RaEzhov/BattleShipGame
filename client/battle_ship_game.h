@@ -20,6 +20,8 @@ private:
 
     void mainMenu();
 
+    void checkServer(sf::Socket::Status status);
+
     void loginFunc();
 
     void registerFunc();
@@ -64,6 +66,8 @@ private:
     sf::Sprite cursor;
 
     User user, enemy;
+
+    bool serverConnected;
 
     static const float WIDTH, HEIGHT;
 };

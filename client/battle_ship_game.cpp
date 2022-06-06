@@ -36,8 +36,8 @@ BattleShipGame::BattleShipGame(): server(std::make_unique<sf::TcpSocket>()), scr
     // Connection to server
     if (server->connect(Config::instance().ip, Config::instance().port) != sf::Socket::Done) {
         throw std::runtime_error("Connection error!\n");
-        std::cout << "Conn err\n";
     }
+    serverConnected = true;
 
     // Set up framerate limit
     window->setFramerateLimit(Config::instance().framerate);
@@ -81,9 +81,6 @@ void BattleShipGame::loadTextures() {
 
     buttons["register"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.085f, static_cast<float>(screen.height) * 0.7f},
                                                    screenScale * 0.7f, [this] { registerFunc(); }, window, "sign up", 40, beige);
-
-    pictures["loginTable"] = std::make_unique<Picture>("loginTable.png", sf::Vector2<float>{static_cast<float>(screen.width) * 0.04f, 0},
-                                                       screenScale * 3.6f, window);
 
     buttons["single"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.05f, static_cast<float>(screen.height) * 0.25f},
                                                  screenScale, [this] { singlePlayerFunc(); }, window, "singleplayer", 25, beige);
@@ -155,21 +152,25 @@ void BattleShipGame::loadTextures() {
                                             screenScale, window, 100, sf::Color::White);
     pictures["end"] = std::make_unique<Picture>("ribbon.png", sf::Vector2<float>{0, 0}, screenScale * 10.f, window);
     pictures["lobby"] = std::make_unique<Picture>("lobbyMenu.png", sf::Vector2<float>{0, 0}, screenScale, window);
-    pages["friends"] = std::make_unique<Pages>(sf::Vector2<float>{static_cast<float>(screen.width) * 0.1f,
+    pages["friends"] = std::make_unique<Pages>(sf::Vector2<float>{static_cast<float>(screen.width) * 0.3f,
                                                                   static_cast<float>(screen.height) * 0.1f}, screenScale, window);
-    entries["friends"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.65f, float(screen.height) * 0.25f}, screenScale,
+    entries["friends"] = std::make_unique<Entry>(sf::Vector2{float(screen.width) * 0.33f, float(screen.height) * 0.8f}, screenScale,
                                                  12, window, 24, true, nullptr);
-    buttons["addFriend"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.8f, static_cast<float>(screen.height) * 0.25f},
+    buttons["addFriend"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.5f, static_cast<float>(screen.height) * 0.75f},
                                                     screenScale * 0.6f, [this] { addFriend(); }, window,
                                                     "add friend", 20, beige);
-    buttons["removeFriend"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.8f, static_cast<float>(screen.height) * 0.35f},
+    buttons["removeFriend"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.5f, static_cast<float>(screen.height) * 0.85f},
                                                        screenScale * 0.6f, [this] { removeFriend(); }, window,
                                                        "remove friend", 20, beige);
-    buttons["randomRival"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.7f, static_cast<float>(screen.height) * 0.8f},
+    buttons["randomRival"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.74f, static_cast<float>(screen.height) * 0.85f},
                                                       screenScale, [this] { randomRival(); }, window, "random\nrival", 30, beige);
     notifications = std::make_unique<NotificationPool>(screenScale, window);
     buttons["ready"] = std::make_unique<Button>(sf::Vector2{static_cast<float>(screen.width) * 0.74f, static_cast<float>(screen.height) * 0.85f},
                                                       screenScale, [this] { startBattle(); }, window, "ready", 40, beige);
+
+    titles["friends"] = std::make_unique<Title>("friends", sf::Vector2<float>{static_cast<float>(screen.width) * 0.4f,
+                                                                               static_cast<float>(screen.height) * 0.05f},
+                                                screenScale, window, 80, beige);
 
 }
 
@@ -183,93 +184,96 @@ void BattleShipGame::mainLoop() {
             }
             cursor.setPosition(static_cast<float>(sf::Mouse::getPosition().x), static_cast<float>(sf::Mouse::getPosition().y));
             notifications->eventCheck(event);
-            switch (user.status) {
-                case LOGIN:
-                    entries["login"]->eventCheck(event);
-                    entries["password"]->eventCheck(event);
-                    buttons["login"]->eventCheck(event);
-                    buttons["exit"]->eventCheck(event);
-                    buttons["register"]->eventCheck(event);
-                    break;
-                case MAIN_MENU:
-                    buttons["single"]->eventCheck(event);
-                    buttons["multi"]->eventCheck(event);
-                    buttons["exit"]->eventCheck(event);
-                    break;
-                case IN_SP_MENU:
-                    fields["myField"]->eventCheck(event);
-                    fields["enemyField"]->eventCheck(event);
-                    buttons["mainMenu"]->eventCheck(event);
-                    buttons["startBattle"]->eventCheck(event);
-                    dragDropShips["placement"]->eventCheck(event);
-                    buttons["randomPlace"]->eventCheck(event);
-                    break;
-                case IN_SP_GAME:
-                    if (user.myMove) {
-                        user.wait = false;
+            if (serverConnected) {
+                switch (user.status) {
+                    case LOGIN:
+                        entries["login"]->eventCheck(event);
+                        entries["password"]->eventCheck(event);
+                        buttons["login"]->eventCheck(event);
+                        buttons["exit"]->eventCheck(event);
+                        buttons["register"]->eventCheck(event);
+                        break;
+                    case MAIN_MENU:
+                        buttons["single"]->eventCheck(event);
+                        buttons["multi"]->eventCheck(event);
+                        buttons["exit"]->eventCheck(event);
+                        break;
+                    case IN_SP_MENU:
+                        fields["myField"]->eventCheck(event);
                         fields["enemyField"]->eventCheck(event);
-                    } else if (!user.wait) {
-                        std::thread wait([this] { fields["myField"]->selfMove(); });
-                        wait.detach();
-                        user.wait = true;
-                    }
-                    if (fields["myField"]->getAliveShips() == 0){
-                        finishBattle(false);
-                    }
-                    if (fields["enemyField"]->getAliveShips() == 0){
-                        finishBattle(true);
-                    }
-
-                    fields["myField"]->eventCheck(event);
-                    buttons["mainMenu"]->eventCheck(event);
-                    break;
-                case END_OF_GAME:
-                    buttons["mainMenu"]->eventCheck(event);
-                    break;
-                case IN_MP_LOBBY:
-                    buttons["mainMenu"]->eventCheck(event);
-                    pages["friends"]->eventCheck(event);
-                    entries["friends"]->eventCheck(event);
-                    buttons["addFriend"]->eventCheck(event);
-                    buttons["removeFriend"]->eventCheck(event);
-                    buttons["randomRival"]->eventCheck(event);
-                    break;
-                case IN_MP_MENU:
-                    fields["myField"]->eventCheck(event);
-                    fields["enemyField"]->eventCheck(event);
-                    buttons["mainMenu"]->eventCheck(event);
-                    buttons["ready"]->eventCheck(event);
-                    dragDropShips["placement"]->eventCheck(event);
-                    buttons["randomPlace"]->eventCheck(event);
-                    break;
-                case IN_MP_GAME:
-                    if (user.myMove) {
-                        user.wait = false;
-                        fields["enemyField"]->eventCheck(event);
-                    } else if (!user.wait) {
-                        user.wait = true;
-                    }
-                    fields["myField"]->eventCheck(event);
-                    buttons["mainMenu"]->eventCheck(event);
-
-                    if (BattleShipGame::sendMove){
-                        BattleShipGame::sendMove = false;
-                        sf::Packet packet;
-                        packet << DO_MOVE << enemy.id << BattleShipGame::moveCoords.first << BattleShipGame::moveCoords.second;
-                        server->send(packet);
-                    }
-
-                    if (fields["enemyField"]->ship1.size() == 4 && fields["myField"]->ship1.size() == 4) {
+                        buttons["mainMenu"]->eventCheck(event);
+                        buttons["startBattle"]->eventCheck(event);
+                        dragDropShips["placement"]->eventCheck(event);
+                        buttons["randomPlace"]->eventCheck(event);
+                        break;
+                    case IN_SP_GAME:
+                        if (user.myMove) {
+                            user.wait = false;
+                            fields["enemyField"]->eventCheck(event);
+                        } else if (!user.wait) {
+                            std::thread wait([this] { fields["myField"]->selfMove(); });
+                            wait.detach();
+                            user.wait = true;
+                        }
                         if (fields["myField"]->getAliveShips() == 0) {
                             finishBattle(false);
                         }
                         if (fields["enemyField"]->getAliveShips() == 0) {
                             finishBattle(true);
                         }
-                    }
-                    break;
-                default:
-                    std::cerr << "Wrong status\n";
+
+                        fields["myField"]->eventCheck(event);
+                        buttons["mainMenu"]->eventCheck(event);
+                        break;
+                    case END_OF_GAME:
+                        buttons["mainMenu"]->eventCheck(event);
+                        break;
+                    case IN_MP_LOBBY:
+                        buttons["mainMenu"]->eventCheck(event);
+                        pages["friends"]->eventCheck(event);
+                        entries["friends"]->eventCheck(event);
+                        buttons["addFriend"]->eventCheck(event);
+                        buttons["removeFriend"]->eventCheck(event);
+                        buttons["randomRival"]->eventCheck(event);
+                        break;
+                    case IN_MP_MENU:
+                        fields["myField"]->eventCheck(event);
+                        fields["enemyField"]->eventCheck(event);
+                        buttons["mainMenu"]->eventCheck(event);
+                        buttons["ready"]->eventCheck(event);
+                        dragDropShips["placement"]->eventCheck(event);
+                        buttons["randomPlace"]->eventCheck(event);
+                        break;
+                    case IN_MP_GAME:
+                        if (user.myMove) {
+                            user.wait = false;
+                            fields["enemyField"]->eventCheck(event);
+                        } else if (!user.wait) {
+                            user.wait = true;
+                        }
+                        fields["myField"]->eventCheck(event);
+                        buttons["mainMenu"]->eventCheck(event);
+
+                        if (BattleShipGame::sendMove) {
+                            BattleShipGame::sendMove = false;
+                            sf::Packet packet;
+                            packet << DO_MOVE << enemy.id << BattleShipGame::moveCoords.first
+                                   << BattleShipGame::moveCoords.second;
+                            server->send(packet);
+                        }
+
+                        if (fields["enemyField"]->ship1.size() == 4 && fields["myField"]->ship1.size() == 4) {
+                            if (fields["myField"]->getAliveShips() == 0) {
+                                finishBattle(false);
+                            }
+                            if (fields["enemyField"]->getAliveShips() == 0) {
+                                finishBattle(true);
+                            }
+                        }
+                        break;
+                    default:
+                        std::cerr << "Wrong status\n";
+                }
             }
         }
         window->clear();
@@ -355,6 +359,7 @@ void BattleShipGame::mainLoop() {
                 buttons["addFriend"]->draw();
                 buttons["removeFriend"]->draw();
                 buttons["randomRival"]->draw();
+                titles["friends"]->draw();
                 break;
             case IN_MP_MENU:
                 pictures["gameBackground"]->draw();
@@ -418,12 +423,12 @@ void BattleShipGame::loginFunc() {
     server->send(packet);
     packet.clear();
     bool authDone;
-    auto connected = server->receive(packet);
-    //TODO check server
+    checkServer(server->receive(packet));
+
     packet >> authDone;
     if (authDone) {
         packet.clear();
-        connected = server->receive(packet);
+        checkServer(server->receive(packet));
         std::pair<unsigned int, unsigned int> idRating;
         packet >> idRating.first >> idRating.second;
         user.init(login, idRating.first, idRating.second);
@@ -444,12 +449,12 @@ void BattleShipGame::registerFunc() {
     server->send(packet);
     packet.clear();
     bool authDone;
-    auto connected = server->receive(packet);
-    //TODO check server
+    checkServer(server->receive(packet));
+
     packet >> authDone;
     if (authDone) {
         packet.clear();
-        connected = server->receive(packet);
+        checkServer(server->receive(packet));
         std::pair<unsigned int, unsigned int> idRating;
         packet >> idRating.first >> idRating.second;
         login.erase(login.begin());
@@ -538,8 +543,7 @@ void BattleShipGame::startBattle() {
             for (auto i: fields["myField"]->serializedField()){
                 packet << i;
             }
-            auto connected = server->send(packet);
-            //TODO check server connection
+            checkServer(server->send(packet));
             fields["myField"]->setState(INACTIVE);
             fields["enemyField"]->setState(GAME);
             user.status = IN_MP_GAME;
@@ -560,7 +564,12 @@ void BattleShipGame::finishBattle(bool meWin) {
     }
     ttl->setPosition(sf::Vector2<float>(static_cast<float>(screen.width) / 2.f - ttl->getSize().width / 2.f,
                                         static_cast<float>(screen.height) / 2.f - ttl->getSize().height / 2.f));
-    //TODO send info to server
+    if (meWin){
+        sf::Packet packet;
+        packet << ME_WIN;
+        server->send(packet);
+        //TODO update rating in server
+    }
 }
 
 void BattleShipGame::changeSide() {
@@ -579,8 +588,7 @@ void BattleShipGame::randomRival() {
     // Request to server for random rival
     sf::Packet packet;
     packet << WANT_RAND_PLAY << user.id;
-    server->send(packet);
-
+    checkServer(server->send(packet));
     titles["myName"]->setColor(beige);
     titles["myLevel"]->setColor(beige);
     setEnemyTitles();
@@ -588,7 +596,7 @@ void BattleShipGame::randomRival() {
                                                     static_cast<float>(screen.height) * 0.5f - pictures["end"]->getSize().height * 0.5f +
                                                     static_cast<float>(screen.height) * 0.1f});
     fields["myField"]->setState(PLACEMENT);
-    fields["enemyField"]->setState(INACTIVE);
+    fields["enemyField"]->setState(ENEMY_INACTIVE);
     fields["myField"]->clearShips();
     fields["enemyField"]->clearShips();
 
@@ -596,13 +604,19 @@ void BattleShipGame::randomRival() {
     user.status = IN_MP_MENU;
 }
 
+void BattleShipGame::checkServer(sf::Socket::Status status){
+    if (status != sf::Socket::Status::Done){
+        notifications->addNotification("lost connection\nto server");
+        serverConnected = false;
+    } else {
+        serverConnected = true;
+    }
+}
+
 void BattleShipGame::serverListener() {
     sf::Packet packet;
     while(true){
-        auto connected = server->receive(packet);
-        if (connected != sf::Socket::Status::Done){
-            notifications->addNotification("lost connection\nto server");
-        }
+        checkServer(server->receive(packet));
         int status;
         packet >> status;
 
@@ -631,7 +645,6 @@ void BattleShipGame::serverListener() {
                 enemy.wait = false;
                 break;
             case ENEMY_FIELD: {
-                //TODO serialise field and put it into enemy field
                 sf::Uint16 temp;
                 const char sizes[10] = {1, 1, 1, 1, 2, 2, 2, 3, 3, 4};
                 fields["enemyField"]->clearShips();
@@ -671,6 +684,9 @@ void BattleShipGame::serverListener() {
             case ENEMY_DISCONNECTED:
                 notifications->addNotification("enemy\ndisconnected");
                 mainMenu();
+                break;
+            case UPD_RATING:
+                packet >> user.rating;
                 break;
         }
     }

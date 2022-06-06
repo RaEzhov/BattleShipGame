@@ -10,5 +10,7 @@
 #define ENEMY_FOUND 4
 #define ENEMY_FIELD 5
 #define ENEMY_DISCONNECTED 6
+#define ME_WIN 7
+#define UPD_RATING 8
 
 #endif//MESSAGE_STATUS_H

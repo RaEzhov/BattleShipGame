@@ -197,34 +197,29 @@ void GameField::draw() const {
             c.draw();
         }
     }
-    switch (state) {
-        case INACTIVE:
-        case PLACEMENT:
-            drawShips(ship1);
-            drawShips(ship2);
-            drawShips(ship3);
-            drawShips(ship4);
-            break;
-        case GAME:
-            break;
-    }
+    drawShips(ship1);
+    drawShips(ship2);
+    drawShips(ship3);
+    drawShips(ship4);
 }
 
 template<char N>
 void GameField::drawShips(const std::list<Ship<N>> &ships) const {
     switch (state) {
+        case INACTIVE:
+        case PLACEMENT:
+            for (auto &ship: ships) {
+                ship.draw();
+            }
+            break;
         case GAME:
             for (auto &ship: ships) {
                 if (!ship.isAlive()) {
                     ship.draw();
                 }
             }
-            //TODO break;
-        case INACTIVE:
-        case PLACEMENT:
-            for (auto &ship: ships) {
-                ship.draw();
-            }
+            break;
+        case ENEMY_INACTIVE:
             break;
     }
 }
