@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  server:
+    mem_limit: 600m
+    build: .
+    container_name: BattleShipServer
+    restart: always
+    ports:
+      - "12345:12345"
+    privileged: true
+    stdin_open: true
+    tty: true

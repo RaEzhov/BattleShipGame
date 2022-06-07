@@ -1,0 +1,29 @@
+name: CmakeBuild
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Installing libraries
+        run: |
+          sudo apt update
+          sudo apt install -y libpqxx-dev libsfml-dev cmake ninja-build
+
+      - name: Build server
+        run: |
+          cd server
+          cmake -G Ninja -DCNAKE_BUILD_TYPE=Release -S ./ -B ./build
+          cd build
+          cmake --build ./ --target BattleShipServer --config Release
+
+      - name: Build client
+        run: |
+          cd client
+          cmake -G Ninja -DCNAKE_BUILD_TYPE=Release -S ./ -B ./build
+          cd build
+          cmake --build ./ --target BattleShipClient --config Release

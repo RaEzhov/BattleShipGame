@@ -1,0 +1,24 @@
+name: GoogleTests
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Installing libraries
+        run: |
+          sudo apt update
+          sudo apt install -y cmake ninja-build
+
+      - name: Building Tests
+        run: |
+          cd tests
+          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -S ./ -B ./build
+          cd build
+          cmake --build ./ --target BattleShipTests --config Release
+      - name: Running Tests
+        run: ./tests/build/BattleShipTests

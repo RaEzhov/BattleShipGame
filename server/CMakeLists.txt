@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.18)
 project(BattleShipServer)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -14,4 +14,4 @@ find_library(PQ_LIB pq)
 
 find_package(SFML COMPONENTS system network REQUIRED)
 
-TARGET_LINK_LIBRARIES(BattleShipServer  ${PQXX_LIB} ${PQ_LIB}  sfml-system sfml-network)
+target_link_libraries(BattleShipServer  ${PQXX_LIB} ${PQ_LIB}  sfml-system sfml-network)
