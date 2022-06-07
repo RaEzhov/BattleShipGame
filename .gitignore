@@ -1,7 +1,7 @@
 .idea/*
 .vs/*
-cmake-build-*/*
-build/*
+tests/*build*/*
+*build*/*
 CMakeFiles/*
 SetupBattleShip/*
 CMakeSettings.json

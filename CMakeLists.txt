@@ -6,3 +6,5 @@ add_subdirectory(client)
 IF("${CMAKE_SYSTEM}" MATCHES "Linux")
     add_subdirectory(server)
 ENDIF()
+
+add_subdirectory(tests)
