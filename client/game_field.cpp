@@ -353,7 +353,7 @@ void GameField::placeShipsRand() {
 }
 
 std::vector<GameFieldCell>& GameField::operator[](size_t i) {
-    if (i <= cells.size()) {
+    if (i < cells.size()) {
         return cells[i];
     }
     throw std::runtime_error("Invalid index in GameField!\n");
