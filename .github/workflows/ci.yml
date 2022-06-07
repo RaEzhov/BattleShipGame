@@ -11,8 +11,8 @@ jobs:
 
       - name: Installing libraries
         run: |
-        apt update
-        apt install -y libpqxx-dev libsfml-dev cmake ninja-build
+         apt update
+         apt install -y libpqxx-dev libsfml-dev cmake ninja-build
 
       - name: Build server
         run: |
