@@ -9,7 +9,8 @@ BattleShipSetup/*
 out/*
 # Prerequisites
 *.d
-
+*config
+*config
 # Compiled Object files
 *.slo
 *.lo

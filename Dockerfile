@@ -3,7 +3,8 @@
 FROM gcc:latest AS build
 
 WORKDIR BattleShip
-COPY . .
+COPY ./message_status.h .
+COPY ./server ./server
 
 RUN apt-get update && \
     apt-get install -y \
@@ -23,4 +24,4 @@ RUN apt-get update && \
 USER sample
 COPY --from=build BattleShip/server/build/BattleShipServer .
 COPY --from=build BattleShip/server/config .
-ENTRYPOINT ["./BattleShipServer"]
+CMD ["./BattleShipServer"]
