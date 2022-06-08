@@ -21,6 +21,6 @@ jobs:
       - name: Build ${{ matrix.build_what }}
         run: |
           cd ${{ matrix.build_what }}
-          cmake -G Ninja -DCNAKE_BUILD_TYPE=Release -S ./ -B ./build
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -S ./ -B ./build
           cd build
-          cmake --build ./ --target battleship_${{ matrix.build_what }} --config Release
+          cmake --build ./ --target battleship${{ matrix.build_what }} --config Release
