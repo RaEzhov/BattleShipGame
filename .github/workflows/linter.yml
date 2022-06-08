@@ -1,0 +1,27 @@
+# Run cpplint
+name: cpplint
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Installing cpplint
+    - run: |
+        sudo apt update
+        sudo apt install python3 pyhton3-pip
+        pip install cpplint
+
+    - name: Gettting files
+    - run: |
+        ls ./server/*.cpp >> files
+        ls ./server/*.h >> files
+        ls ./client/*.cpp >> files 
+        ls ./client/*.cpp >> files
+
+    - name: Checking codestyle
+    - run: cpplint $(cat files)
