@@ -12,6 +12,7 @@ jobs:
 
     - name: Installing cpplint
       run: |
+        sudo add-apt-repository universe
         sudo apt update
         sudo apt install python3 pyhton3-pip
         pip install cpplint
