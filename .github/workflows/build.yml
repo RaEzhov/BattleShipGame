@@ -3,12 +3,11 @@ name: CmakeBuild
 on: [push]
 
 jobs:
-  build_matrix:
+  build:
     strategy:
       matrix:
         build_what: [server, client]
-
-  build:
+        
     runs-on: ubuntu-20.04
 
     steps:
