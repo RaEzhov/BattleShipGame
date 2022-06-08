@@ -1,5 +1,5 @@
 # Run cpplint
-name: cpplint
+name: CppLint
 
 on: [push]
 
@@ -11,17 +11,17 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Installing cpplint
-    - run: |
+      run: |
         sudo apt update
         sudo apt install python3 pyhton3-pip
         pip install cpplint
 
     - name: Gettting files
-    - run: |
+      run: |
         ls ./server/*.cpp >> files
         ls ./server/*.h >> files
         ls ./client/*.cpp >> files 
         ls ./client/*.cpp >> files
 
     - name: Checking codestyle
-    - run: cpplint $(cat files)
+      run: cpplint $(cat files)
