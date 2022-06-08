@@ -23,4 +23,4 @@ jobs:
           cd ${{ matrix.build_what }}
           cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -S ./ -B ./build
           cd build
-          cmake --build ./ --target battleship${{ matrix.build_what }} --config Release
+          cmake --build ./ --config Release
