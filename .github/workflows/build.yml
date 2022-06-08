@@ -3,6 +3,11 @@ name: CmakeBuild
 on: [push]
 
 jobs:
+  build_matrix:
+    strategy:
+      matrix:
+        build_what: [server, client]
+
   build:
     runs-on: ubuntu-20.04
 
@@ -14,16 +19,9 @@ jobs:
           sudo apt update
           sudo apt install -y libpqxx-dev libsfml-dev cmake ninja-build
 
-      - name: Build server
+      - name: Build ${{ matrix.build_what }}
         run: |
-          cd server
+          cd ${{ matrix.build_what }}
           cmake -G Ninja -DCNAKE_BUILD_TYPE=Release -S ./ -B ./build
           cd build
-          cmake --build ./ --target BattleShipServer --config Release
-
-      - name: Build client
-        run: |
-          cd client
-          cmake -G Ninja -DCNAKE_BUILD_TYPE=Release -S ./ -B ./build
-          cd build
-          cmake --build ./ --target BattleShipClient --config Release
+          cmake --build ./ --target battleship_${{ matrix.build_what }} --config Release
