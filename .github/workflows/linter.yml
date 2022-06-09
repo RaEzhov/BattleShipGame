@@ -9,14 +9,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    
+    - name: Seting up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
 
     - name: Installing cpplint
       run: |
-        sudo add-apt-repository universe
-        sudo apt update
-        sudo apt upgrade
-        sudo apt install python3 pyhton3-pip
-        pip install cpplint
+        python -m pip install cpplint
 
     - name: Gettting files
       run: |
