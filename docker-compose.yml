@@ -2,7 +2,7 @@ version: '3'
 
 services:
   server:
-    mem_limit: 600m
+    shm_size: "300M"
     build: .
     container_name: BattleShipServer
     restart: always

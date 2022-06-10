@@ -12,6 +12,9 @@ set(PQXX /usr/local/include/pqxx)
 find_library(PQXX_LIB pqxx)
 find_library(PQ_LIB pq)
 
+include_directories(../)
+include_directories(../../)
+
 find_package(SFML COMPONENTS system network REQUIRED)
 
 target_link_libraries(BattleShipServer  ${PQXX_LIB} ${PQ_LIB}  sfml-system sfml-network)

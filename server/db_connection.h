@@ -1,44 +1,50 @@
-#ifndef DB_CONNECTION_H
-#define DB_CONNECTION_H
+// Copyright 2022 Roman Ezhov. Github: RaEzhov
+
+#ifndef SERVER_DB_CONNECTION_H_
+#define SERVER_DB_CONNECTION_H_
 
 #include <pqxx/pqxx>
+
+#include <memory>
+#include <utility>
+#include <list>
+#include <string>
+
 #include <SFML/Network.hpp>
 
-#include "config.h"
+#include "server/config.h"
 
-enum UserStatus{
-    OFFLINE = 0,
-    ONLINE = 1,
+using IdRating = std::pair<unsigned int, unsigned int>;
 
+enum UserStatus {
+  OFFLINE = 0,
+  ONLINE = 1
 };
-
 
 class DBConnection {
-public:
-    DBConnection();
+ public:
+  DBConnection();
 
-    ~DBConnection();
+  ~DBConnection();
 
-    std::string getLogin(unsigned int id);
+  std::string getLogin(unsigned int id);
 
-    std::list<unsigned int> getFriends(unsigned int id);
+  std::list<unsigned int> getFriends(unsigned int id);
 
-    void addFriend(unsigned int usr, unsigned int frnd);
+  void addFriend(unsigned int usr, unsigned int frnd);
 
-    /**Checks if password is correct for user*/
-    bool isPasswordCorrect(const std::string &login, const std::string &password);
+  bool isPasswordCorrect(const std::string &login, const std::string &password);
 
-    /**Insert new user*/
-    bool isUserRegistered(const std::string &login, const std::string &password);
+  bool isUserRegistered(const std::string &login, const std::string &password);
 
-    void updateStatus(unsigned int id, UserStatus status);
+  void updateStatus(unsigned int id, UserStatus status);
 
-    std::pair<unsigned int, unsigned int> getUserIdRating(const std::string &login);
+  IdRating getUserIdRating(const std::string &login);
 
-private:
-    std::unique_ptr<pqxx::connection> conn;
-    std::unique_ptr<pqxx::work> w;
-    static std::string CONN_STR;
+ private:
+  std::string connectionString;
+  std::unique_ptr<pqxx::connection> conn;
+  std::unique_ptr<pqxx::work> w;
 };
 
-#endif//DB_CONNECTION_H
+#endif  // SERVER_DB_CONNECTION_H_

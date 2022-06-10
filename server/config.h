@@ -1,21 +1,23 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+// Copyright 2022 Roman Ezhov. Github: RaEzhov
+
+#ifndef SERVER_CONFIG_H_
+#define SERVER_CONFIG_H_
+
 #include <memory>
 #include <string>
 #include <fstream>
 
 class Config {
-public:
+ public:
+  static const Config &instance();
 
-    static const Config &instance();
+  std::string dbIp, dbUser, dbPassword;
+  int port;
 
-    std::string dbIp, dbUser, dbPassword;
-    int port;
-private:
+ private:
+  Config();
 
-    Config();
-
-    static std::unique_ptr<Config> pInstance;
+  static std::unique_ptr<Config> pInstance;
 };
 
-#endif//CONFIG_H
+#endif  // SERVER_CONFIG_H_
