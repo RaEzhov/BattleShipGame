@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.16)
 project(BattleShipServer)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 add_executable(BattleShipServer main.cpp db_connection.cpp logger.cpp config.cpp)
 
@@ -11,6 +11,9 @@ set(PQXX /usr/local/include/pqxx)
 
 find_library(PQXX_LIB pqxx)
 find_library(PQ_LIB pq)
+
+include_directories(../)
+include_directories(../../)
 
 find_package(SFML COMPONENTS system network REQUIRED)
 

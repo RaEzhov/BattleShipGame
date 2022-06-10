@@ -1,75 +1,82 @@
-#ifndef BATTLE_SHIP_GAME_H
-#define BATTLE_SHIP_GAME_H
+// Copyright 2022 Roman Ezhov. Github: RaEzhov
 
-#include "screen_objects.h"
-#include "game_field.h"
-#include "user.h"
+#ifndef CLIENT_BATTLE_SHIP_GAME_H_
+#define CLIENT_BATTLE_SHIP_GAME_H_
+
+#include <utility>
+#include <string>
+#include <unordered_map>
+#include <memory>
+
+#include "client/screen_objects.h"
+#include "client/game_field.h"
+#include "client/user.h"
 
 class BattleShipGame final {
-public:
-    BattleShipGame();
+ public:
+  BattleShipGame();
 
-    void mainLoop();
+  void mainLoop();
 
-    static std::pair<unsigned char, unsigned char> moveCoords;
+  static std::pair<unsigned char, unsigned char> moveCoords;
 
-    static bool sendMove;
+  static bool sendMove;
 
-private:
-    void loadTextures();
+ private:
+  void loadTextures();
 
-    void mainMenu();
+  void mainMenu();
 
-    void checkServer(sf::Socket::Status status);
+  void checkServer(sf::Socket::Status status);
 
-    void loginFunc();
+  void loginFunc();
 
-    void registerFunc();
+  void registerFunc();
 
-    void singlePlayerFunc();
+  void singlePlayerFunc();
 
-    void multiPlayerLobby();
+  void multiPlayerLobby();
 
-    void setEnemyTitles();
+  void setEnemyTitles();
 
-    void multiPlayerFunc(const std::string &enemy);
+  void multiPlayerFunc(const std::string &enemy);
 
-    void addFriend();
+  void addFriend();
 
-    void removeFriend();
+  void removeFriend();
 
-    void randomRival();
+  void randomRival();
 
-    void startBattle();
+  void startBattle();
 
-    void finishBattle(bool);
+  void finishBattle(bool);
 
-    void changeSide();
+  void changeSide();
 
-    [[noreturn]] void serverListener();
+  [[noreturn]] void serverListener();
 
-private:
-    std::unique_ptr<sf::TcpSocket> server;
-    std::shared_ptr<sf::RenderWindow> window;
-    sf::VideoMode screen;
-    sf::Vector2<float> screenScale;
-    std::unordered_map<std::string, std::unique_ptr<Button>> buttons;
-    std::unordered_map<std::string, std::unique_ptr<Entry>> entries;
-    std::unordered_map<std::string, std::unique_ptr<Picture>> pictures;
-    std::unordered_map<std::string, std::unique_ptr<Title>> titles;
-    std::unordered_map<std::string, std::unique_ptr<DraggableAndDroppableShips>> dragDropShips;
-    std::unordered_map<std::string, std::unique_ptr<GameField>> fields;
-    std::unordered_map<std::string, std::unique_ptr<Pages>> pages;
-    std::unique_ptr<NotificationPool> notifications;
+ private:
+  std::unique_ptr<sf::TcpSocket> server;
+  std::shared_ptr<sf::RenderWindow> window;
+  sf::VideoMode screen;
+  sf::Vector2<float> screenScale;
+  std::unordered_map<std::string, std::unique_ptr<Button>> buttons;
+  std::unordered_map<std::string, std::unique_ptr<Entry>> entries;
+  std::unordered_map<std::string, std::unique_ptr<Picture>> pictures;
+  std::unordered_map<std::string, std::unique_ptr<Title>> titles;
+  std::unordered_map<std::string, std::unique_ptr<DragNDropShp>> dragDropShips;
+  std::unordered_map<std::string, std::unique_ptr<GameField>> fields;
+  std::unordered_map<std::string, std::unique_ptr<Pages>> pages;
+  std::unique_ptr<NotificationPool> notifications;
 
-    sf::Texture cursorTex;
-    sf::Sprite cursor;
+  sf::Texture cursorTex;
+  sf::Sprite cursor;
 
-    User user, enemy;
+  User user, enemy;
 
-    bool serverConnected;
+  bool serverConnected;
 
-    static const float WIDTH, HEIGHT;
+  static const float WIDTH, HEIGHT;
 };
 
-#endif//BATTLE_SHIP_GAME_H
+#endif  // CLIENT_BATTLE_SHIP_GAME_H_

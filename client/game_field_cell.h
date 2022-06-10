@@ -1,41 +1,48 @@
-#ifndef GAME_FIELD_CELL_H
-#define GAME_FIELD_CELL_H
+// Copyright 2022 Roman Ezhov. Github: RaEzhov
 
-#include "screen_objects.h"
+#ifndef CLIENT_GAME_FIELD_CELL_H_
+#define CLIENT_GAME_FIELD_CELL_H_
+
+#include <memory>
+
+#include "client/screen_objects.h"
 
 class GameField;
 
 class GameFieldCell : public ScreenObject {
-public:
-    friend GameField;
+ public:
+  friend GameField;
 
-    GameFieldCell(sf::Vector2<float> scale, sf::Vector2<float> position, std::shared_ptr<sf::RenderWindow> window_);
+  GameFieldCell(sf::Vector2<float> scale,
+                sf::Vector2<float> position,
+                std::shared_ptr<sf::RenderWindow> window_);
 
-    void setPosition(sf::Vector2<float> newPosition);
+  void setPosition(sf::Vector2<float> newPosition);
 
-    void eventCheck(sf::Event &event, GameFieldState state, GameField &parent,
-                    char i, char j, sf::Vector2<float> scale);
+  void eventCheck(const sf::Event &event, GameFieldState state,
+                  GameField *parent, char i, char j,
+                  sf::Vector2<float> scale);
 
-    void shoot();
+  void shoot();
 
-    void setUnderShip(bool under);
+  void setUnderShip(bool under);
 
-    void draw() const;
+  void draw() const;
 
-    void setAlpha(unsigned char alpha);
+  void setAlpha(unsigned char alpha);
 
-    bool isAvailable() const;
+  bool isAvailable() const;
 
-    void rmAvailability();
+  void rmAvailability();
 
-    void addAvailability();
+  void addAvailability();
 
-    bool isUnderShip();
+  bool isUnderShip() const;
 
-private:
-    sf::RectangleShape cell;
-    bool availability;
-    bool underShip;
+ private:
+  sf::RectangleShape cell;
+  bool availability;
+  bool underShip;
 };
 
-#endif//GAME_FIELD_CELL_H
+#endif  // CLIENT_GAME_FIELD_CELL_H_

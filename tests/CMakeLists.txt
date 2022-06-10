@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.16)
 project(BattleShipTests)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -17,6 +17,8 @@ enable_testing()
 
 add_executable(BattleShipTests main.cpp)
 target_link_libraries(BattleShipTests gtest_main)
+
+include_directories(../)
 
 include(GoogleTest)
 gtest_discover_tests(BattleShipTests)

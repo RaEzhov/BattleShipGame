@@ -5,12 +5,13 @@
 
 #define GET_FRIENDS 0
 #define ADD_FRIEND 1
-#define DO_MOVE 2
-#define WANT_RAND_PLAY 3
-#define ENEMY_FOUND 4
-#define ENEMY_FIELD 5
-#define ENEMY_DISCONNECTED 6
-#define ME_WIN 7
-#define UPD_RATING 8
+#define RM_FRIEND 2
+#define DO_MOVE 3
+#define WANT_RAND_PLAY 4
+#define ENEMY_FOUND 5
+#define ENEMY_FIELD 6
+#define ENEMY_DISCONNECTED 7
+#define ME_WIN 8
+#define UPD_RATING 9
 
 #endif//MESSAGE_STATUS_H
