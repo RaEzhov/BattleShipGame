@@ -1,3 +1,5 @@
+// Copyright 2022 Roman Ezhov. Github: RaEzhov
+
 #include <thread>
 #include <list>
 #include <unordered_map>

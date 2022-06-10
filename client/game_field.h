@@ -1,93 +1,102 @@
-#ifndef GAME_FIELD_H
-#define GAME_FIELD_H
+// Copyright 2022 Roman Ezhov. Github: RaEzhov
 
-#include "screen_objects.h"
-#include "ship.h"
+#ifndef CLIENT_GAME_FIELD_H_
+#define CLIENT_GAME_FIELD_H_
 
-class DraggableAndDroppableShips: public ScreenObject {
-public:
-    DraggableAndDroppableShips(const sf::Vector2<float> &scale_, const sf::VideoMode &screen,
-                               std::shared_ptr<sf::RenderWindow> window_);
+#include <memory>
+#include <utility>
+#include <list>
+#include <vector>
+#include <array>
 
-    void draw() const;
+#include "client/screen_objects.h"
+#include "client/ship.h"
 
-    void eventCheck(sf::Event &event);
+class DragNDropShp: public ScreenObject {
+ public:
+  DragNDropShp(const sf::Vector2<float> &scale_, const sf::VideoMode &screen,
+               std::shared_ptr<sf::RenderWindow> window_);
 
-private:
-    std::array<sf::Texture, 5> tShip;
-    std::array<sf::Sprite, 5> sShip;
-    std::array<sf::Vector2<float>, 5> startPos, tempPos;
-    std::array<bool, 5> dragged;
-    sf::Vector2<float> scale;
+  void draw() const;
+
+  void eventCheck(const sf::Event &event);
+
+ private:
+  std::array<sf::Texture, 5> tShip;
+  std::array<sf::Sprite, 5> sShip;
+  std::array<sf::Vector2<float>, 5> startPos, tempPos;
+  std::array<bool, 5> dragged;
+  sf::Vector2<float> scale;
 };
 
+class GameField : public ScreenObject {
+ public:
+  friend class BattleShipGame;
 
-class GameField: public ScreenObject {
-public:
+  friend class GameFieldCell;
 
-    friend class BattleShipGame;
+  GameField(sf::Vector2<float> position_,
+            sf::Vector2<float> scale,
+            GameFieldState state_,
+            std::shared_ptr<sf::RenderWindow> window_,
+            std::function<void()> changeSide_);
 
-    friend class GameFieldCell;
+  void eventCheck(const sf::Event &event);
 
-    GameField(sf::Vector2<float> position_, sf::Vector2<float> scale, GameFieldState state_,
-              std::shared_ptr<sf::RenderWindow> window_, std::function<void()> changeSide_);
+  void draw() const;
 
-    void eventCheck(sf::Event &event);
+  bool addShip(char i, char j, char shipType);
 
-    void draw() const;
+  void removeShip(std::pair<char, char> coords, char shipType);
 
-    bool addShip(char i, char j, char shipType);
+  void setState(GameFieldState newState);
 
-    void removeShip(std::pair<char, char> coords, char shipType);
+  void placeShipsRand();
 
-    void setState(GameFieldState newState);
+  void clearShips();
 
-    void placeShipsRand();
+  std::vector<sf::Uint16> serializedField();
 
-    void clearShips();
+  void selfMove(std::pair<unsigned char, unsigned char> move = {100, 100});
 
-    std::vector<sf::Uint16> serializedField();
+  void clearColors();
 
-    void selfMove(std::pair<unsigned char, unsigned char> move = {100, 100});
+  template<char N>
+  void shoot(std::pair<char, char> coords, Ship<N> *ship);
 
-    void clearColors();
+  void findShip(std::pair<char, char> coords);
 
-    template<char N>
-    void shoot(std::pair<char, char> coords, Ship<N> &ship);
+  template<char N>
+  void updateAvailability(Ship<N> *ship);
 
-    void findShip(std::pair<char, char> coords);
+  void clearAvailability(bool onlyAvailability = false);
 
-    template<char N>
-    void updateAvailability(Ship<N> &ship);
+  std::vector<GameFieldCell> &operator[](size_t i);
 
-    void clearAvailability(bool onlyAvailability = false);
+  /**Size of dragged ship for DraggableAndDroppableShip class*/
+  static char shipSize;
 
-    std::vector<GameFieldCell> &operator[](size_t i);
+  /**Difference between cursor and upper left ship corner on y-axis*/
+  static float diffY;
 
-    /**Size of dragged ship for DraggableAndDroppableShip class*/
-    static char shipSize;
+  std::function<void()> changeSide;
 
-    /**Difference between cursor and upper left ship corner on y-axis*/
-    static float diffY;
+  unsigned char getAliveShips() const;
 
-    std::function<void()> changeSide;
+ private:
+  template<char N>
+  void drawShips(const std::list<Ship<N>> &ships) const;
 
-    unsigned char getAliveShips() const;
+ private:
+  Picture field, border;
+  std::list<Ship<1>> ship1;
+  std::list<Ship<2>> ship2;
+  std::list<Ship<3>> ship3;
+  std::list<Ship<4>> ship4;
+  sf::Vector2<float> scale, position;
+  GameFieldState state;
 
-private:
-    template<char N>
-    void drawShips(const std::list<Ship<N>> &ships) const;
-
-private:
-    Picture field, border;
-    std::list<Ship<1>> ship1;
-    std::list<Ship<2>> ship2;
-    std::list<Ship<3>> ship3;
-    std::list<Ship<4>> ship4;
-    sf::Vector2<float> scale, position;
-    GameFieldState state;
-
-    std::vector<std::vector<GameFieldCell>> cells;
+  GameFieldCellMatrix cells;
 };
 
-#endif//GAME_FIELD_H
+#endif  // CLIENT_GAME_FIELD_H_
