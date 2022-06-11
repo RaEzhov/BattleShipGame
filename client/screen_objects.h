@@ -14,7 +14,7 @@
 #include <SFML/Network.hpp>
 
 #include "client/config.h"
-#include "BattleShipGame/message_status.h"
+#include "global/message_status.h"
 
 const auto beige = sf::Color(225, 225, 225, 255);
 
