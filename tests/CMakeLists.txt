@@ -16,7 +16,7 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 IF("${CMAKE_SYSTEM}" MATCHES "Linux")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+
 ELSE()
     set(SFML_STATIC_LIBRARIES TRUE)
     set(SFML_ROOT D:/Projects/SFML_test/SFML-2.5.1/)
@@ -34,6 +34,6 @@ include_directories(../../)
 include(GoogleTest)
 gtest_discover_tests(BattleShipTests)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 target_link_libraries(BattleShipTests sfml-system sfml-window sfml-graphics sfml-audio sfml-network)

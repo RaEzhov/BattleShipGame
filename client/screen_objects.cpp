@@ -30,25 +30,16 @@ const ShipDirection operator++(ShipDirection &other, int) {
   return rVal;
 }
 
-Button::Button(sf::Vector2<float> position_,
-               sf::Vector2<float> scale_,
-               std::function<void()> funcRef,
-               std::shared_ptr<sf::RenderWindow> window_,
-               const std::string &text_,
-               unsigned int textSize,
-               sf::Color textColor_,
-               const std::string &font,
-               const std::string &buttonOn,
-               const std::string &buttonOff)
-    : ScreenObject(std::move(window_)),
-      function(std::move(funcRef)),
-      scale(scale_),
-      buttonPosition(position_),
-      lockClick(false),
-      pressed(false),
-      textColor(textColor_),
-      sound("button.wav") {
-
+Button::Button(
+    sf::Vector2<float> position_, sf::Vector2<float> scale_,
+    std::function<void()> funcRef, std::shared_ptr<sf::RenderWindow> window_,
+    const std::string &text_, unsigned int textSize, sf::Color textColor_,
+    const std::string &font, const std::string &buttonOn,
+    const std::string &buttonOff, const std::string &soundFile)
+    : ScreenObject(
+        std::move(window_)), function(std::move(funcRef)), scale(scale_),
+        buttonPosition(position_), lockClick(false), pressed(false),
+        textColor(textColor_), sound(soundFile) {
   // Loading sprites
   textFont.loadFromFile(Config::instance().resources + font);
   text.setFont(textFont);
@@ -70,14 +61,14 @@ Button::Button(sf::Vector2<float> position_,
 
   spriteButtonOn.setPosition(buttonPosition);
   spriteButtonOff.setPosition(buttonPosition);
-  text.setPosition({spriteButtonOn.getPosition().x +
-      (static_cast<float>(textureButtonOn.getSize().x)
-          - text.getLocalBounds().width) * scale.x,
-                    spriteButtonOn.getPosition().y +
-                        (static_cast<float>(textureButtonOn.getSize().y)
-                            - text.getLocalBounds().height -
-                            static_cast<float>(text.getCharacterSize()))
-                            * scale.y});
+  text.setPosition({
+    spriteButtonOn.getPosition().x +
+    (static_cast<float>(textureButtonOn.getSize().x)
+    - text.getLocalBounds().width) * scale.x,
+    spriteButtonOn.getPosition().y +
+    (static_cast<float>(textureButtonOn.getSize().y)
+    - text.getLocalBounds().height -
+    static_cast<float>(text.getCharacterSize())) * scale.y});
   textPosition = text.getPosition();
 
   spriteButtonOn.setColor(sf::Color(225, 225, 225, 255));
@@ -155,10 +146,11 @@ Entry::Entry(sf::Vector2<float> position,
              unsigned int fontSize = 24,
              bool isLogOrPass,
              std::function<void()> enterFunc,
-             const std::string &str)
-    : ScreenObject(window_), isActive(false), symbolsCount(21), input(str),
-      isLoginOrPassword(isLogOrPass), enterPressedFunc(std::move(enterFunc)) {
-  font.loadFromFile(Config::instance().resources + "Upheavtt.ttf");
+             const std::string &str, const std::string &fontFile)
+    : ScreenObject(std::move(window_)), isActive(false), symbolsCount(21),
+      input(str), isLoginOrPassword(isLogOrPass),
+      enterPressedFunc(std::move(enterFunc)) {
+  font.loadFromFile(Config::instance().resources + fontFile);
   text.setFont(font);
   text.setCharacterSize(fontSize);
   text.setScale(scale);
@@ -262,7 +254,7 @@ Title::Title(const std::string &text_,
              std::shared_ptr<sf::RenderWindow> window_,
              int size,
              sf::Color color_,
-             const std::string &font_) : ScreenObject(window_) {
+             const std::string &font_) : ScreenObject(std::move(window_)) {
   font.loadFromFile(Config::instance().resources + font_);
   text.setString(text_);
   text.setPosition(position);
@@ -301,22 +293,18 @@ void Title::move(sf::Vector2<float> offset) {
   text.move(offset);
 }
 
-TitleRef::TitleRef(const std::string &text_,
-                   sf::Vector2<float> position,
-                   sf::Vector2<float> scale_,
-                   std::shared_ptr<sf::RenderWindow> window_,
-                   int size,
-                   std::function<void()> func,
-                   sf::Color color_,
-                   const std::string &font_) :
-    Title(text_, position, scale_, std::move(window_), size, color_, font_),
+TitleRef::TitleRef(
+    const std::string &text_, sf::Vector2<float> position,
+    sf::Vector2<float> scale_, std::shared_ptr<sf::RenderWindow> window_,
+    int size, std::function<void()> func, sf::Color color_,
+    const std::string &font_) : Title(
+        text_, position, scale_, std::move(window_), size, color_, font_),
     function(std::move(func)) {}
 
 void TitleRef::eventCheck(const sf::Event &event) {
-  if (text.getGlobalBounds().contains(static_cast<float>(sf::Mouse::getPosition(
-                                          *window).x),
-                                      static_cast<float>(sf::Mouse::getPosition(
-                                          *window).y))) {
+  if (text.getGlobalBounds().contains(
+      static_cast<float>(sf::Mouse::getPosition(*window).x),
+      static_cast<float>(sf::Mouse::getPosition(*window).y))) {
     text.setStyle(sf::Text::Underlined);
     if (event.type == sf::Event::MouseButtonReleased) {
       if (function) {
@@ -328,11 +316,10 @@ void TitleRef::eventCheck(const sf::Event &event) {
   }
 }
 
-Picture::Picture(const std::string &fileName,
-                 sf::Vector2<float> position,
-                 sf::Vector2<float> scale_,
-                 std::shared_ptr<sf::RenderWindow> window_) : ScreenObject(
-    window_) {
+Picture::Picture(
+    const std::string &fileName, sf::Vector2<float> position,
+    sf::Vector2<float> scale_, std::shared_ptr<sf::RenderWindow> window_) :
+    ScreenObject(std::move(window_)) {
   texture.loadFromFile(Config::instance().resources + fileName);
   texture.setSmooth(false);
   sprite.setTexture(texture);
@@ -352,13 +339,11 @@ sf::Rect<float> Picture::getSize() const {
   return sprite.getGlobalBounds();
 }
 
-Animation::Animation(sf::Vector2<float> position_,
-                     sf::Vector2<float> scale_,
-                     unsigned int frames,
-                     float speed_,
-                     const std::string &filename,
-                     std::shared_ptr<sf::RenderWindow> window_) : ScreenObject(
-    window_), speed(speed_), isPlaying(false) {
+Animation::Animation(
+    sf::Vector2<float> position_, sf::Vector2<float> scale_,
+    unsigned int frames, float speed_, const std::string &filename,
+    std::shared_ptr<sf::RenderWindow> window_) : ScreenObject(
+        std::move(window_)), speed(speed_), isPlaying(false) {
   for (unsigned int i = 1; i <= frames; i++) {
     textures.emplace_back();
     (--(textures.end()))->loadFromFile(
@@ -415,56 +400,29 @@ void Animation::changeSprites(bool reverse) {
   }
 }
 
-Pages::Pages(sf::Vector2<float> position_,
-             sf::Vector2<float> scale_,
-             std::shared_ptr<sf::RenderWindow> window_) :
-    ScreenObject(window_), position(position_), scale(scale_), lastPosNum(0) {
-  background = std::make_unique<Animation>(position,
-                                           scale * 8.f,
-                                           5,
-                                           10.f,
-                                           "rotating.png",
-                                           window);
+Pages::Pages(
+    sf::Vector2<float> position_, sf::Vector2<float> scale_,
+    std::shared_ptr<sf::RenderWindow> window_) : ScreenObject(
+        std::move(window_)), position(position_), scale(scale_), lastPosNum{} {
+  background = std::make_unique<Animation>(
+      position, scale * 8.f, 5, 10.f, "rotating.png", window);
 
-  auto temp =
-      std::make_unique<Button>(position,
-                               scale,
-                               nullptr,
-                               window,
-                               "",
-                               20,
-                               beige,
-                               "Upheavtt.ttf",
-                               "squareButton1.png",
-                               "squareButton2.png");
+  auto temp = std::make_unique<Button>(
+      position, scale, nullptr, window, "", 20, beige,
+      "Upheavtt.ttf", "squareButton1.png", "squareButton2.png");
   auto bgSize = background->getSize();
-  next = std::make_unique<Button>(sf::Vector2<float>{
-                                      position.x + bgSize.width + 10.f,
-                                      position.y + bgSize.height * 0.5f
-                                          - temp->getSize().height / 2.f},
-                                  scale,
-                                  [this] { nextPage(); },
-                                  window,
-                                  ">",
-                                  20,
-                                  beige,
-                                  "Upheavtt.ttf",
-                                  "squareButton1.png",
-                                  "squareButton2.png");
-  previous = std::make_unique<Button>(sf::Vector2<float>{
-                                          position.x - 10.f
-                                              - temp->getSize().width,
-                                          position.y + bgSize.height * 0.5f
-                                              - temp->getSize().height / 2.f},
-                                      scale,
-                                      [this] { previousPage(); },
-                                      window,
-                                      "<",
-                                      20,
-                                      beige,
-                                      "Upheavtt.ttf",
-                                      "squareButton1.png",
-                                      "squareButton2.png");
+  next = std::make_unique<Button>(
+      sf::Vector2<float>{position.x + bgSize.width + 10.f,
+                         position.y + bgSize.height * 0.5f
+                         - temp->getSize().height / 2.f},
+      scale, [this] { nextPage(); }, window, ">", 20, beige,
+      "Upheavtt.ttf", "squareButton1.png", "squareButton2.png");
+  previous = std::make_unique<Button>(
+      sf::Vector2<float>{ position.x - 10.f - temp->getSize().width,
+                          position.y + bgSize.height * 0.5f
+                          - temp->getSize().height / 2.f},
+      scale, [this] { previousPage(); }, window, "<", 20, beige,
+      "Upheavtt.ttf", "squareButton1.png", "squareButton2.png");
   temp.reset(nullptr);
 
   auto tempPos = position;
@@ -542,34 +500,20 @@ void Pages::clearTitles() {
   lastPosNum = 0;
 }
 
-Notification::Notification(const std::string &text,
-                           char id_,
-                           sf::Vector2<float> position,
-                           sf::Vector2<float> scale,
-                           std::shared_ptr<sf::RenderWindow> window_,
-                           std::function<void()> function) :
-    ScreenObject(window_),
-    background("notification.png", position, scale, window_),
-    info(text,
-         sf::Vector2<float>{background.getSize().left + 10.f * scale.x,
-                            background.getSize().top + 15.f * scale.y},
-         scale * 1.3f,
-         window_),
-    close(sf::Vector2<float>{
-              background.getSize().left + background.getSize().width
-                  - 40.f * scale.x,
-              background.getSize().top + 10.f * scale.y},
-          scale * 0.5f,
-          std::move(function),
-          window_,
-          "",
-          25,
-          sf::Color::White,
-          "Upheavtt.ttf",
-          "cross.png",
-          "cross.png"),
-    id(id_),
-    timer() {}
+Notification::Notification(
+    const std::string &text, char id_, sf::Vector2<float> position,
+    sf::Vector2<float> scale, std::shared_ptr<sf::RenderWindow> window_,
+    std::function<void()> function) :
+    ScreenObject(std::move(window_)),
+    background("notification.png", position, scale, window), info(
+        text, sf::Vector2<float>{background.getSize().left + 10.f * scale.x,
+                                 background.getSize().top + 15.f * scale.y},
+        scale * 1.3f, window), close(sf::Vector2<float>{
+          background.getSize().left + background.getSize().width
+          - 40.f * scale.x,
+          background.getSize().top + 10.f * scale.y}, scale * 0.5f,
+          std::move(function), window, "", 25, sf::Color::White,
+          "Upheavtt.ttf", "cross.png", "cross.png"), id(id_), timer() {}
 
 void Notification::eventCheck(const sf::Event &event) {
   close.eventCheck(event);
@@ -593,9 +537,10 @@ void Notification::moveUp() {
   close.move({0, -offset});
 }
 
-NotificationPool::NotificationPool(sf::Vector2<float> scale_,
-                                   std::shared_ptr<sf::RenderWindow> window_) :
-    ScreenObject(window_), scale(scale_), notifications(), nextId(0) {}
+NotificationPool::NotificationPool(
+    sf::Vector2<float> scale_, std::shared_ptr<sf::RenderWindow> window_) :
+    ScreenObject(std::move(window_)), scale(scale_), notifications(),
+    nextId(0) {}
 
 void NotificationPool::eventCheck(const sf::Event &event) {
   for (auto iter = notifications.begin(); iter != notifications.end();) {
@@ -632,22 +577,16 @@ void NotificationPool::draw() {
 void NotificationPool::addNotification(const std::string &info) {
   auto id = nextId++;
   if (notifications.empty()) {
-    notifications.emplace_back(info,
-                               id,
-                               sf::Vector2{10.f, 10.f},
-                               scale,
-                               window,
-                               [this, id] { deleteNotification(id); });
+    notifications.emplace_back(
+        info, id, sf::Vector2{10.f, 10.f}, scale, window,
+        [this, id] { deleteNotification(id); });
     return;
   }
   auto position = (--(notifications.end()))->getSize();
   position.top += position.height + 10.f;
-  notifications.emplace_back(info,
-                             id,
-                             sf::Vector2{position.left, position.top},
-                             scale,
-                             window,
-                             [this, id] { deleteNotification(id); });
+  notifications.emplace_back(
+      info, id, sf::Vector2{position.left, position.top},
+      scale, window, [this, id] { deleteNotification(id); });
 }
 
 void NotificationPool::deleteNotification(char id) {
