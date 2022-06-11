@@ -13,7 +13,6 @@ find_library(PQXX_LIB pqxx)
 find_library(PQ_LIB pq)
 
 include_directories(../)
-include_directories(../../)
 
 find_package(SFML COMPONENTS system network REQUIRED)
 

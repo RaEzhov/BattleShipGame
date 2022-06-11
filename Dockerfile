@@ -3,7 +3,7 @@
 FROM gcc:latest AS build
 
 WORKDIR BattleShip
-COPY ./message_status.h .
+COPY ./global ./global
 COPY ./server ./server
 
 RUN apt-get update && \

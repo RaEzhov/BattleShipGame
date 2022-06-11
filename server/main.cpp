@@ -11,7 +11,7 @@
 #include "server/db_connection.h"
 #include "server/logger.h"
 
-#include "BattleShipGame/message_status.h"
+#include "global/message_status.h"
 
 const int PORT = 12345;
 
