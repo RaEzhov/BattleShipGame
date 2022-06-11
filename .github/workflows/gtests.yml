@@ -12,7 +12,7 @@ jobs:
       - name: Installing libraries
         run: |
           sudo apt update
-          sudo apt install -y cmake ninja-build
+          sudo apt install -y cmake ninja-build libsfml-dev libpqxx-dev
 
       - name: Building Tests
         run: |
