@@ -9,6 +9,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        
+      - name: Setting up project
+        run: touch ./server/config
       
       - name: Docker build
         run: docker-compose build
