@@ -79,7 +79,8 @@ class Button : public ScreenObject {
          sf::Color textColor_,
          const std::string &font = "Upheavtt.ttf",
          const std::string &buttonOn = "button1.png",
-         const std::string &buttonOff = "button2.png");
+         const std::string &buttonOff = "button2.png",
+         const std::string &soundFile = "button.wav");
 
   void draw();
 
@@ -116,7 +117,8 @@ class Entry : public ScreenObject {
         unsigned int fontSize,
         bool isLogOrPass = true,
         std::function<void()> enterFunc = nullptr,
-        const std::string &str = "");
+        const std::string &str = "",
+        const std::string &fontFile = "Upheav.ttf");
 
   void eventCheck(const sf::Event &event);
 

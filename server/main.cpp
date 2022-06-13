@@ -42,7 +42,8 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
     std::list<unsigned int> friends;
 
     switch (status) {
-      case GET_FRIENDS:friends = conn->getFriends(id);
+      case GET_FRIENDS:
+        friends = conn->getFriends(id);
         packet.clear();
         packet << GET_FRIENDS << static_cast<unsigned int>(friends.size());
         for (auto &f : friends) {
@@ -51,7 +52,8 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         (*client)->send(packet);
         Logger::log("user " + std::to_string(id) + " get friends");
         break;
-      case ADD_FRIEND:break;
+      case ADD_FRIEND:
+        break;
       case DO_MOVE: {
         sf::Packet packet2;
         unsigned int enemyId;

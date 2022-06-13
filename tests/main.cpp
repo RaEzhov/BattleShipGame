@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 
-TEST(HelloTest, TestNothing){
-    EXPECT_EQ(0, 0);
-}
+#include "tests/client_user_tests.h"
+#include "tests/client_screen_oblects_tests.h"
 
 int main(int argc, char* argv[]){
     testing::InitGoogleTest(&argc, argv);
