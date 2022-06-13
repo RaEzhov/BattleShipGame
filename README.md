@@ -15,9 +15,7 @@
 [![CMakeBuild](https://github.com/RaEzhov/BattleShipGame/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/RaEzhov/BattleShipGame/actions/workflows/build.yml)
 [![GoogleTests](https://github.com/RaEzhov/BattleShipGame/actions/workflows/gtests.yml/badge.svg?branch=master)](https://github.com/RaEzhov/BattleShipGame/actions/workflows/gtests.yml)
 [![CppLint](https://github.com/RaEzhov/BattleShipGame/actions/workflows/linter.yml/badge.svg?branch=master)](https://github.com/RaEzhov/BattleShipGame/actions/workflows/linter.yml)
-[![DockerBuild](https://github.com/RaEzhov/BattleShipGame/actions/workflows/docker.yml/bage.svg?branch=master]
-(https://github.com/RaEzhov/BattleShipGame/actions/workflows/docker.yml)
-   
+[![DockerBuild](https://github.com/RaEzhov/BattleShipGame/actions/workflows/docker.yml/badge.svg?branch=master)](https://github.com/RaEzhov/BattleShipGame/actions/workflows/docker.yml)
 <br>
 [![PullRequests](https://img.shields.io/github/issues-pr/RaEzhov/BattleShipGame)](https://github.com/RaEzhov/BattleShipGame/pulls)
 [![Issues](https://img.shields.io/github/issues/RaEzhov/BattleShipGame)](https://github.com/RaEzhov/BattleShipGame/issues)
