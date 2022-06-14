@@ -15,6 +15,7 @@
 
 #include "client/config.h"
 #include "global/message_status.h"
+#include "client/audio_objects.h"
 
 const auto beige = sf::Color(225, 225, 225, 255);
 
@@ -55,17 +56,6 @@ class ScreenObject {
 
  protected:
   std::shared_ptr<sf::RenderWindow> window;
-};
-
-class Sound {
- public:
-  explicit Sound(const std::string &file);
-
-  void play();
-
- private:
-  sf::SoundBuffer buffer;
-  sf::Sound sound;
 };
 
 class Button : public ScreenObject {
@@ -118,7 +108,7 @@ class Entry : public ScreenObject {
         bool isLogOrPass = true,
         std::function<void()> enterFunc = nullptr,
         const std::string &str = "",
-        const std::string &fontFile = "Upheav.ttf");
+        const std::string &fontFile = "Upheavtt.ttf");
 
   void eventCheck(const sf::Event &event);
 

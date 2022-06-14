@@ -40,6 +40,14 @@ BattleShipGame::BattleShipGame() : server(std::make_unique<sf::TcpSocket>()),
   loadTextures();
 
   enemy.reset();
+
+  if (!music.openFromFile(Config::instance().resources + "soundTrack.ogg")) {
+    throw std::runtime_error("Can't open soundtrack\n");
+  }
+  music.setVolume(30);
+  music.setLoop(true);
+
+  music.play();
 }
 
 void BattleShipGame::loadTextures() {

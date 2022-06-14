@@ -603,14 +603,3 @@ void NotificationPool::deleteNotification(char id) {
     }
   }
 }
-
-Sound::Sound(const std::string &file) {
-  if (!buffer.loadFromFile(Config::instance().resources + file)) {
-    throw std::runtime_error("Load sound error!\n");
-  }
-  sound.setBuffer(buffer);
-}
-
-void Sound::play() {
-  sound.play();
-}

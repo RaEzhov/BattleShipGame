@@ -25,7 +25,7 @@ ENDIF()
 find_package(SFML 2.5.1 COMPONENTS system window graphics audio network REQUIRED)
 
 
-add_executable(BattleShipTests main.cpp ../client/user.cpp ../client/screen_objects.cpp ../client/config.cpp)
+add_executable(BattleShipTests main.cpp ../client/user.cpp ../client/screen_objects.cpp ../client/config.cpp ../client/audio_objects.cpp)
 target_link_libraries(BattleShipTests gtest_main)
 
 include_directories(../)

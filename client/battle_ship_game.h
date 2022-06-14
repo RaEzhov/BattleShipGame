@@ -72,6 +72,8 @@ class BattleShipGame final {
   sf::Texture cursorTex;
   sf::Sprite cursor;
 
+  sf::Music music;
+
   User user, enemy;
 
   bool serverConnected;
