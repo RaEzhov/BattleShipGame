@@ -1,8 +1,9 @@
-name: telegram message
-on: [push]
-jobs:
+name: Telegram
 
-  build:
+on: [push]
+
+jobs:
+  sending-message:
     name: Build
     runs-on: ubuntu-latest
     steps:

@@ -3,7 +3,7 @@ name: CmakeBuild
 on: [push]
 
 jobs:
-  build:
+  cmake-build:
     strategy:
       matrix:
         build_what: [server, client]

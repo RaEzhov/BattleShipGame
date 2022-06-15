@@ -3,7 +3,7 @@ name: Docker
 on: [push]
 
 jobs:
-  docker:
+  docker-build:
     runs-on: ubuntu-20.04
 
     steps:

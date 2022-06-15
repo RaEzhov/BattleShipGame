@@ -1,10 +1,9 @@
-# Run cpplint
 name: CppLint
 
 on: [push]
 
 jobs:
-  build:
+  linter:
     runs-on: ubuntu-20.04
 
     steps:
