@@ -37,14 +37,19 @@ class DBConnection {
 
   bool isUserRegistered(const std::string &login, const std::string &password);
 
+  bool isUserOnline(unsigned int id);
+
   void updateStatus(unsigned int id, UserStatus status);
 
   IdRating getUserIdRating(const std::string &login);
+
+  static bool correctLoginOrPassword(const std::string &str);
 
  private:
   std::string connectionString;
   std::unique_ptr<pqxx::connection> conn;
   std::unique_ptr<pqxx::work> w;
+  sf::Mutex m;
 };
 
 #endif  // SERVER_DB_CONNECTION_H_

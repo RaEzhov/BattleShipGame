@@ -8,9 +8,17 @@
 #include "server/db_connection.h"
 #include "server/logger.h"
 
+bool DBConnection::correctLoginOrPassword(const std::string &str) {
+  return str.size() >= 4 && str.size() <= 8 &&
+  str.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789") ==
+  std::string::npos;
+}
+
 bool DBConnection::isPasswordCorrect(const std::string &login,
                                      const std::string &password) {
-  sf::Mutex m;
+  if (!correctLoginOrPassword(login) || !correctLoginOrPassword(password)) {
+    return false;
+  }
   m.lock();
   auto dbPassword = w->exec(
       "SELECT password, status FROM users WHERE users.login = '" + login
@@ -25,10 +33,9 @@ bool DBConnection::isPasswordCorrect(const std::string &login,
 
 bool DBConnection::isUserRegistered(const std::string &login,
                                     const std::string &password) {
-  if (login.size() < 4 || password.size() < 4) {
+  if (!correctLoginOrPassword(login) || !correctLoginOrPassword(password)) {
     return false;
   }
-  sf::Mutex m;
   m.lock();
   auto countUsers =
       w->exec1("SELECT count(users.login) FROM users WHERE login = '" + login
@@ -45,7 +52,9 @@ bool DBConnection::isUserRegistered(const std::string &login,
 }
 
 IdRating DBConnection::getUserIdRating(const std::string &login) {
-  sf::Mutex m;
+  if (!correctLoginOrPassword(login)) {
+    return {0, 0};
+  }
   m.lock();
   auto idRating = w->exec(
       "SELECT id, rating FROM users WHERE users.login = '" + login + "';");
@@ -66,12 +75,11 @@ DBConnection::DBConnection()
         " port=5432 dbname=battleship_db user=" + Config::instance().dbUser +
         " password=" + Config::instance().dbPassword)),
       conn(std::make_unique<pqxx::connection>(connectionString)),
-      w(std::make_unique<pqxx::work>(*conn)) {
+      w(std::make_unique<pqxx::work>(*conn)), m{} {
   Logger::log("database connection string is " + connectionString);
 }
 
 void DBConnection::updateStatus(unsigned int id, UserStatus status) {
-  sf::Mutex m;
   m.lock();
   w->exec(
       "UPDATE  users SET status = " + std::to_string(status) + " WHERE id = "
@@ -80,7 +88,6 @@ void DBConnection::updateStatus(unsigned int id, UserStatus status) {
 }
 
 std::string DBConnection::getLogin(unsigned int id) {
-  sf::Mutex m;
   m.lock();
   auto result = w->exec1(
       "SELECT login FROM users WHERE id = " + std::to_string(id) + ";");
@@ -89,11 +96,10 @@ std::string DBConnection::getLogin(unsigned int id) {
 }
 
 std::list<unsigned int> DBConnection::getFriends(unsigned int id) {
-  sf::Mutex m;
   m.lock();
   auto result = w->exec(
       "SELECT user_id FROM friends WHERE friend_id = " + std::to_string(id)
-          + ";");
+          + " AND status;");
   m.unlock();
   std::list<unsigned int> friends;
   for (auto row : result) {
@@ -105,10 +111,9 @@ std::list<unsigned int> DBConnection::getFriends(unsigned int id) {
 }
 
 void DBConnection::addFriend(unsigned int usrId, unsigned int frndId) {
-  sf::Mutex m;
   m.lock();
   auto result = w->exec1(
-      "SELECT count(user_id) from friends WHERE user_id = "
+      "SELECT count(user_id) FROM friends WHERE user_id = "
       + std::to_string(usrId)
       + " AND friend_id = " + std::to_string(frndId) + ";");
   if (result[0].as<unsigned int>() == 1) {
@@ -117,4 +122,10 @@ void DBConnection::addFriend(unsigned int usrId, unsigned int frndId) {
   w->exec("INSERT INTO friends (user_id, friend_id) VALUES ("
               + std::to_string(usrId) + ", " + std::to_string(frndId) + ");");
   m.unlock();
+}
+bool DBConnection::isUserOnline(unsigned int id) {
+  m.lock();
+  auto result = w->exec1("SELECT status FROM users WHERE id = " +
+      std::to_string(id) + ";");
+  return result[0].as<int>() != 0;
 }

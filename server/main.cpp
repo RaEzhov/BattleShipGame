@@ -21,11 +21,12 @@ static std::unique_ptr<DBConnection> conn;
 
 static std::list<std::unique_ptr<sf::TcpSocket>> clients;
 
-static std::unordered_map<unsigned int,
-                          std::list<std::unique_ptr<sf::TcpSocket>>::iterator>
+static std::unordered_map<
+    unsigned int, std::list<std::unique_ptr<sf::TcpSocket>>::iterator>
     clientsMap;
 
 static std::queue<unsigned int> randPlayQueue;
+sf::Mutex m;
 
 void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
                 unsigned int id) {
@@ -47,7 +48,9 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         packet.clear();
         packet << GET_FRIENDS << static_cast<unsigned int>(friends.size());
         for (auto &f : friends) {
-          packet << conn->getLogin(f);
+          if (conn->isUserOnline(f)) {
+            packet << conn->getLogin(f);
+          }
         }
         (*client)->send(packet);
         Logger::log("user " + std::to_string(id) + " get friends");
@@ -72,14 +75,17 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         break;
       }
       case WANT_RAND_PLAY:
+        m.lock();
         if (randPlayQueue.empty()) {
           randPlayQueue.push(id);
           Logger::log("User " + std::to_string(id) + " added to queue");
+          m.unlock();
         } else {
           // Get enemy
           auto enemyId = randPlayQueue.front();
           randPlayQueue.pop();
 
+          m.unlock();
           // Send info to this user
           auto enemyLogin = conn->getLogin(enemyId);
           auto enemyIdRating = conn->getUserIdRating(enemyLogin);
