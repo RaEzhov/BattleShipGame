@@ -1,16 +1,18 @@
 name: Deploy server
 
 on:
+  push:
+    branches: ["master"]
   workflow_run:
     workflows: ["CmakeBuild", "Docker", "Publish Docker image", "GoogleTests", "CppLint"]
     types:
       - completed
 
 jobs:
-  notify:
+  deploy:
     runs-on: ubuntu-latest
 
-    steps:
+    steps:          
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -28,3 +30,14 @@ jobs:
             docker rm battleship-server
             docker pull ${{ secrets.DOCKER_USERNAME }}/battleship-server:master
             docker-compose up -d --build
+            
+      - name: Send status
+        if: always()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            Deploying last version of battleship-server on ${{ SSH_HOST }} ${{job.status}}
+        env:
+          status: ${{job.status}}
