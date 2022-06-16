@@ -118,7 +118,7 @@ class Entry : public ScreenObject {
         bool isLogOrPass = true,
         std::function<void()> enterFunc = nullptr,
         const std::string &str = "",
-        const std::string &fontFile = "Upheav.ttf");
+        const std::string &fontFile = "Upheavtt.ttf");
 
   void eventCheck(const sf::Event &event);
 
