@@ -24,10 +24,11 @@ Config::Config() : port{} {
   cfg.open("./config");
 
   if (cfg.good()) {
-    cfg >> port >> dbIp >> dbUser >> dbPassword;
+    cfg >> port >> dbIp >> dbPort >> dbUser >> dbPassword;
   } else {
     port = std::atoi(getEnvVar("BATTLESHIP_SERVER_PORT").c_str());
     dbIp = getEnvVar("BATTLESHIP_SERVER_DBIP");
+    dbPort = getEnvVar("BATTLESHIP_SERVER_DBPORT");
     dbUser = getEnvVar("BATTLESHIP_SERVER_DBUSER");
     dbPassword = getEnvVar("BATTLESHIP_SERVER_DBPASSWORD");
   }
