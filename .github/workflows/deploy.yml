@@ -1,0 +1,30 @@
+name: Deploy server
+
+on:
+  workflow_run:
+    workflows: ["CmakeBuild", "Docker", "Publish Docker image", "GoogleTests", "CppLint"]
+    types:
+      - completed
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Updating server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          script: |
+            cd ./server
+            docker stop battleship-server
+            docker rm battleship-server
+            docker pull ${{ secrets.DOCKER_USERNAME }}/battleship-server:master
+            docker-compose up -d --build
