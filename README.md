@@ -34,14 +34,16 @@ This is client-server application. Server must listen clients and do requests to
 - Enjoy game!
   
   
-**If you want to start server, you must**
+**If you want to start server on your machine, you must**
 
-- Download [Docker](https://www.docker.com/)
-- Start [PostgeSQL](https://www.postgresql.org/) database*
-- Edit file `config` in server folder (port for battleship server, ip addres of database and user&password for database. there is example of this file in server folder)
-- If you change port for server, also you must change in in docker-compose.yml
-- Run `docker-compose up -d`
-- Enjoy my game! (You also need to change ip addres of server in client\config)  
+- Install [Docker](https://www.docker.com/)
+- Start and set up the [PostgeSQL](https://www.postgresql.org/) database*
+- Download files [docker-compose.yml](https://raw.githubusercontent.com/RaEzhov/BattleShipGame/master/docker-compose.yml)
+and [.env](https://raw.githubusercontent.com/RaEzhov/BattleShipGame/master/.env)
+- Edit `.env` file with your database settings 
+- Run `docker-compose up -d` in directory with this files
+- In client app folder you need to open `config` file and type your server address 
+- And now the server is running!
   
   
   
@@ -52,7 +54,7 @@ This is client-server application. Server must listen clients and do requests to
 
 <h2 align="center"> Textures </h2>
 
-**This is ships textures:**  
+**These are ships textures:**  
 
 ![Ship4_a](https://user-images.githubusercontent.com/79147155/173153700-873f148d-2f3e-4406-b27b-a36c9aad99dc.png)
 ![Ship3_a](https://user-images.githubusercontent.com/79147155/173153720-c6050b40-b89f-4156-a33c-315bd15d7312.png)

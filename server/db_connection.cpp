@@ -62,9 +62,11 @@ DBConnection::~DBConnection() {
 
 DBConnection::DBConnection()
     : connectionString(
-        std::string("hostaddr=" + Config::instance().dbIp +
-        " port=5432 dbname=battleship_db user=" + Config::instance().dbUser +
-        " password=" + Config::instance().dbPassword)),
+        std::string(
+            "hostaddr=" + Config::instance().dbIp +
+            " port=" + Config::instance().dbPort +
+            " dbname=battleship_db user=" + Config::instance().dbUser +
+            " password=" + Config::instance().dbPassword)),
       conn(std::make_unique<pqxx::connection>(connectionString)),
       w(std::make_unique<pqxx::work>(*conn)) {
   Logger::log("database connection string is " + connectionString);
