@@ -1,8 +1,6 @@
 name: Deploy server
 
 on:
-  push:
-    branches: ["master"]
   workflow_run:
     workflows: ["Publish Docker image"]
     types:
