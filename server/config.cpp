@@ -4,7 +4,13 @@
 
 #include "server/config.h"
 
+std::string getEnvVar(std::string const &key) {
+  char *val = getenv(key.c_str());
+  return val == NULL ? std::string("") : std::string(val);
+}
+
 std::unique_ptr<Config> Config::pInstance = nullptr;
+
 
 const Config &Config::instance() {
   if (!pInstance) {
@@ -17,7 +23,13 @@ Config::Config() : port{} {
   std::ifstream cfg;
   cfg.open("./config");
 
-  cfg >> port >> dbIp >> dbUser >> dbPassword;
-
+  if (cfg.good()) {
+    cfg >> port >> dbIp >> dbUser >> dbPassword;
+  } else {
+    port = std::atoi(getEnvVar("BATTLESHIP_SERVER_PORT").c_str());
+    dbIp = getEnvVar("BATTLESHIP_SERVER_DBIP");
+    dbUser = getEnvVar("BATTLESHIP_SERVER_DBUSER");
+    dbPassword = getEnvVar("BATTLESHIP_SERVER_DBPASSWORD");
+  }
   cfg.close();
 }

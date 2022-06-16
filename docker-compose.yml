@@ -2,6 +2,7 @@ version: '3'
 
 services:
   server:
+    env_file: server.env
     shm_size: "300M"
     build: .
     container_name: BattleShipServer
