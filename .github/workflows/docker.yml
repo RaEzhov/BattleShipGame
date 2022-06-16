@@ -16,13 +16,13 @@ jobs:
       - name: Docker build
         run: docker-compose build
 
-      - name: Send if falure
-        if: failure()
+      - name: Send status
+        if: always()
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            Run faied: ${{ github.workflow }} - ${{ steps.branch-name.outputs.current_branch }}.
+            Run ${{ github.workflow }} ${{job.status}}
         env:
           status: ${{job.status}}

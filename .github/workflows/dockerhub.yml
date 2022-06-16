@@ -33,13 +33,13 @@ jobs:
       - name: Docker push
         run: docker push ${{ DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}
 
-      - name: Send if falure
-        if: failure()
+      - name: Send status
+        if: always()
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            Run faied: ${{ github.workflow }} - ${{ steps.branch-name.outputs.current_branch }}.
+            Image uploaded to ${{ DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}
         env:
           status: ${{job.status}}
