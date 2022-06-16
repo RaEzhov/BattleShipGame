@@ -28,7 +28,7 @@ jobs:
 
       - name: Build the Docker image
         run: |
-          docker build . --file ./Dockerfile --tag ${{ DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}    - name: Docker Push
+          docker build . --file ./Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}    - name: Docker Push
 
       - name: Docker push
         run: docker push ${{ secrets.DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}
