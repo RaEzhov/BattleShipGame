@@ -26,7 +26,7 @@ jobs:
           cmake --build ./ --config Release
 
       - name: Send status
-        if: failure()
+        if: always()
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
