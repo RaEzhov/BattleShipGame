@@ -31,7 +31,7 @@ jobs:
           docker build . --file ./Dockerfile --tag ${{ DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}    - name: Docker Push
 
       - name: Docker push
-        run: docker push ${{ DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}
 
       - name: Send status
         if: always()
@@ -40,6 +40,6 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            Image uploaded to ${{ DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}
+            Image uploaded to ${{ secrets.DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}
         env:
           status: ${{job.status}}
