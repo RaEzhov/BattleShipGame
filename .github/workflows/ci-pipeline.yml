@@ -3,7 +3,7 @@ name: CI pipeline
 on: [push]
 
 jobs:
-  SendingMessage:
+  sending_message:
     name: Sending message
     runs-on: ubuntu-20.04
     steps:
@@ -13,14 +13,15 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            New commit from ${{ github.actor }}.  
+            New commit from ${{ github.actor }} on branch ${GITHUB_REF##*/}.  
               
             Commit message: ${{ github.event.commits[0].message }}  
               
             See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
 
-  CppLint:
+  cpplint:
     name: CppLint
+    id: cpplint
     needs: ["SendingMessage"]
     runs-on: ubuntu-20.04
     steps:
@@ -46,16 +47,10 @@ jobs:
           ${{ github.workflow }} CppLint ${{ job.status }}
       env:
         status: ${{job.status}}
-        
-    - uses: yanzay/notify-telegram@v0.1.0
-      if: always()
-      with:
-        chat: ${{ secrets.TELEGRAM_CHAT_ID }} # user id or channel name secret
-        token: ${{ secrets.TELEGRAM_BOT_TOKEN }} # token secret
-        status: ${{ job.status }} # do not modify this line
 
-  GoogleTest:
+  googletest:
     name: Google test
+    id: gtest
     needs: ["SendingMessage"]
     runs-on: ubuntu-20.04
     steps:
@@ -87,8 +82,9 @@ jobs:
         env:
           status: ${{job.status}}
 
-  CMakeBuild:
+  cmake_build:
     name: CMake build
+    id: cmake
     needs: ["CppLint", "GoogleTest"]
     strategy:
       matrix:
@@ -120,7 +116,8 @@ jobs:
             ${{ steps.check.outputs.status }}
         env:
           status: ${{job.status}}
-  SendResult:
+  send_result:
+    if: ${{ always() }}
     name: Send result
     needs: ["CMakeBuild"]
     runs-on: ubuntu-20.04
@@ -131,5 +128,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            Workflow ${{ github.workflow }} status is ${{ steps.check.outputs.status }}
+            
+            Workflow ${{ github.workflow }} status is ${{ steps.cpplint.outputs.status }} 
+            ${{ steps.gtest.outputs.status }} ${{ steps.cmake.outputs.status }}
 
