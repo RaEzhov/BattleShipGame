@@ -698,7 +698,13 @@ void BattleShipGame::changeSide() {
   user.myMove = !user.myMove;
 }
 
-void BattleShipGame::addFriend() {}
+void BattleShipGame::addFriend() {
+  auto friendLogin = entries["friends"]->getStr();
+  sf::Packet packet;
+  packet << ADD_FRIEND << friendLogin;
+  server->send(packet);
+  //TODO entries["friends"].clear();
+}
 
 void BattleShipGame::removeFriend() {}
 

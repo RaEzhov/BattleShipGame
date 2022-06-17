@@ -4,12 +4,13 @@
 #include <utility>
 #include <list>
 #include <string>
+#include <unordered_set>
 
 #include "server/db_connection.h"
 #include "server/logger.h"
 
 bool DBConnection::correctLoginOrPassword(const std::string &str) {
-  return str.size() >= 4 && str.size() <= 8 &&
+  return str.size() >= 4 &&
   str.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789") ==
   std::string::npos;
 }
@@ -22,7 +23,7 @@ bool DBConnection::isPasswordCorrect(const std::string &login,
   m.lock();
   auto dbPassword = w->exec(
       "SELECT password, status FROM users WHERE users.login = '" + login
-          + "';");
+          + "' ;");
   m.unlock();
   if (dbPassword.empty() || dbPassword[0].empty() ||
   dbPassword[0][1].as<unsigned int>() != OFFLINE) {
@@ -43,7 +44,7 @@ bool DBConnection::isUserRegistered(const std::string &login,
   auto maxId = (w->exec1("SELECT max(id) FROM users;"))[0].as<int>();
   if (countUsers[0].as<int>() == 0) {
     w->exec("INSERT INTO users VALUES ('" + login + "', '" + password + "', "
-                + std::to_string(maxId + 1) + ", 0);");
+                + std::to_string(maxId + 1) + ", 0) ;");
     m.unlock();
     return true;
   }
@@ -57,7 +58,7 @@ IdRating DBConnection::getUserIdRating(const std::string &login) {
   }
   m.lock();
   auto idRating = w->exec(
-      "SELECT id, rating FROM users WHERE users.login = '" + login + "';");
+      "SELECT id, rating FROM users WHERE users.login = '" + login + "' ;");
   m.unlock();
   if (idRating.empty() || idRating[0].empty()) {
     return {0, 0};
@@ -85,28 +86,43 @@ void DBConnection::updateStatus(unsigned int id, UserStatus status) {
   m.lock();
   w->exec(
       "UPDATE  users SET status = " + std::to_string(status) + " WHERE id = "
-          + std::to_string(id) + ";");
+          + std::to_string(id) + " ;");
   m.unlock();
 }
 
 std::string DBConnection::getLogin(unsigned int id) {
   m.lock();
   auto result = w->exec1(
-      "SELECT login FROM users WHERE id = " + std::to_string(id) + ";");
+      "SELECT login FROM users WHERE id = " + std::to_string(id) + " ;");
   m.unlock();
   return result[0].as<std::string>();
 }
 
-std::list<unsigned int> DBConnection::getFriends(unsigned int id) {
+std::unordered_set<unsigned int> DBConnection::getFriends(unsigned int id) {
   m.lock();
   auto result = w->exec(
-      "SELECT user_id FROM friends WHERE friend_id = " + std::to_string(id)
-          + " AND status;");
+      "SELECT user_id FROM friends WHERE friend_id = " +
+      std::to_string(id) + " ;");
   m.unlock();
-  std::list<unsigned int> friends;
+  std::unordered_set<unsigned int> friends;
   for (auto row : result) {
     for (auto i : row) {
-      friends.push_back(i.as<unsigned int>());
+      friends.insert(i.as<unsigned int>());
+      //friends.push_back(i.as<unsigned int>());
+      Logger::log(std::to_string(i.as<unsigned int>()) + " ");
+    }
+  }
+
+  m.lock();
+  result = w->exec(
+      "SELECT friend_id FROM friends WHERE user_id = " +
+          std::to_string(id) + " ;");
+  m.unlock();
+  for (auto row : result) {
+    for (auto i : row) {
+      friends.insert(i.as<unsigned int>());
+      Logger::log(std::to_string(i.as<unsigned int>()) + " ");
+      //friends.push_back(i.as<unsigned int>());
     }
   }
   return std::move(friends);
@@ -117,17 +133,17 @@ void DBConnection::addFriend(unsigned int usrId, unsigned int frndId) {
   auto result = w->exec1(
       "SELECT count(user_id) FROM friends WHERE user_id = "
       + std::to_string(usrId)
-      + " AND friend_id = " + std::to_string(frndId) + ";");
+      + " AND friend_id = " + std::to_string(frndId) + " ;");
   if (result[0].as<unsigned int>() == 1) {
     return;
   }
   w->exec("INSERT INTO friends (user_id, friend_id) VALUES ("
-              + std::to_string(usrId) + ", " + std::to_string(frndId) + ");");
+              + std::to_string(usrId) + ", " + std::to_string(frndId) + ") ;");
   m.unlock();
 }
 bool DBConnection::isUserOnline(unsigned int id) {
   m.lock();
   auto result = w->exec1("SELECT status FROM users WHERE id = " +
-      std::to_string(id) + ";");
+      std::to_string(id) + " ;");
   return result[0].as<int>() != 0;
 }

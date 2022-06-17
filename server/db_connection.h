@@ -29,7 +29,7 @@ class DBConnection {
 
   std::string getLogin(unsigned int id);
 
-  std::list<unsigned int> getFriends(unsigned int id);
+  std::unordered_set<unsigned int> getFriends(unsigned int id);
 
   void addFriend(unsigned int usr, unsigned int frnd);
 

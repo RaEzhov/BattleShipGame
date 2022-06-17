@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <list>
+#include <unordered_set>
 #include <unordered_map>
 #include <csignal>
 #include <queue>
@@ -38,7 +39,7 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
   while (connected == sf::Socket::Status::Done) {
     packet >> status;
 
-    std::list<unsigned int> friends;
+    std::unordered_set<unsigned int> friends;
 
     switch (status) {
       case GET_FRIENDS:
@@ -46,15 +47,21 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         packet.clear();
         packet << GET_FRIENDS << static_cast<unsigned int>(friends.size());
         for (auto &f : friends) {
-          if (conn->isUserOnline(f)) {
+          // TODO delete true
+          if (true || conn->isUserOnline(f)) {
             packet << conn->getLogin(f);
+            Logger::log(conn->getLogin(f));
           }
         }
         (*client)->send(packet);
         Logger::log("user " + std::to_string(id) + " get friends");
         break;
-      case ADD_FRIEND:
+      case ADD_FRIEND:{
+        std::string frnd;
+        packet >> frnd;
+        conn->addFriend(id, conn->getUserIdRating(frnd).first);
         break;
+      }
       case DO_MOVE: {
         sf::Packet packet2;
         unsigned int enemyId;
@@ -127,7 +134,9 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         }
         break;
       }
-      default:Logger::log("wrong message status from " + std::to_string(id));
+      default:
+        Logger::log("wrong message status from " + std::to_string(id));
+        break;
     }
     packet.clear();
     connected = (*client)->receive(packet);
