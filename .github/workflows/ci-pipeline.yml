@@ -21,8 +21,7 @@ jobs:
 
   cpplint:
     name: CppLint
-    id: cpplint
-    needs: ["SendingMessage"]
+    needs: [sending_message]
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout
@@ -50,8 +49,7 @@ jobs:
 
   googletest:
     name: Google test
-    id: gtest
-    needs: ["SendingMessage"]
+    needs: [sending_message]
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -84,8 +82,7 @@ jobs:
 
   cmake_build:
     name: CMake build
-    id: cmake
-    needs: ["CppLint", "GoogleTest"]
+    needs: [cpplint, sending_message]
     strategy:
       matrix:
         build_what: [server, client]
@@ -119,7 +116,7 @@ jobs:
   send_result:
     if: ${{ always() }}
     name: Send result
-    needs: ["CMakeBuild"]
+    needs: [cmake_build]
     runs-on: ubuntu-20.04
     steps:
       - name: Sending telegram message
@@ -130,5 +127,5 @@ jobs:
           message: |
             
             Workflow ${{ github.workflow }} status is ${{ steps.cpplint.outputs.status }} 
-            ${{ steps.gtest.outputs.status }} ${{ steps.cmake.outputs.status }}
+            ${{ steps.googletest.outputs.status }} ${{ steps.cmake_build.outputs.status }}
 
