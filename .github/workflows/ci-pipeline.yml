@@ -21,6 +21,7 @@ jobs:
 
   CppLint:
     name: CppLint
+    needs: ["SendingMessage"]
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout
@@ -42,12 +43,13 @@ jobs:
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         message: |
-          ${{ github.workflow }} ${{ github.jobs.name }} ${{ github.job.conclusion }}
+          ${{ github.workflow }} ${{ jobs.name }} ${{ job.status }}
       env:
         status: ${{job.status}}
 
   GoogleTest:
     name: Google test
+    needs: ["SendingMessage"]
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -74,7 +76,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ${{ github.workflow }} ${{ github.jobs.name }} ${{ github.jobs.conclusion }}
+            ${{ github.workflow }} ${{ jobs.name }} ${{ job.conclusion }}
         env:
           status: ${{job.status}}
 
@@ -107,7 +109,19 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ${{ github.workflow }} ${{ github.jobs.name }} ${{ github.jobs.conclusion }}
+            ${{ github.workflow }} ${{ jobs.name }} ${{ job.conclusion }}
         env:
           status: ${{job.status}}
+  SendResult:
+    name: Send result
+    needs: ["CMakeBuild"]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Sending telegram message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID}}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
+          message: |
+            Workflow ${{ github.workflow }} status is ${{ github.action_status }}
 
