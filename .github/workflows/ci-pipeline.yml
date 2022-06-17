@@ -43,9 +43,16 @@ jobs:
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         message: |
-          ${{ github.workflow }} ${{ jobs.CppLint.name }} ${{ job.status }}
+          ${{ github.workflow }} CppLint ${{ job.status }}
       env:
         status: ${{job.status}}
+        
+    - uses: yanzay/notify-telegram@v0.1.0
+      if: always()
+      with:
+        chat: ${{ secrets.TELEGRAM_CHAT_ID }} # user id or channel name secret
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }} # token secret
+        status: ${{ job.status }} # do not modify this line
 
   GoogleTest:
     name: Google test
@@ -76,7 +83,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ${{ github.workflow }} ${{ jobs.GoogleTest.name }} ${{ job.status }}
+            ${{ github.workflow }} GoogleTest ${{ job.status }}
         env:
           status: ${{job.status}}
 
@@ -109,7 +116,8 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ${{ github.workflow }} ${{ jobs.CMakeBuild.name }} ${{ job.status }}
+            ${{ github.workflow }} CMakeBuild(${{ matrix.build_what }}) ${{ job.status }}  
+            ${{ steps.check.outputs.status }}
         env:
           status: ${{job.status}}
   SendResult:
@@ -123,5 +131,5 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            Workflow ${{ github.workflow }} status is ${{ github.action_status }}
+            Workflow ${{ github.workflow }} status is ${{ steps.check.outputs.status }}
 
