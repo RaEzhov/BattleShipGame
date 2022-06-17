@@ -17,7 +17,7 @@ jobs:
               
             Commit message: ${{ github.event.commits[0].message }}  
               
-            <a href=https://github.com/${{ github.repository }}/commit/${{github.sha}}>See changes</a>
+            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
 
   CppLint:
     name: CppLint
@@ -42,7 +42,7 @@ jobs:
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         message: |
-          ${{ github.workflow }} ${{ github.job.name }} ${{ github.job.status }}
+          ${{ github.workflow }} ${{ github.jobs.name }} ${{ github.job.conclusion }}
       env:
         status: ${{job.status}}
 
@@ -74,7 +74,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ${{ github.workflow }} ${{ github.job.name }} ${{ github.job.status }}
+            ${{ github.workflow }} ${{ github.jobs.name }} ${{ github.jobs.conclusion }}
         env:
           status: ${{job.status}}
 
@@ -107,7 +107,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ${{ github.workflow }} ${{ github.job.name }} ${{ github.job.status }}
+            ${{ github.workflow }} ${{ github.jobs.name }} ${{ github.jobs.conclusion }}
         env:
           status: ${{job.status}}
 
