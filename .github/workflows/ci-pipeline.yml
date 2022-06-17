@@ -80,7 +80,7 @@ jobs:
 
   CMakeBuild:
     name: CMake build
-    needs: ["CppLint", "Google test"]
+    needs: ["CppLint", "GoogleTest"]
     strategy:
       matrix:
         build_what: [server, client]
