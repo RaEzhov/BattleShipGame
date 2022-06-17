@@ -17,7 +17,7 @@ jobs:
               
             Commit message: ${{ github.event.commits[0].message }}  
               
-            [See changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
+            <a href=https://github.com/${{ github.repository }}/commit/${{github.sha}}>See changes</a>
 
   CppLint:
     name: CppLint
@@ -32,7 +32,9 @@ jobs:
     - name: Install and run CppLint
       run: |
         pip install cpplint
-        cpplint --recursive .
+        cpplint --recursive ./global 
+        cpplint --recursive ./client 
+        cpplint --recursive ./server
     
     - name: Send status
       uses: appleboy/telegram-action@master
@@ -40,7 +42,7 @@ jobs:
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         message: |
-          Run ${{ github.workflow }} ${{job.status}}
+          ${{ github.workflow }} ${{ github.job.name }} ${{ github.job.status }}
       env:
         status: ${{job.status}}
 
@@ -72,12 +74,13 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            Run ${{ github.workflow }} ${{job.status}}
+            ${{ github.workflow }} ${{ github.job.name }} ${{ github.job.status }}
         env:
           status: ${{job.status}}
 
   CMakeBuild:
     name: CMake build
+    needs: ["CppLint", "Google test"]
     strategy:
       matrix:
         build_what: [server, client]
@@ -99,12 +102,12 @@ jobs:
           cmake --build ./ --config Release
 
       - name: Send status
-        if: always()
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            Run ${{ github.workflow }}(${{ matrix.build_what }}) ${{job.status}}
+            ${{ github.workflow }} ${{ github.job.name }} ${{ github.job.status }}
         env:
-          status: ${{ job.status }}
+          status: ${{job.status}}
+
