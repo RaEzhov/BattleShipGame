@@ -13,8 +13,6 @@
 
 #include "global/message_status.h"
 
-const int PORT = 12345;
-
 static std::unique_ptr<sf::TcpListener> listener;
 
 static std::unique_ptr<DBConnection> conn;
@@ -197,11 +195,12 @@ int main() {
   }
 
   // bind the listener to a port
-  if (listener->listen(PORT) != sf::Socket::Done) {
+  if (listener->listen(Config::instance().port) != sf::Socket::Done) {
     Logger::log("listener cannot start", ERROR);
     return 1;
   }
-  Logger::log("listener started");
+  Logger::log("listener started on port " +
+      std::to_string(Config::instance().port));
   while (true) {
     clients.push_back(std::make_unique<sf::TcpSocket>());
     if (listener->accept(**(--clients.end())) != sf::Socket::Done) {

@@ -11,7 +11,7 @@ class Config {
  public:
   static const Config &instance();
 
-  std::string dbIp, dbUser, dbPassword;
+  std::string dbIp, dbPort, dbUser, dbPassword;
   int port;
 
  private:

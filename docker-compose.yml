@@ -2,12 +2,20 @@ version: '3'
 
 services:
   server:
+    image: raezhov/battleship-server:master
     shm_size: "300M"
-    build: .
-    container_name: BattleShipServer
+    container_name: battleship-server
     restart: always
+    environment:
+      - BATTLESHIP_SERVER_PORT=${BATTLESHIP_SERVER_PORT}
+      - BATTLESHIP_SERVER_DBIP=${BATTLESHIP_SERVER_DBIP}
+      - BATTLESHIP_SERVER_DBPORT=${BATTLESHIP_SERVER_DBPORT}
+      - BATTLESHIP_SERVER_DBUSER=${BATTLESHIP_SERVER_DBUSER}
+      - BATTLESHIP_SERVER_DBPASSWORD=${BATTLESHIP_SERVER_DBPASSWORD}
+
     ports:
-      - "12345:12345"
+      - "${BATTLESHIP_SERVER_PORT}:${BATTLESHIP_SERVER_PORT}"
     privileged: true
     stdin_open: true
     tty: true
+
