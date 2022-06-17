@@ -1,0 +1,110 @@
+name: CI pipeline
+
+on: [push]
+
+jobs:
+  SendingMessage:
+    name: Sending message
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Sending telegram message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID}}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
+          message: |
+            New commit from ${{ github.actor }}.  
+              
+            Commit message: ${{ github.event.commits[0].message }}  
+              
+            [See changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
+
+  CppLint:
+    name: CppLint
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Setup python
+      uses: actions/setup-python@v1
+      
+    - name: Install and run CppLint
+      run: |
+        pip install cpplint
+        cpplint --recursive .
+    
+    - name: Send status
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        message: |
+          Run ${{ github.workflow }} ${{job.status}}
+      env:
+        status: ${{job.status}}
+
+  GoogleTest:
+    name: Google test
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Installing libraries
+        run: |
+          sudo apt update
+          sudo apt install -y cmake ninja-build libsfml-dev libpqxx-dev
+
+      - name: Building tests
+        run: |
+          cd tests
+          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -S ./ -B ./build
+          cd build
+          cmake --build ./ --target BattleShipTests --config Release
+          
+      - name: Running Tests
+        run: ./tests/build/BattleShipTests
+
+      - name: Send status
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            Run ${{ github.workflow }} ${{job.status}}
+        env:
+          status: ${{job.status}}
+
+  CMakeBuild:
+    name: CMake build
+    strategy:
+      matrix:
+        build_what: [server, client]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Installing libraries
+        run: |
+          sudo apt update
+          sudo apt install -y libpqxx-dev libsfml-dev cmake ninja-build
+
+      - name: Build ${{ matrix.build_what }}
+        run: |
+          cd ${{ matrix.build_what }}
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -S ./ -B ./build
+          cd build
+          cmake --build ./ --config Release
+
+      - name: Send status
+        if: always()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            Run ${{ github.workflow }}(${{ matrix.build_what }}) ${{job.status}}
+        env:
+          status: ${{ job.status }}
