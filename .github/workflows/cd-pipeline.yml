@@ -8,7 +8,7 @@ on:
     branches:
       - '*'
       
- jobs:
+jobs:
   push_to_dockerhub:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-20.04
