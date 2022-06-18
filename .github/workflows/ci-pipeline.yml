@@ -13,7 +13,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            New commit from ${{ github.actor }} on branch ${GITHUB_REF##*/}.  
+            New commit from ${{ github.actor }} on branch "${GITHUB_REF##*/}".  
               
             Commit message: ${{ github.event.commits[0].message }}  
               
@@ -24,34 +24,44 @@ jobs:
     needs: [sending_message]
     runs-on: ubuntu-20.04
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - env:
+            EVENT_CONTEXT: ${{ toJSON(github.event) }}
+          run: |
+            echo $EVENT_CONTEXT
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Setup python
+        uses: actions/setup-python@v1
+        
+      - name: Install and run CppLint
+        run: |
+          pip install cpplint
+          cpplint --recursive ./global 
+          cpplint --recursive ./client 
+          cpplint --recursive ./server
       
-    - name: Setup python
-      uses: actions/setup-python@v1
-      
-    - name: Install and run CppLint
-      run: |
-        pip install cpplint
-        cpplint --recursive ./global 
-        cpplint --recursive ./client 
-        cpplint --recursive ./server
-    
-    - name: Send status
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_CHAT_ID }}
-        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        message: |
-          ${{ github.workflow }} CppLint ${{ job.status }}
-      env:
-        status: ${{job.status}}
+      - name: Send status
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ${{ github.workflow }} CppLint ${{ job.status }}
+        env:
+          status: ${{job.status}}
 
   googletest:
     name: Google test
     needs: [sending_message]
     runs-on: ubuntu-20.04
     steps:
+      - env:
+          EVENT_CONTEXT: ${{ toJSON(github.event) }}
+        run: |
+          echo $EVENT_CONTEXT
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -82,12 +92,17 @@ jobs:
 
   cmake_build:
     name: CMake build
-    needs: [cpplint, sending_message]
+    needs: [cpplint, googletest]
     strategy:
       matrix:
         build_what: [server, client]
     runs-on: ubuntu-20.04
     steps:
+      - env:
+          EVENT_CONTEXT: ${{ toJSON(github.event) }}
+        run: |
+          echo $EVENT_CONTEXT
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -119,6 +134,11 @@ jobs:
     needs: [cmake_build]
     runs-on: ubuntu-20.04
     steps:
+      - env:
+          EVENT_CONTEXT: ${{ toJSON(github.event) }}
+        run: |
+          echo $EVENT_CONTEXT
+
       - name: Sending telegram message
         uses: appleboy/telegram-action@master
         with:
@@ -128,4 +148,5 @@ jobs:
             
             Workflow ${{ github.workflow }} status is ${{ steps.cpplint.outputs.status }} 
             ${{ steps.googletest.outputs.status }} ${{ steps.cmake_build.outputs.status }}
+
 
