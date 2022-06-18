@@ -1,25 +1,23 @@
 // Copyright 2022 Roman Ezhov. Github: RaEzhov
 
+#include <memory>
 #include <thread>
 
 #include "client/battle_ship_game.h"
 
-const float BattleShipGame::WIDTH = 1920;
-const float BattleShipGame::HEIGHT = 1080;
-
 std::pair<unsigned char, unsigned char> BattleShipGame::moveCoords = {0, 0};
 bool BattleShipGame::sendMove = false;
 
-BattleShipGame::BattleShipGame() : server(std::make_unique<sf::TcpSocket>()),
-                                   screen(sf::VideoMode::getDesktopMode()),
-                                   window(std::make_shared<sf::RenderWindow>(
-                                       sf::VideoMode::getDesktopMode(),
-                                       "Battleship", sf::Style::Fullscreen)),
-                                   screenScale(
-                                       static_cast<float>(screen.width)
-                                           / WIDTH,
-                                       static_cast<float>(screen.height)
-                                           / HEIGHT) {
+const sf::Vector2<unsigned int> FHD(1920, 1080);
+
+BattleShipGame::BattleShipGame() :
+server(std::make_unique<sf::TcpSocket>()),
+screen(sf::VideoMode::getDesktopMode()),
+screenScale(screen.width / FHD.x, screen.height /FHD.y),
+window(std::make_shared<sf::RenderWindow>(screen, "Battleship")),
+WIDTH(window->getSize().x),
+HEIGHT(window->getSize().y){
+
   // Connection to server
   if (server->connect(Config::instance().ip,
                       Config::instance().port) != sf::Socket::Done) {
@@ -29,16 +27,8 @@ BattleShipGame::BattleShipGame() : server(std::make_unique<sf::TcpSocket>()),
 
   // Set up framerate limit
   window->setFramerateLimit(Config::instance().framerate);
-
-  // Cursor init
-  cursorTex.loadFromFile(Config::instance().resources + "cursor.png");
-  cursor.setTexture(cursorTex);
-  cursor.setScale(2, 2);
-  window->setMouseCursorVisible(false);
-
   // Load all textures
   loadTextures();
-
   enemy.reset();
 
   if (!music.openFromFile(Config::instance().resources + "soundTrack.ogg")) {
@@ -47,7 +37,7 @@ BattleShipGame::BattleShipGame() : server(std::make_unique<sf::TcpSocket>()),
   music.setVolume(30);
   music.setLoop(true);
 
-  music.play();
+  //TODO music.play();
 }
 
 void BattleShipGame::loadTextures() {
@@ -55,7 +45,6 @@ void BattleShipGame::loadTextures() {
   Ship<2>::loadTextures();
   Ship<3>::loadTextures();
   Ship<4>::loadTextures();
-
   buttons["exit"] = std::make_unique<Button>(
       sf::Vector2{
         static_cast<float>(screen.width) * 0.05f,
@@ -281,8 +270,16 @@ void BattleShipGame::mainLoop() {
       if (event.type == sf::Event::Closed) {
         window->close();
       }
-      cursor.setPosition(static_cast<float>(sf::Mouse::getPosition().x),
-                         static_cast<float>(sf::Mouse::getPosition().y));
+      if (event.type == sf::Event::Resized){
+        sf::FloatRect visibleArea(0, 0, event.size.width, event.size.height);
+        window->setView(sf::View(visibleArea));
+        screen = sf::VideoMode(event.size.width, event.size.height);
+        screenScale = sf::Vector2<float>{
+          screen.width / static_cast<float>(WIDTH),
+          screen.height / static_cast<float>(HEIGHT)};
+        loadTextures();
+      }
+
       notifications->eventCheck(event);
       if (serverConnected) {
         switch (user.status) {
@@ -509,7 +506,6 @@ void BattleShipGame::mainLoop() {
       default:std::cerr << "Wrong status\n";
     }
     notifications->draw();
-    window->draw(cursor);
     window->display();
   }
 }

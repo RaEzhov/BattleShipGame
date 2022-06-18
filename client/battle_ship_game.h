@@ -57,9 +57,9 @@ class BattleShipGame final {
 
  private:
   std::unique_ptr<sf::TcpSocket> server;
-  std::shared_ptr<sf::RenderWindow> window;
   sf::VideoMode screen;
   sf::Vector2<float> screenScale;
+  std::shared_ptr<sf::RenderWindow> window;
   std::unordered_map<std::string, std::unique_ptr<Button>> buttons;
   std::unordered_map<std::string, std::unique_ptr<Entry>> entries;
   std::unordered_map<std::string, std::unique_ptr<Picture>> pictures;
@@ -69,16 +69,13 @@ class BattleShipGame final {
   std::unordered_map<std::string, std::unique_ptr<Pages>> pages;
   std::unique_ptr<NotificationPool> notifications;
 
-  sf::Texture cursorTex;
-  sf::Sprite cursor;
-
   sf::Music music;
 
   User user, enemy;
 
   bool serverConnected;
 
-  static const float WIDTH, HEIGHT;
+  unsigned int WIDTH, HEIGHT;
 };
 
 #endif  // CLIENT_BATTLE_SHIP_GAME_H_
