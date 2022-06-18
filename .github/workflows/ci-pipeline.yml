@@ -24,10 +24,10 @@ jobs:
     needs: [sending_message]
     runs-on: ubuntu-20.04
     steps:
-      - env:
+      - run: |
+          echo $EVENT_CONTEXT
+        env:
             EVENT_CONTEXT: ${{ toJSON(github.event) }}
-          run: |
-            echo $EVENT_CONTEXT
 
       - name: Checkout
         uses: actions/checkout@v3
