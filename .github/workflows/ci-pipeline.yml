@@ -13,7 +13,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            New commit from ${{ github.actor }} on branch "${GITHUB_REF##*/}".  
+            New commit from ${{ github.actor }}.  
               
             Commit message: ${{ github.event.commits[0].message }}  
               
@@ -24,11 +24,6 @@ jobs:
     needs: [sending_message]
     runs-on: ubuntu-20.04
     steps:
-      - run: |
-          echo $EVENT_CONTEXT
-        env:
-            EVENT_CONTEXT: ${{ toJSON(github.event) }}
-
       - name: Checkout
         uses: actions/checkout@v3
         
@@ -48,7 +43,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ${{ github.workflow }} CppLint ${{ job.status }}
+            ${{ github.workflow }}: CppLint ${{ job.status }}
         env:
           status: ${{job.status}}
 
@@ -57,11 +52,6 @@ jobs:
     needs: [sending_message]
     runs-on: ubuntu-20.04
     steps:
-      - env:
-          EVENT_CONTEXT: ${{ toJSON(github.event) }}
-        run: |
-          echo $EVENT_CONTEXT
-
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -86,7 +76,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ${{ github.workflow }} GoogleTest ${{ job.status }}
+            ${{ github.workflow }}: GoogleTest ${{ job.status }}
         env:
           status: ${{job.status}}
 
@@ -98,11 +88,6 @@ jobs:
         build_what: [server, client]
     runs-on: ubuntu-20.04
     steps:
-      - env:
-          EVENT_CONTEXT: ${{ toJSON(github.event) }}
-        run: |
-          echo $EVENT_CONTEXT
-
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -124,20 +109,24 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ${{ github.workflow }} CMakeBuild(${{ matrix.build_what }}) ${{ job.status }}  
-            ${{ steps.check.outputs.status }}
+            ${{ github.workflow }}: CMakeBuild(${{ matrix.build_what }}) ${{ job.status }}  
         env:
           status: ${{job.status}}
+
   send_result:
     if: ${{ always() }}
     name: Send result
     needs: [cmake_build]
     runs-on: ubuntu-20.04
     steps:
-      - env:
-          EVENT_CONTEXT: ${{ toJSON(github.event) }}
-        run: |
-          echo $EVENT_CONTEXT
+      - if: ${{ always() }}
+        run: echo ${{ job.status }}
+        
+      - if: ${{ success() }}
+        run: echo "success"
+
+      - if: ${{ failure() }}
+        run: echo "failure"
 
       - name: Sending telegram message
         uses: appleboy/telegram-action@master
@@ -145,8 +134,6 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            
-            Workflow ${{ github.workflow }} status is ${{ steps.cpplint.outputs.status }} 
-            ${{ steps.googletest.outputs.status }} ${{ steps.cmake_build.outputs.status }}
-
-
+            Workflow ${{ github.workflow }} status is ${{job.status}}
+        env:
+          status: ${{job.status}}
