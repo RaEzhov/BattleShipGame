@@ -77,3 +77,17 @@ jobs:
             ${{ github.workflow }}: Deploy updated image ${{ job.status }}
         env:
           status: ${{job.status}}
+          
+  send_result:
+    if: ${{ always() }}
+    name: Send result
+    needs: [deploy_on_server]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Sending telegram message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID}}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
+          message: |
+            ${{ github.workflow }} ended
