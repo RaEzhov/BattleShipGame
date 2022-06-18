@@ -1,0 +1,11 @@
+name: CD pipeline two
+
+on:
+  workflow_run:
+    workflows: ["CI pipeline"]
+    types: [requested]
+    branches:
+      - 'test'
+jobs:
+  echo_hello:
+    - run: echo "Hello from pipeline"
