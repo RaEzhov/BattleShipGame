@@ -13,7 +13,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            New commit from ${{ github.actor }}.  
+            New commit from ${{ github.actor }} on branch $(echo $GITHUB_REF | cut -d'/' -f 3).  
               
             Commit message: ${{ github.event.commits[0].message }}  
               
@@ -119,21 +119,11 @@ jobs:
     needs: [cmake_build]
     runs-on: ubuntu-20.04
     steps:
-      - if: ${{ always() }}
-        run: echo ${{ job.status }}
-        
-      - if: ${{ success() }}
-        run: echo "success"
-
-      - if: ${{ failure() }}
-        run: echo "failure"
-
       - name: Sending telegram message
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            Workflow ${{ github.workflow }} status is ${{job.status}}
-        env:
-          status: ${{job.status}}
+            ${{ github.workflow }} ended.
+            
