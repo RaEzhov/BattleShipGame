@@ -8,4 +8,8 @@ on:
       - 'test'
 jobs:
   echo_hello:
-    - run: echo "Hello from pipeline"
+    name: Hello
+    runs-on: ubuntu-latest
+    steps:
+      - name: hello
+        run: echo "Hello from pipeline"
