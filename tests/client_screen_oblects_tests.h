@@ -34,7 +34,7 @@ TEST_P(ShipDirectionTest, PostIncreaseShipDirection){
 
 INSTANTIATE_TEST_CASE_P(Default, ShipDirectionTest,
                         testing::Values(
-                            ShipDirectionState{UP, UP},
+                            ShipDirectionState{UP, RIGHT},
                             ShipDirectionState{RIGHT, DOWN},
                             ShipDirectionState{DOWN, LEFT},
                             ShipDirectionState{LEFT, UP}
