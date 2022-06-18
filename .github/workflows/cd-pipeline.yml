@@ -3,8 +3,10 @@ name: CD pipeline
 on:
   workflow_run:
     workflows: ["CI pipeline"]
-    types:
-      - completed
+    types: [requested]
+    branches:
+      - 'test'
+
 
 jobs:
   push_to_dockerhub:
