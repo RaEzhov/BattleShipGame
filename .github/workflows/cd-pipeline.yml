@@ -7,7 +7,6 @@ on:
       - completed
     branches:
       - 'master'
-      - 'dev-ops'
 
 
 jobs:
@@ -32,10 +31,10 @@ jobs:
 
       - name: Build the Docker image
         run: |
-          docker build . --file ./Dockerfile --tag ${{ DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}    
+          docker build . --file ./Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}    
 
       - name: Docker push
-        run: docker push ${{ DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/battleship-server:${{ steps.date.outputs.date }}
       
       - name: Send status
         if: ${{ always() }}
