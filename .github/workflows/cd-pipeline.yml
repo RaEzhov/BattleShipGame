@@ -5,7 +5,7 @@ on:
     workflows: ["CI pipeline"]
     types:
       - completed
-      
+
 jobs:
   push_to_dockerhub:
     name: Push Docker image to Docker Hub
