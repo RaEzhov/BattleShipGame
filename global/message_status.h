@@ -1,7 +1,7 @@
-#ifndef MESSAGE_STATUS_H
-#define MESSAGE_STATUS_H
+// Copyright 2022 Roman Ezhov. Github: RaEzhov
 
-#include <SFML/Graphics/Color.hpp>
+#ifndef GLOBAL_MESSAGE_STATUS_H_
+#define GLOBAL_MESSAGE_STATUS_H_
 
 #define GET_FRIENDS 0
 #define ADD_FRIEND 1
@@ -14,4 +14,5 @@
 #define ME_WIN 8
 #define UPD_RATING 9
 
-#endif//MESSAGE_STATUS_H
+#endif  // GLOBAL_MESSAGE_STATUS_H_
+
