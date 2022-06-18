@@ -13,7 +13,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            New commit from ${{ github.actor }} on branch $(echo $GITHUB_REF | cut -d'/' -f 3).  
+            New commit from ${{ github.actor }} on branch ${{ $GITHUB_REF | cut -d'/' -f 3 }}.  
               
             Commit message: ${{ github.event.commits[0].message }}  
               
@@ -38,6 +38,7 @@ jobs:
           cpplint --recursive ./server
       
       - name: Send status
+        if: ${{ always() }}
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -71,6 +72,7 @@ jobs:
         run: ./tests/build/BattleShipTests
 
       - name: Send status
+        if: ${{ always() }}
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -104,6 +106,7 @@ jobs:
           cmake --build ./ --config Release
 
       - name: Send status
+        if: ${{ always() }}
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -125,5 +128,5 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            ${{ github.workflow }} ended.
+            ${{ github.workflow }} ended
             
