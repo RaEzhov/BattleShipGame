@@ -1,15 +1,41 @@
-name: CD pipeline two
+name: Deploy server
 
 on:
   workflow_run:
-    workflows: ["CI pipeline"]
-    types: [requested]
-    branches:
-      - 'test'
+    workflows: ["Publish Docker image"]
+    types:
+      - completed
+
 jobs:
-  echo_hello:
-    name: Hello
+  deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: hello
-        run: echo "Hello from pipeline"
+
+    steps:          
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Updating server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          script: |
+            cd ./server
+            docker stop battleship-server
+            docker rm battleship-server
+            docker pull ${{ secrets.DOCKER_USERNAME }}/battleship-server:master
+            docker-compose up -d --build
+            
+      - name: Send status
+        if: always()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            Deploying battleship-server on ${{ secrets.SSH_HOST }} ${{job.status}}
+        env:
+          status: ${{job.status}}
