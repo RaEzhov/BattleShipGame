@@ -7,13 +7,17 @@ jobs:
     name: Sending message
     runs-on: ubuntu-20.04
     steps:
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v5.2
+
       - name: Sending telegram message
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID}}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN}}
           message: |
-            New commit from ${{ github.actor }} on branch ${{ $GITHUB_REF | cut -d'/' -f 3 }}.  
+            New commit from ${{ github.actor }} on branch ${{ steps.branch-name.outputs.current_branch }}.  
               
             Commit message: ${{ github.event.commits[0].message }}  
               
