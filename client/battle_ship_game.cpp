@@ -275,8 +275,8 @@ void BattleShipGame::mainLoop() {
         window->setView(sf::View(visibleArea));
         screen = sf::VideoMode(event.size.width, event.size.height);
         screenScale = sf::Vector2<float>{
-          screen.width / static_cast<float>(WIDTH),
-          screen.height / static_cast<float>(HEIGHT)};
+          screen.width / static_cast<float>(FHD.x),
+          screen.height / static_cast<float>(FHD.y)};
         loadTextures();
       }
 
@@ -632,7 +632,26 @@ void BattleShipGame::multiPlayerLobby() {
 }
 
 void BattleShipGame::multiPlayerFunc(const std::string &enemy_) {
-  user.status = MAIN_MENU;
+  sf::Packet packet;
+  packet << WANT_FRIEND_PLAY << enemy_;
+  server->send(packet);
+
+  titles["myName"]->setColor(beige);
+  titles["myLevel"]->setColor(beige);
+  setEnemyTitles();
+  pictures["end"]->setPosition(sf::Vector2<float>{
+      static_cast<float>(screen.width) * 0.5f
+          - pictures["end"]->getSize().width * 0.5f,
+      static_cast<float>(screen.height) * 0.5f
+          - pictures["end"]->getSize().height * 0.5f +
+          static_cast<float>(screen.height) * 0.1f});
+  fields["myField"]->setState(PLACEMENT);
+  fields["enemyField"]->setState(ENEMY_INACTIVE);
+  fields["myField"]->clearShips();
+  fields["enemyField"]->clearShips();
+
+  notifications->addNotification("waiting for enemy");
+  user.status = IN_MP_MENU;
 }
 
 void BattleShipGame::startBattle() {
@@ -700,9 +719,21 @@ void BattleShipGame::addFriend() {
   packet << ADD_FRIEND << friendLogin;
   server->send(packet);
   //TODO entries["friends"].clear();
+  packet.clear();
+  packet << GET_FRIENDS;
+  server->send(packet);
 }
 
-void BattleShipGame::removeFriend() {}
+void BattleShipGame::removeFriend() {
+  auto friendLogin = entries["friends"]->getStr();
+  sf::Packet packet;
+  packet << RM_FRIEND << friendLogin;
+  server->send(packet);
+  //TODO entries["friends"].clear();
+  packet.clear();
+  packet << GET_FRIENDS;
+  server->send(packet);
+}
 
 void BattleShipGame::randomRival() {
   // Request to server for random rival
@@ -813,6 +844,9 @@ void BattleShipGame::serverListener() {
       case UPD_RATING:
         packet >> user.rating;
         break;
+      case WANT_FRIEND_PLAY:
+        packet >> frnd;
+        notifications->addNotification(frnd + " wants to\nplay with you!");
     }
   }
 }

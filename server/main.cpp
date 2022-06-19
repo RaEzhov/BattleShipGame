@@ -25,6 +25,7 @@ static std::unordered_map<
     clientsMap;
 
 static std::queue<unsigned int> randPlayQueue;
+std::unordered_map<unsigned int, unsigned int> friend_queue;
 sf::Mutex m;
 
 void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
@@ -40,6 +41,9 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
     packet >> status;
 
     std::unordered_set<unsigned int> friends;
+
+    std::string str;
+    unsigned int en_id;
 
     switch (status) {
       case GET_FRIENDS:
@@ -60,6 +64,12 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         std::string frnd;
         packet >> frnd;
         conn->addFriend(id, conn->getUserIdRating(frnd).first);
+        break;
+      }
+      case RM_FRIEND:{
+        std::string frnd;
+        packet >> frnd;
+        conn->removeFriend(id, conn->getUserIdRating(frnd).first);
         break;
       }
       case DO_MOVE: {
@@ -115,6 +125,45 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
           }
         }
         break;
+      case WANT_FRIEND_PLAY: {
+        packet >> str;
+        en_id = conn->getUserIdRating(str).first;
+        Logger::log("user " + std::to_string(id) + " want play with " + std::to_string(en_id));
+        if (friend_queue.find(id) == friend_queue.end() ||
+            friend_queue[id] != en_id) {
+          friend_queue[en_id] = id;
+          packet.clear();
+          packet << WANT_FRIEND_PLAY << conn->getLogin(id);
+          if (clientsMap.find(en_id) != clientsMap.end()) {
+            (*(clientsMap[en_id]))->send(packet);
+          }
+        } else {
+          friend_queue.erase(id);
+
+          auto enemyLogin = conn->getLogin(en_id);
+          auto enemyIdRating = conn->getUserIdRating(enemyLogin);
+          packet.clear();
+          packet << ENEMY_FOUND << enemyLogin << enemyIdRating.first
+                 << enemyIdRating.second
+                 << true;  // he moves first
+          (*client)->send(packet);
+
+
+          auto myLogin = conn->getLogin(id);
+          auto myIdRating = conn->getUserIdRating(myLogin);
+          packet.clear();
+          packet << ENEMY_FOUND << myLogin << myIdRating.first
+                 << myIdRating.second
+                 << false;  // he moves second
+          if (clientsMap.find(en_id) != clientsMap.end()) {
+            (*(clientsMap[en_id]))->send(packet);
+            Logger::log(
+                "users " + std::to_string(id) + ' ' + std::to_string(en_id)
+                    + " went to game");
+          }
+        }
+        break;
+      }
       case ENEMY_FIELD: {
         unsigned int enemyId;
         packet >> enemyId;

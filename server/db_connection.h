@@ -33,6 +33,8 @@ class DBConnection {
 
   void addFriend(unsigned int usr, unsigned int frnd);
 
+  void removeFriend(unsigned int usr, unsigned int frnd);
+
   bool isPasswordCorrect(const std::string &login, const std::string &password);
 
   bool isUserRegistered(const std::string &login, const std::string &password);

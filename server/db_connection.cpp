@@ -147,3 +147,8 @@ bool DBConnection::isUserOnline(unsigned int id) {
       std::to_string(id) + " ;");
   return result[0].as<int>() != 0;
 }
+void DBConnection::removeFriend(unsigned int usr, unsigned int frnd) {
+  m.lock();
+  w->exec("DELETE FROM friends WHERE user_id = " + std::to_string(usr) + " AND friend_id = " + std::to_string(frnd) +
+  " OR user_id = " + std::to_string(frnd) + " AND friend_id = " + std::to_string(usr) + ";" );
+}
