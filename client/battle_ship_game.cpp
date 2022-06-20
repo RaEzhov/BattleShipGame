@@ -16,8 +16,7 @@ screen(sf::VideoMode::getDesktopMode()),
 screenScale(screen.width / FHD.x, screen.height /FHD.y),
 window(std::make_shared<sf::RenderWindow>(screen, "Battleship")),
 WIDTH(window->getSize().x),
-HEIGHT(window->getSize().y){
-
+HEIGHT(window->getSize().y) {
   // Connection to server
   if (server->connect(Config::instance().ip,
                       Config::instance().port) != sf::Socket::Done) {
@@ -37,7 +36,7 @@ HEIGHT(window->getSize().y){
   music.setVolume(30);
   music.setLoop(true);
 
-  //TODO music.play();
+  music.play();
 }
 
 void BattleShipGame::loadTextures() {
@@ -270,7 +269,7 @@ void BattleShipGame::mainLoop() {
       if (event.type == sf::Event::Closed) {
         window->close();
       }
-      if (event.type == sf::Event::Resized){
+      if (event.type == sf::Event::Resized) {
         sf::FloatRect visibleArea(0, 0, event.size.width, event.size.height);
         window->setView(sf::View(visibleArea));
         screen = sf::VideoMode(event.size.width, event.size.height);
@@ -718,7 +717,7 @@ void BattleShipGame::addFriend() {
   sf::Packet packet;
   packet << ADD_FRIEND << friendLogin;
   server->send(packet);
-  //TODO entries["friends"].clear();
+  // TODO (RaEzhov): clear entry.
   packet.clear();
   packet << GET_FRIENDS;
   server->send(packet);
@@ -729,7 +728,7 @@ void BattleShipGame::removeFriend() {
   sf::Packet packet;
   packet << RM_FRIEND << friendLogin;
   server->send(packet);
-  //TODO entries["friends"].clear();
+  // TODO (RaEzhov): clear entry.
   packet.clear();
   packet << GET_FRIENDS;
   server->send(packet);
