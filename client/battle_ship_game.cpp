@@ -717,7 +717,7 @@ void BattleShipGame::addFriend() {
   sf::Packet packet;
   packet << ADD_FRIEND << friendLogin;
   server->send(packet);
-  // TODO (RaEzhov): clear entry.
+  // TODO(RaEzhov): clear entry.
   packet.clear();
   packet << GET_FRIENDS;
   server->send(packet);
@@ -728,7 +728,7 @@ void BattleShipGame::removeFriend() {
   sf::Packet packet;
   packet << RM_FRIEND << friendLogin;
   server->send(packet);
-  // TODO (RaEzhov): clear entry.
+  // TODO(RaEzhov): clear entry.
   packet.clear();
   packet << GET_FRIENDS;
   server->send(packet);
