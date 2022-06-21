@@ -108,8 +108,6 @@ std::unordered_set<unsigned int> DBConnection::getFriends(unsigned int id) {
   for (auto row : result) {
     for (auto i : row) {
       friends.insert(i.as<unsigned int>());
-      //friends.push_back(i.as<unsigned int>());
-      Logger::log(std::to_string(i.as<unsigned int>()) + " ");
     }
   }
 
@@ -121,8 +119,6 @@ std::unordered_set<unsigned int> DBConnection::getFriends(unsigned int id) {
   for (auto row : result) {
     for (auto i : row) {
       friends.insert(i.as<unsigned int>());
-      Logger::log(std::to_string(i.as<unsigned int>()) + " ");
-      //friends.push_back(i.as<unsigned int>());
     }
   }
   return std::move(friends);
@@ -149,6 +145,7 @@ bool DBConnection::isUserOnline(unsigned int id) {
 }
 void DBConnection::removeFriend(unsigned int usr, unsigned int frnd) {
   m.lock();
-  w->exec("DELETE FROM friends WHERE user_id = " + std::to_string(usr) + " AND friend_id = " + std::to_string(frnd) +
-  " OR user_id = " + std::to_string(frnd) + " AND friend_id = " + std::to_string(usr) + ";" );
+  w->exec("DELETE FROM friends WHERE user_id = " + std::to_string(usr) +
+  " AND friend_id = " + std::to_string(frnd) + " OR user_id = " +
+  std::to_string(frnd) + " AND friend_id = " + std::to_string(usr) + ";");
 }

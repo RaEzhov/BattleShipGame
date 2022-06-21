@@ -51,7 +51,7 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         packet.clear();
         packet << GET_FRIENDS << static_cast<unsigned int>(friends.size());
         for (auto &f : friends) {
-          // TODO delete true
+          // TODO(RaEzhov): delete true.
           if (true || conn->isUserOnline(f)) {
             packet << conn->getLogin(f);
             Logger::log(conn->getLogin(f));
@@ -60,13 +60,13 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         (*client)->send(packet);
         Logger::log("user " + std::to_string(id) + " get friends");
         break;
-      case ADD_FRIEND:{
+      case ADD_FRIEND: {
         std::string frnd;
         packet >> frnd;
         conn->addFriend(id, conn->getUserIdRating(frnd).first);
         break;
       }
-      case RM_FRIEND:{
+      case RM_FRIEND: {
         std::string frnd;
         packet >> frnd;
         conn->removeFriend(id, conn->getUserIdRating(frnd).first);
@@ -128,7 +128,8 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
       case WANT_FRIEND_PLAY: {
         packet >> str;
         en_id = conn->getUserIdRating(str).first;
-        Logger::log("user " + std::to_string(id) + " want play with " + std::to_string(en_id));
+        Logger::log("user " + std::to_string(id) + " want play with " +
+        std::to_string(en_id));
         if (friend_queue.find(id) == friend_queue.end() ||
             friend_queue[id] != en_id) {
           friend_queue[en_id] = id;

@@ -9,6 +9,7 @@
 #include <utility>
 #include <list>
 #include <string>
+#include <unordered_set>
 
 #include <SFML/Network.hpp>
 
