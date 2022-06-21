@@ -2,7 +2,8 @@ version: '3'
 
 services:
   server:
-    image: raezhov/battleship-server:master
+    #image: raezhov/battleship-server:master
+    build: .
     shm_size: "300M"
     container_name: battleship-server
     restart: always

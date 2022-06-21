@@ -193,7 +193,7 @@ void Entry::eventCheck(const sf::Event &event) {
       } else if (input.getSize() < symbolsCount) {
         if (isLoginOrPassword) {
           if (availableLetters.find(static_cast<char>(event.text.unicode))
-              != std::string::npos) {
+              != std::string::npos && input.operator std::string().size() < 8) {
             input += event.text.unicode;
           }
         } else {
@@ -602,15 +602,4 @@ void NotificationPool::deleteNotification(char id) {
       return;
     }
   }
-}
-
-Sound::Sound(const std::string &file) {
-  if (!buffer.loadFromFile(Config::instance().resources + file)) {
-    throw std::runtime_error("Load sound error!\n");
-  }
-  sound.setBuffer(buffer);
-}
-
-void Sound::play() {
-  sound.play();
 }

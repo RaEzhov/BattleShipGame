@@ -9,6 +9,7 @@
 #include <utility>
 #include <list>
 #include <string>
+#include <unordered_set>
 
 #include <SFML/Network.hpp>
 
@@ -29,22 +30,29 @@ class DBConnection {
 
   std::string getLogin(unsigned int id);
 
-  std::list<unsigned int> getFriends(unsigned int id);
+  std::unordered_set<unsigned int> getFriends(unsigned int id);
 
   void addFriend(unsigned int usr, unsigned int frnd);
+
+  void removeFriend(unsigned int usr, unsigned int frnd);
 
   bool isPasswordCorrect(const std::string &login, const std::string &password);
 
   bool isUserRegistered(const std::string &login, const std::string &password);
 
+  bool isUserOnline(unsigned int id);
+
   void updateStatus(unsigned int id, UserStatus status);
 
   IdRating getUserIdRating(const std::string &login);
+
+  static bool correctLoginOrPassword(const std::string &str);
 
  private:
   std::string connectionString;
   std::unique_ptr<pqxx::connection> conn;
   std::unique_ptr<pqxx::work> w;
+  sf::Mutex m;
 };
 
 #endif  // SERVER_DB_CONNECTION_H_

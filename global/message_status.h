@@ -13,6 +13,7 @@
 #define ENEMY_DISCONNECTED 7
 #define ME_WIN 8
 #define UPD_RATING 9
+#define WANT_FRIEND_PLAY 10
 
 #endif  // GLOBAL_MESSAGE_STATUS_H_
 

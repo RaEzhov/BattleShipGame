@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <list>
+#include <unordered_set>
 #include <unordered_map>
 #include <csignal>
 #include <queue>
@@ -19,11 +20,13 @@ static std::unique_ptr<DBConnection> conn;
 
 static std::list<std::unique_ptr<sf::TcpSocket>> clients;
 
-static std::unordered_map<unsigned int,
-                          std::list<std::unique_ptr<sf::TcpSocket>>::iterator>
+static std::unordered_map<
+    unsigned int, std::list<std::unique_ptr<sf::TcpSocket>>::iterator>
     clientsMap;
 
 static std::queue<unsigned int> randPlayQueue;
+std::unordered_map<unsigned int, unsigned int> friend_queue;
+sf::Mutex m;
 
 void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
                 unsigned int id) {
@@ -37,7 +40,10 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
   while (connected == sf::Socket::Status::Done) {
     packet >> status;
 
-    std::list<unsigned int> friends;
+    std::unordered_set<unsigned int> friends;
+
+    std::string str;
+    unsigned int en_id;
 
     switch (status) {
       case GET_FRIENDS:
@@ -45,13 +51,27 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         packet.clear();
         packet << GET_FRIENDS << static_cast<unsigned int>(friends.size());
         for (auto &f : friends) {
-          packet << conn->getLogin(f);
+          // TODO(RaEzhov): delete true.
+          if (true || conn->isUserOnline(f)) {
+            packet << conn->getLogin(f);
+            Logger::log(conn->getLogin(f));
+          }
         }
         (*client)->send(packet);
         Logger::log("user " + std::to_string(id) + " get friends");
         break;
-      case ADD_FRIEND:
+      case ADD_FRIEND: {
+        std::string frnd;
+        packet >> frnd;
+        conn->addFriend(id, conn->getUserIdRating(frnd).first);
         break;
+      }
+      case RM_FRIEND: {
+        std::string frnd;
+        packet >> frnd;
+        conn->removeFriend(id, conn->getUserIdRating(frnd).first);
+        break;
+      }
       case DO_MOVE: {
         sf::Packet packet2;
         unsigned int enemyId;
@@ -70,14 +90,17 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         break;
       }
       case WANT_RAND_PLAY:
+        m.lock();
         if (randPlayQueue.empty()) {
           randPlayQueue.push(id);
           Logger::log("User " + std::to_string(id) + " added to queue");
+          m.unlock();
         } else {
           // Get enemy
           auto enemyId = randPlayQueue.front();
           randPlayQueue.pop();
 
+          m.unlock();
           // Send info to this user
           auto enemyLogin = conn->getLogin(enemyId);
           auto enemyIdRating = conn->getUserIdRating(enemyLogin);
@@ -102,6 +125,46 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
           }
         }
         break;
+      case WANT_FRIEND_PLAY: {
+        packet >> str;
+        en_id = conn->getUserIdRating(str).first;
+        Logger::log("user " + std::to_string(id) + " want play with " +
+        std::to_string(en_id));
+        if (friend_queue.find(id) == friend_queue.end() ||
+            friend_queue[id] != en_id) {
+          friend_queue[en_id] = id;
+          packet.clear();
+          packet << WANT_FRIEND_PLAY << conn->getLogin(id);
+          if (clientsMap.find(en_id) != clientsMap.end()) {
+            (*(clientsMap[en_id]))->send(packet);
+          }
+        } else {
+          friend_queue.erase(id);
+
+          auto enemyLogin = conn->getLogin(en_id);
+          auto enemyIdRating = conn->getUserIdRating(enemyLogin);
+          packet.clear();
+          packet << ENEMY_FOUND << enemyLogin << enemyIdRating.first
+                 << enemyIdRating.second
+                 << true;  // he moves first
+          (*client)->send(packet);
+
+
+          auto myLogin = conn->getLogin(id);
+          auto myIdRating = conn->getUserIdRating(myLogin);
+          packet.clear();
+          packet << ENEMY_FOUND << myLogin << myIdRating.first
+                 << myIdRating.second
+                 << false;  // he moves second
+          if (clientsMap.find(en_id) != clientsMap.end()) {
+            (*(clientsMap[en_id]))->send(packet);
+            Logger::log(
+                "users " + std::to_string(id) + ' ' + std::to_string(en_id)
+                    + " went to game");
+          }
+        }
+        break;
+      }
       case ENEMY_FIELD: {
         unsigned int enemyId;
         packet >> enemyId;
@@ -121,7 +184,9 @@ void clientLoop(std::list<std::unique_ptr<sf::TcpSocket>>::iterator client,
         }
         break;
       }
-      default:Logger::log("wrong message status from " + std::to_string(id));
+      default:
+        Logger::log("wrong message status from " + std::to_string(id));
+        break;
     }
     packet.clear();
     connected = (*client)->receive(packet);

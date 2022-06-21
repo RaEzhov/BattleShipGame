@@ -7,6 +7,8 @@ SetupBattleShip/*
 CMakeSettings.json
 BattleShipSetup/*
 out/*
+.env
+docker-compose.yml
 # Prerequisites
 *.d
 *config

@@ -12,7 +12,7 @@ ENDIF()
 
 include_directories(../)
 
-add_executable(BattleShipClient main.cpp screen_objects.cpp battle_ship_game.cpp game_field.cpp game_field_cell.cpp user.cpp config.cpp)
+add_executable(BattleShipClient main.cpp screen_objects.cpp battle_ship_game.cpp game_field.cpp game_field_cell.cpp user.cpp config.cpp audio_objects.cpp)
 
 find_package(SFML 2.5.1 COMPONENTS system window graphics audio network REQUIRED)
 
